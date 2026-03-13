@@ -1,0 +1,8 @@
+name = "wp-sentinel-probe"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+LOCATION = "de-cf"
+
+# Set PROBE_SECRET via: npx wrangler secret put PROBE_SECRET

@@ -1,0 +1,91 @@
+const mongoose = require('mongoose');
+
+const siteSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
+    },
+    interval: {
+      type: Number,
+      default: 5 * 60 * 1000, // 5 minutes in ms
+      min: 60 * 1000,          // 1 minute
+      max: 24 * 60 * 60 * 1000, // 24 hours
+    },
+    paused: {
+      type: Boolean,
+      default: false,
+    },
+    currentStatus: {
+      type: String,
+      enum: ['up', 'down', 'degraded', 'pending'],
+      default: 'pending',
+    },
+    lastCheckedAt: {
+      type: Date,
+      index: true,
+    },
+    consecutiveFailures: {
+      type: Number,
+      default: 0,
+    },
+    ssl: {
+      issuer: String,
+      validFrom: Date,
+      validTo: Date,
+      daysRemaining: Number,
+      protocol: String,
+      cipher: String,
+      fingerprint: String,
+      lastCheckedAt: Date,
+    },
+    security: [
+      {
+        check: String,
+        status: { type: String, enum: ['pass', 'fail', 'warn'] },
+        message: String,
+      },
+    ],
+    securityScore: {
+      type: Number,
+      default: 0,
+    },
+    notifications: {
+      email: { type: Boolean, default: true },
+      slack: { type: Boolean, default: false },
+      discord: { type: Boolean, default: false },
+      webhook: { type: Boolean, default: false },
+      slackUrl: String,
+      discordUrl: String,
+      webhookUrl: String,
+    },
+    expectedKeywords: {
+      type: [String],
+      default: [],
+    },
+    tags: {
+      type: [String],
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+siteSchema.index({ userId: 1, url: 1 }, { unique: true });
+
+module.exports = mongoose.model('Site', siteSchema);

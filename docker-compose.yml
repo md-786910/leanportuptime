@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: wp-sentinel-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server/src:/app/src
+      - ./server/server.js:/app/server.js
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wp-sentinel
+
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: wp-sentinel-worker
+    restart: unless-stopped
+    command: node src/workers/index.js
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server/src:/app/src
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wp-sentinel
+
+  mongo:
+    image: mongo:7
+    container_name: wp-sentinel-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wp-sentinel
+
+  redis:
+    image: redis:7-alpine
+    container_name: wp-sentinel-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wp-sentinel
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  wp-sentinel:
+    driver: bridge
