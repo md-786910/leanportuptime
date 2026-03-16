@@ -17,6 +17,8 @@ import PerformanceMetrics from '../components/monitoring/PerformanceMetrics';
 import TimingBreakdown from '../components/monitoring/TimingBreakdown';
 import SSLPanel from '../components/ssl/SSLPanel';
 import SecurityPanel from '../components/security/SecurityPanel';
+import PluginPanel from '../components/plugins/PluginPanel';
+import SiteScanPanel from '../components/sitescan/SiteScanPanel';
 
 export default function SiteDetailPage() {
   const { id } = useParams();
@@ -94,6 +96,10 @@ export default function SiteDetailPage() {
       {activeTab === 'ssl' && <SSLPanel siteId={id} />}
 
       {activeTab === 'security' && <SecurityPanel siteId={id} />}
+
+      {activeTab === 'plugins' && <PluginPanel siteId={id} />}
+
+      {activeTab === 'sitescan' && <SiteScanPanel siteId={id} />}
 
       {activeTab === 'history' && (
         <div className="space-y-6">

@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const Site = require('../models/Site');
-const { uptimeQueue, sslQueue, securityQueue } = require('../config/queue');
+const { uptimeQueue, sslQueue, securityQueue, pluginQueue, siteScanQueue } = require('../config/queue');
 const logger = require('../utils/logger');
 
 class SchedulerService {
@@ -13,6 +13,12 @@ class SchedulerService {
 
     // Security audits once daily at 3 AM
     cron.schedule('0 3 * * *', () => this.scheduleSecurityChecks());
+
+    // Plugin audits once daily at 4 AM
+    cron.schedule('0 4 * * *', () => this.schedulePluginChecks());
+
+    // Full site scans once daily at 5 AM
+    cron.schedule('0 5 * * *', () => this.scheduleSiteScanChecks());
 
     logger.info('Scheduler started');
   }
@@ -75,6 +81,37 @@ class SchedulerService {
       logger.info(`Scheduled security checks for ${sites.length} sites`);
     } catch (error) {
       logger.error(`Scheduler security error: ${error.message}`);
+    }
+  }
+
+  async schedulePluginChecks() {
+    try {
+      const sites = await Site.find({ paused: false }).lean();
+      for (const site of sites) {
+        await pluginQueue.add(
+          'plugin-check',
+          { siteId: site._id.toString(), url: site.url },
+          { removeOnComplete: 50, removeOnFail: 20 }
+        );
+      }
+      logger.info(`Scheduled plugin checks for ${sites.length} sites`);
+    } catch (error) {
+      logger.error(`Scheduler plugin error: ${error.message}`);
+    }
+  }
+  async scheduleSiteScanChecks() {
+    try {
+      const sites = await Site.find({ paused: false }).lean();
+      for (const site of sites) {
+        await siteScanQueue.add(
+          'sitescan-check',
+          { siteId: site._id.toString(), url: site.url },
+          { removeOnComplete: 50, removeOnFail: 20 }
+        );
+      }
+      logger.info(`Scheduled site scans for ${sites.length} sites`);
+    } catch (error) {
+      logger.error(`Scheduler site scan error: ${error.message}`);
     }
   }
 }

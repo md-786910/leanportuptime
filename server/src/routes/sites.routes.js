@@ -18,6 +18,9 @@ const createSiteSchema = Joi.object({
     discordUrl: Joi.string().uri().allow('').optional(),
     webhookUrl: Joi.string().uri().allow('').optional(),
   }).optional(),
+  plugins: Joi.object({
+    flaggedPlugins: Joi.array().items(Joi.string()).optional(),
+  }).optional(),
 });
 
 const updateSiteSchema = Joi.object({
@@ -33,6 +36,9 @@ const updateSiteSchema = Joi.object({
     slackUrl: Joi.string().uri().allow('').optional(),
     discordUrl: Joi.string().uri().allow('').optional(),
     webhookUrl: Joi.string().uri().allow('').optional(),
+  }).optional(),
+  plugins: Joi.object({
+    flaggedPlugins: Joi.array().items(Joi.string()).optional(),
   }).optional(),
 }).min(1);
 

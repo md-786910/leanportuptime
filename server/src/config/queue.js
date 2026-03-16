@@ -9,12 +9,16 @@ const connection = {
 const uptimeQueue = new Queue('uptime-checks', { connection });
 const sslQueue = new Queue('ssl-checks', { connection });
 const securityQueue = new Queue('security-checks', { connection });
+const pluginQueue = new Queue('plugin-checks', { connection });
+const siteScanQueue = new Queue('sitescan-checks', { connection });
 const notificationQueue = new Queue('notifications', { connection });
 
 module.exports = {
   uptimeQueue,
   sslQueue,
   securityQueue,
+  pluginQueue,
+  siteScanQueue,
   notificationQueue,
   connection,
 };

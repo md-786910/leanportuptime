@@ -5,6 +5,8 @@ const connectDB = require('../config/database');
 const createUptimeWorker = require('./uptime.worker');
 const createSSLWorker = require('./ssl.worker');
 const createSecurityWorker = require('./security.worker');
+const createPluginWorker = require('./plugin.worker');
+const createSiteScanWorker = require('./sitescan.worker');
 const logger = require('../utils/logger');
 
 // Register all Mongoose models so populate() works
@@ -14,6 +16,8 @@ require('../models/Check');
 require('../models/SSLCert');
 require('../models/SecurityAudit');
 require('../models/Notification');
+require('../models/PluginAudit');
+require('../models/SiteScan');
 
 async function startWorkers() {
   await connectDB();
@@ -21,6 +25,8 @@ async function startWorkers() {
   const uptimeWorker = createUptimeWorker(connection);
   const sslWorker = createSSLWorker(connection);
   const securityWorker = createSecurityWorker(connection);
+  const pluginWorker = createPluginWorker(connection);
+  const siteScanWorker = createSiteScanWorker(connection);
 
   logger.info('All workers started');
 
@@ -30,6 +36,8 @@ async function startWorkers() {
     await uptimeWorker.close();
     await sslWorker.close();
     await securityWorker.close();
+    await pluginWorker.close();
+    await siteScanWorker.close();
     await mongoose.connection.close();
     process.exit(0);
   };

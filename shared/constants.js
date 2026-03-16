@@ -17,6 +17,8 @@ module.exports = {
     SSL_EXPIRY: 'ssl_expiry',
     SECURITY_ALERT: 'security_alert',
     DEGRADED: 'degraded',
+    PLUGIN_ALERT: 'plugin_alert',
+    SITE_SCAN_ALERT: 'site_scan_alert',
   },
   CHANNELS: ['email', 'slack', 'discord', 'webhook'],
   CHECK_INTERVALS: [

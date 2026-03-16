@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['down', 'up', 'ssl_expiry', 'security_alert', 'degraded'],
+      enum: ['down', 'up', 'ssl_expiry', 'security_alert', 'degraded', 'plugin_alert', 'site_scan_alert'],
       required: true,
     },
     channel: {

@@ -18,6 +18,8 @@ export const NOTIFICATION_TYPES = {
   SSL_EXPIRY: 'ssl_expiry',
   SECURITY_ALERT: 'security_alert',
   DEGRADED: 'degraded',
+  PLUGIN_ALERT: 'plugin_alert',
+  SITE_SCAN_ALERT: 'site_scan_alert',
 };
 
 export const CHANNELS = ['email', 'slack', 'discord', 'webhook'];

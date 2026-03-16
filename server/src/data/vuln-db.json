@@ -1,0 +1,91 @@
+{
+  "elementor": [
+    { "below": "3.19.1", "severity": "critical", "title": "Authenticated Remote Code Execution (CVE-2024-2117)", "solution": "Update Elementor to 3.19.1 or later immediately" },
+    { "below": "3.18.2", "severity": "high", "title": "Stored XSS via Widget (CVE-2024-0506)", "solution": "Update Elementor to 3.18.2 or later" }
+  ],
+  "contact-form-7": [
+    { "below": "5.8.4", "severity": "critical", "title": "Unrestricted File Upload (CVE-2023-6449)", "solution": "Update Contact Form 7 to 5.8.4 or later immediately" },
+    { "below": "5.3.2", "severity": "high", "title": "Arbitrary File Upload (CVE-2020-35489)", "solution": "Update Contact Form 7 to 5.3.2 or later" }
+  ],
+  "woocommerce": [
+    { "below": "8.6.0", "severity": "high", "title": "SQL Injection in product search (CVE-2024-1298)", "solution": "Update WooCommerce to 8.6.0 or later" },
+    { "below": "6.6.1", "severity": "critical", "title": "Authentication Bypass (CVE-2023-28121)", "solution": "Update WooCommerce to 6.6.1 or later immediately" }
+  ],
+  "wordpress-seo": [
+    { "below": "22.3", "severity": "high", "title": "Stored XSS via breadcrumb title (CVE-2024-4041)", "solution": "Update Yoast SEO to 22.3 or later" },
+    { "below": "20.3", "severity": "medium", "title": "Reflected XSS (CVE-2023-40680)", "solution": "Update Yoast SEO to 20.3 or later" }
+  ],
+  "jetpack": [
+    { "below": "13.3.1", "severity": "critical", "title": "Critical authentication bypass (CVE-2024-5765)", "solution": "Update Jetpack to 13.3.1 or later immediately" },
+    { "below": "12.1.1", "severity": "high", "title": "Stored XSS via contact form (CVE-2023-2996)", "solution": "Update Jetpack to 12.1.1 or later" }
+  ],
+  "wordfence": [
+    { "below": "7.11.0", "severity": "high", "title": "Authentication Bypass (CVE-2024-2294)", "solution": "Update Wordfence to 7.11.0 or later" }
+  ],
+  "wpforms-lite": [
+    { "below": "1.8.5.4", "severity": "high", "title": "Stored XSS in form fields (CVE-2024-0585)", "solution": "Update WPForms Lite to 1.8.5.4 or later" }
+  ],
+  "all-in-one-seo-pack": [
+    { "below": "4.6.0", "severity": "critical", "title": "SQL Injection (CVE-2024-1071)", "solution": "Update All in One SEO to 4.6.0 or later immediately" },
+    { "below": "4.2.9", "severity": "high", "title": "Privilege Escalation (CVE-2023-0586)", "solution": "Update All in One SEO to 4.2.9 or later" }
+  ],
+  "really-simple-ssl": [
+    { "below": "7.2.0", "severity": "critical", "title": "Authentication Bypass (CVE-2023-49583)", "solution": "Update Really Simple SSL to 7.2.0 or later immediately" }
+  ],
+  "updraftplus": [
+    { "below": "1.24.4", "severity": "high", "title": "Sensitive Data Exposure (CVE-2024-2171)", "solution": "Update UpdraftPlus to 1.24.4 or later" },
+    { "below": "1.22.3", "severity": "critical", "title": "Arbitrary Backup Download (CVE-2022-0633)", "solution": "Update UpdraftPlus to 1.22.3 or later immediately" }
+  ],
+  "litespeed-cache": [
+    { "below": "6.1", "severity": "critical", "title": "Unauthenticated Privilege Escalation (CVE-2024-28000)", "solution": "Update LiteSpeed Cache to 6.1 or later immediately" },
+    { "below": "5.7.0.1", "severity": "high", "title": "Stored XSS (CVE-2024-0448)", "solution": "Update LiteSpeed Cache to 5.7.0.1 or later" }
+  ],
+  "wp-super-cache": [
+    { "below": "1.9.5", "severity": "high", "title": "Stored XSS (CVE-2023-2689)", "solution": "Update WP Super Cache to 1.9.5 or later" }
+  ],
+  "w3-total-cache": [
+    { "below": "2.3.2", "severity": "high", "title": "Stored XSS (CVE-2023-5359)", "solution": "Update W3 Total Cache to 2.3.2 or later" }
+  ],
+  "duplicate-post": [
+    { "below": "4.5.1", "severity": "medium", "title": "Insecure Permissions (CVE-2023-3763)", "solution": "Update Yoast Duplicate Post to 4.5.1 or later" }
+  ],
+  "wp-mail-smtp": [
+    { "below": "3.11.0", "severity": "high", "title": "Sensitive Data Exposure (CVE-2024-3689)", "solution": "Update WP Mail SMTP to 3.11.0 or later" }
+  ],
+  "advanced-custom-fields": [
+    { "below": "6.2.5", "severity": "high", "title": "Reflected XSS (CVE-2023-5692)", "solution": "Update ACF to 6.2.5 or later" }
+  ],
+  "sucuri-scanner": [
+    { "below": "1.8.40", "severity": "medium", "title": "Stored XSS via admin panel (CVE-2023-2995)", "solution": "Update Sucuri Scanner to 1.8.40 or later" }
+  ],
+  "better-wp-security": [
+    { "below": "9.0.0", "severity": "high", "title": "Authentication Bypass (CVE-2024-1587)", "solution": "Update iThemes Security to 9.0.0 or later" }
+  ],
+  "limit-login-attempts-reloaded": [
+    { "below": "2.25.22", "severity": "medium", "title": "IP bypass via headers (CVE-2023-4631)", "solution": "Update Limit Login Attempts Reloaded to 2.25.22 or later" }
+  ],
+  "mailchimp-for-wp": [
+    { "below": "4.9.7", "severity": "medium", "title": "Reflected XSS (CVE-2023-6934)", "solution": "Update MC4WP to 4.9.7 or later" }
+  ],
+  "ninja-forms": [
+    { "below": "3.6.26", "severity": "critical", "title": "Multiple Reflected XSS (CVE-2023-37979)", "solution": "Update Ninja Forms to 3.6.26 or later immediately" }
+  ],
+  "formidable": [
+    { "below": "6.5.1", "severity": "high", "title": "Stored XSS (CVE-2024-0587)", "solution": "Update Formidable Forms to 6.5.1 or later" }
+  ],
+  "buddypress": [
+    { "below": "12.1.1", "severity": "high", "title": "Stored XSS via profile fields (CVE-2024-2836)", "solution": "Update BuddyPress to 12.1.1 or later" }
+  ],
+  "bbpress": [
+    { "below": "2.6.10", "severity": "medium", "title": "Stored XSS in forum titles (CVE-2023-4646)", "solution": "Update bbPress to 2.6.10 or later" }
+  ],
+  "user-role-editor": [
+    { "below": "4.64", "severity": "critical", "title": "Privilege Escalation (CVE-2023-3489)", "solution": "Update User Role Editor to 4.64 or later immediately" }
+  ],
+  "google-site-kit": [
+    { "below": "1.120.0", "severity": "medium", "title": "Information Disclosure (CVE-2024-2088)", "solution": "Update Site Kit by Google to 1.120.0 or later" }
+  ],
+  "tablepress": [
+    { "below": "2.2.1", "severity": "medium", "title": "Stored XSS via table content (CVE-2024-0588)", "solution": "Update TablePress to 2.2.1 or later" }
+  ]
+}

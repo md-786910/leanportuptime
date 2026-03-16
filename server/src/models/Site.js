@@ -63,6 +63,19 @@ const siteSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    plugins: {
+      lastScannedAt: Date,
+      totalPlugins: { type: Number, default: 0 },
+      issueCount: { type: Number, default: 0 },
+      flaggedPlugins: { type: [String], default: [] },
+    },
+    siteScan: {
+      lastScannedAt: Date,
+      score: { type: Number, default: 0 },
+      performanceScore: { type: Number, default: 0 },
+      bugsScore: { type: Number, default: 0 },
+      malwareScore: { type: Number, default: 0 },
+    },
     notifications: {
       email: { type: Boolean, default: true },
       slack: { type: Boolean, default: false },

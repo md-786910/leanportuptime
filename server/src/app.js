@@ -15,6 +15,8 @@ const checksRoutes = require("./routes/checks.routes");
 const sslRoutes = require("./routes/ssl.routes");
 const securityRoutes = require("./routes/security.routes");
 const reportsRoutes = require("./routes/reports.routes");
+const pluginRoutes = require("./routes/plugin.routes");
+const siteScanRoutes = require("./routes/sitescan.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
 
 const app = express();
@@ -46,6 +48,8 @@ app.use("/api/sites", sitesRoutes);
 app.use("/api/sites/:id/checks", checksRoutes);
 app.use("/api/sites/:id/ssl", sslRoutes);
 app.use("/api/sites/:id/security", securityRoutes);
+app.use("/api/sites/:id/plugins", pluginRoutes);
+app.use("/api/sites/:id/sitescan", siteScanRoutes);
 app.use("/api/sites/:id/reports", reportsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 
