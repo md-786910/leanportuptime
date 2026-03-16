@@ -9,9 +9,9 @@ services:
       ME_CONFIG_MONGODB_SERVER: mongo
       ME_CONFIG_MONGODB_PORT: "27017"
       ME_CONFIG_MONGODB_ADMINUSERNAME: wpsentinel
-      ME_CONFIG_MONGODB_ADMINPASSWORD: "Kx9$$mQ7vLp2wNrT4!bZj"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: Kx9mQ7vLp2wNrT4bZj8X
       ME_CONFIG_BASICAUTH_USERNAME: sentinel_admin
-      ME_CONFIG_BASICAUTH_PASSWORD: "Gu!4dPnL8$vXr3KmW7qJ"
+      ME_CONFIG_BASICAUTH_PASSWORD: Gu4dPnL8vXr3KmW7qJ9Z
     depends_on:
       mongo:
         condition: service_healthy
