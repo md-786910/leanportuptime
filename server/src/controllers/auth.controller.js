@@ -1,22 +1,22 @@
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const User = require('../models/User');
-const config = require('../config');
-const logger = require('../utils/logger');
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const User = require("../models/User");
+const config = require("../config");
+const logger = require("../utils/logger");
 
 const generateAccessToken = (userId) => {
-  return jwt.sign({ userId }, config.jwt.secret, { expiresIn: config.jwt.accessExpiry });
+  return jwt.sign({ userId }, config.jwt.secret, {
+    expiresIn: config.jwt.accessExpiry,
+  });
 };
 
 const generateRefreshToken = (userId) => {
-  return jwt.sign({ userId }, config.jwt.refreshSecret, { expiresIn: config.jwt.refreshExpiry });
+  return jwt.sign({ userId }, config.jwt.refreshSecret, {
+    expiresIn: config.jwt.refreshExpiry,
+  });
 };
 
 exports.register = async (req, res, next) => {
-  return res.status(403).json({
-    success: false,
-    error: { code: 'FORBIDDEN', message: 'Registration is disabled. Contact admin.' },
-  });
   try {
     const { email, password, name } = req.body;
 
@@ -24,7 +24,7 @@ exports.register = async (req, res, next) => {
     if (existing) {
       return res.status(409).json({
         success: false,
-        error: { code: 'DUPLICATE_ERROR', message: 'Email already registered' },
+        error: { code: "DUPLICATE_ERROR", message: "Email already registered" },
       });
     }
 
@@ -36,10 +36,10 @@ exports.register = async (req, res, next) => {
     user.refreshTokens.push(refreshToken);
     await user.save();
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: config.env === 'production',
-      sameSite: 'strict',
+      secure: config.env === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -56,18 +56,23 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select('+password +refreshTokens +failedLoginAttempts +lockUntil');
+    const user = await User.findOne({ email }).select(
+      "+password +refreshTokens +failedLoginAttempts +lockUntil",
+    );
     if (!user) {
       return res.status(401).json({
         success: false,
-        error: { code: 'AUTH_FAILED', message: 'Invalid email or password' },
+        error: { code: "AUTH_FAILED", message: "Invalid email or password" },
       });
     }
 
     if (user.isLocked()) {
       return res.status(423).json({
         success: false,
-        error: { code: 'ACCOUNT_LOCKED', message: 'Account is temporarily locked. Try again later.' },
+        error: {
+          code: "ACCOUNT_LOCKED",
+          message: "Account is temporarily locked. Try again later.",
+        },
       });
     }
 
@@ -81,7 +86,7 @@ exports.login = async (req, res, next) => {
 
       return res.status(401).json({
         success: false,
-        error: { code: 'AUTH_FAILED', message: 'Invalid email or password' },
+        error: { code: "AUTH_FAILED", message: "Invalid email or password" },
       });
     }
 
@@ -96,10 +101,10 @@ exports.login = async (req, res, next) => {
     user.refreshTokens = [...user.refreshTokens.slice(-4), refreshToken];
     await user.save();
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: config.env === 'production',
-      sameSite: 'strict',
+      secure: config.env === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -118,17 +123,17 @@ exports.refresh = async (req, res, next) => {
     if (!refreshToken) {
       return res.status(401).json({
         success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Refresh token required' },
+        error: { code: "UNAUTHORIZED", message: "Refresh token required" },
       });
     }
 
     const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret);
-    const user = await User.findById(decoded.userId).select('+refreshTokens');
+    const user = await User.findById(decoded.userId).select("+refreshTokens");
 
     if (!user || !user.refreshTokens.includes(refreshToken)) {
       return res.status(401).json({
         success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid refresh token' },
+        error: { code: "UNAUTHORIZED", message: "Invalid refresh token" },
       });
     }
 
@@ -139,10 +144,10 @@ exports.refresh = async (req, res, next) => {
     user.refreshTokens.push(newRefreshToken);
     await user.save();
 
-    res.cookie('refreshToken', newRefreshToken, {
+    res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: config.env === 'production',
-      sameSite: 'strict',
+      secure: config.env === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -159,15 +164,17 @@ exports.logout = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
     if (refreshToken) {
-      const user = await User.findById(req.user._id).select('+refreshTokens');
+      const user = await User.findById(req.user._id).select("+refreshTokens");
       if (user) {
-        user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken);
+        user.refreshTokens = user.refreshTokens.filter(
+          (t) => t !== refreshToken,
+        );
         await user.save();
       }
     }
 
-    res.clearCookie('refreshToken');
-    res.json({ success: true, data: { message: 'Logged out' } });
+    res.clearCookie("refreshToken");
+    res.json({ success: true, data: { message: "Logged out" } });
   } catch (error) {
     next(error);
   }
@@ -180,18 +187,27 @@ exports.forgotPassword = async (req, res, next) => {
 
     // Always return success to prevent email enumeration
     if (!user) {
-      return res.json({ success: true, data: { message: 'If that email exists, a reset link was sent' } });
+      return res.json({
+        success: true,
+        data: { message: "If that email exists, a reset link was sent" },
+      });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.passwordResetToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
     // TODO: Send email with reset link
     logger.info(`Password reset token generated for ${email}`);
 
-    res.json({ success: true, data: { message: 'If that email exists, a reset link was sent' } });
+    res.json({
+      success: true,
+      data: { message: "If that email exists, a reset link was sent" },
+    });
   } catch (error) {
     next(error);
   }
@@ -208,7 +224,7 @@ exports.getMe = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   try {
     const { token, password } = req.body;
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     const user = await User.findOne({
       passwordResetToken: hashedToken,
@@ -218,7 +234,10 @@ exports.resetPassword = async (req, res, next) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        error: { code: 'INVALID_TOKEN', message: 'Invalid or expired reset token' },
+        error: {
+          code: "INVALID_TOKEN",
+          message: "Invalid or expired reset token",
+        },
       });
     }
 
@@ -228,7 +247,7 @@ exports.resetPassword = async (req, res, next) => {
     user.refreshTokens = [];
     await user.save();
 
-    res.json({ success: true, data: { message: 'Password reset successful' } });
+    res.json({ success: true, data: { message: "Password reset successful" } });
   } catch (error) {
     next(error);
   }
