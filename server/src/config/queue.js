@@ -1,9 +1,11 @@
 const { Queue } = require('bullmq');
 const config = require('./index');
 
+const parsedRedis = new URL(config.redisUrl);
 const connection = {
-  host: new URL(config.redisUrl).hostname || 'localhost',
-  port: parseInt(new URL(config.redisUrl).port, 10) || 6379,
+  host: parsedRedis.hostname || 'localhost',
+  port: parseInt(parsedRedis.port, 10) || 6379,
+  ...(parsedRedis.password && { password: decodeURIComponent(parsedRedis.password) }),
 };
 
 const uptimeQueue = new Queue('uptime-checks', { connection });

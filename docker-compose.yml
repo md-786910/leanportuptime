@@ -45,10 +45,13 @@ services:
     restart: unless-stopped
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: wpsentinel
+      MONGO_INITDB_ROOT_PASSWORD: Kx9$mQ7vLp2wNrT4!bZj
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh -u wpsentinel -p 'Kx9$$mQ7vLp2wNrT4!bZj' --authenticationDatabase admin --quiet
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,10 +64,11 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+    command: redis-server --requirepass R3d!sP@ss8xYq2Wm
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "R3d!sP@ss8xYq2Wm", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
