@@ -18,18 +18,25 @@ async function callProbe(probe, url, secret) {
 }
 
 async function runProbeChecks(siteId, url) {
-  if (!config.probes.length) return;
-  await Promise.allSettled(
+  if (!config.probes.length) return [];
+  const settled = await Promise.allSettled(
     config.probes.map(async (probe) => {
-      try {
-        const result = await callProbe(probe, url, config.probeSecret);
-        await Check.create({ siteId, timestamp: new Date(), ...result });
-        logger.debug(`Probe [${probe.name}]: ${url} -> ${result.status}`);
-      } catch (err) {
-        logger.warn(`Probe failed [${probe.name}]: ${err.message}`);
-      }
+      const result = await callProbe(probe, url, config.probeSecret);
+      await Check.create({ siteId, timestamp: new Date(), ...result });
+      logger.debug(`Probe [${probe.name}]: ${url} -> ${result.status}`);
+      return result;
     })
   );
+  return settled
+    .filter((s) => s.status === 'fulfilled')
+    .map((s) => s.value);
+}
+
+function aggregateStatus(localResult, probeResults) {
+  const allStatuses = [localResult.status, ...probeResults.map((r) => r.status)];
+  if (allStatuses.includes('up')) return 'up';
+  if (allStatuses.includes('degraded')) return 'degraded';
+  return 'down';
 }
 
 function createUptimeWorker(connection) {
@@ -45,19 +52,25 @@ function createUptimeWorker(connection) {
 
       const result = await monitorService.performCheck(url, site.expectedKeywords || []);
 
-      // Save check result
+      // Save local check result
       await Check.create({
         siteId,
         timestamp: new Date(),
         ...result,
       });
 
-      // Update site status
+      // Run probe checks and collect results
+      const probeResults = await runProbeChecks(siteId, url);
+
+      // Determine aggregated status across all locations
+      const aggregatedStatus = aggregateStatus(result, probeResults);
+
+      // Update site status using aggregated result
       const previousStatus = site.currentStatus;
-      site.currentStatus = result.status;
+      site.currentStatus = aggregatedStatus;
       site.lastCheckedAt = new Date();
 
-      if (result.status === 'down') {
+      if (aggregatedStatus === 'down') {
         site.consecutiveFailures += 1;
       } else {
         site.consecutiveFailures = 0;
@@ -65,17 +78,14 @@ function createUptimeWorker(connection) {
 
       await site.save();
 
-      // Fire probe checks in parallel (supplementary, non-blocking)
-      await runProbeChecks(siteId, url);
-
       // Notify on status change
-      if (previousStatus !== 'pending' && previousStatus !== result.status) {
+      if (previousStatus !== 'pending' && previousStatus !== aggregatedStatus) {
         const message =
-          result.status === 'down'
-            ? `Site ${site.name} is DOWN. Error: ${result.error || `HTTP ${result.httpStatus}`}`
+          aggregatedStatus === 'down'
+            ? `Site ${site.name} is DOWN from all locations. Error: ${result.error || `HTTP ${result.httpStatus}`}`
             : `Site ${site.name} is back UP. Response time: ${result.responseTime}ms`;
 
-        await notificationService.notify(site.userId._id, site, result.status, message);
+        await notificationService.notify(site.userId._id, site, aggregatedStatus, message);
       }
 
       // Notify on keyword mismatch
@@ -88,7 +98,7 @@ function createUptimeWorker(connection) {
         );
       }
 
-      logger.debug(`Uptime check completed: ${url} -> ${result.status}`);
+      logger.debug(`Uptime check completed: ${url} -> ${aggregatedStatus}`);
       return result;
     },
     {
