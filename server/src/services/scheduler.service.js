@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const Site = require('../models/Site');
-const { uptimeQueue, sslQueue, securityQueue, pluginQueue, siteScanQueue } = require('../config/queue');
+const { uptimeQueue, sslQueue, securityQueue, pluginQueue, siteScanQueue, seoQueue } = require('../config/queue');
 const logger = require('../utils/logger');
 
 class SchedulerService {
@@ -19,6 +19,9 @@ class SchedulerService {
 
     // Full site scans once daily at 5 AM
     cron.schedule('0 5 * * *', () => this.scheduleSiteScanChecks());
+
+    // SEO audits every 12 hours
+    cron.schedule('0 */12 * * *', () => this.scheduleSeoChecks());
 
     logger.info('Scheduler started');
   }
@@ -112,6 +115,21 @@ class SchedulerService {
       logger.info(`Scheduled site scans for ${sites.length} sites`);
     } catch (error) {
       logger.error(`Scheduler site scan error: ${error.message}`);
+    }
+  }
+  async scheduleSeoChecks() {
+    try {
+      const sites = await Site.find({ paused: false }).lean();
+      for (const site of sites) {
+        await seoQueue.add(
+          'seo-check',
+          { siteId: site._id.toString(), url: site.url },
+          { removeOnComplete: 50, removeOnFail: 20 }
+        );
+      }
+      logger.info(`Scheduled SEO checks for ${sites.length} sites`);
+    } catch (error) {
+      logger.error(`Scheduler SEO error: ${error.message}`);
     }
   }
 }

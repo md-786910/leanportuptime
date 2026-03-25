@@ -17,6 +17,7 @@ const securityRoutes = require("./routes/security.routes");
 const reportsRoutes = require("./routes/reports.routes");
 const pluginRoutes = require("./routes/plugin.routes");
 const siteScanRoutes = require("./routes/sitescan.routes");
+const seoRoutes = require("./routes/seo.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
 
 const app = express();
@@ -25,7 +26,7 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: config.clientUrl,
+    origin: true,
     credentials: true,
   }),
 );
@@ -50,6 +51,7 @@ app.use("/api/sites/:id/ssl", sslRoutes);
 app.use("/api/sites/:id/security", securityRoutes);
 app.use("/api/sites/:id/plugins", pluginRoutes);
 app.use("/api/sites/:id/sitescan", siteScanRoutes);
+app.use("/api/sites/:id/seo", seoRoutes);
 app.use("/api/sites/:id/reports", reportsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 

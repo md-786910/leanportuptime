@@ -76,6 +76,14 @@ const siteSchema = new mongoose.Schema(
       bugsScore: { type: Number, default: 0 },
       malwareScore: { type: Number, default: 0 },
     },
+    seo: {
+      lastScannedAt: Date,
+      score: { type: Number, default: 0 },
+      metaTagsScore: { type: Number, default: 0 },
+      contentScore: { type: Number, default: 0 },
+      linksScore: { type: Number, default: 0 },
+      performanceScore: { type: Number, default: 0 },
+    },
     notifications: {
       email: { type: Boolean, default: true },
       slack: { type: Boolean, default: false },

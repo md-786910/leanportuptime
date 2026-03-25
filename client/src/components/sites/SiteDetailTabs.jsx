@@ -2,6 +2,7 @@ const tabs = [
   { key: 'overview', label: 'Overview' },
   { key: 'performance', label: 'Performance' },
   { key: 'ssl', label: 'SSL' },
+  { key: 'seo', label: 'SEO' },
   { key: 'security', label: 'Security' },
   { key: 'plugins', label: 'Plugins' },
   { key: 'sitescan', label: 'Site Scan' },

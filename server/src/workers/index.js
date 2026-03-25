@@ -7,6 +7,7 @@ const createSSLWorker = require('./ssl.worker');
 const createSecurityWorker = require('./security.worker');
 const createPluginWorker = require('./plugin.worker');
 const createSiteScanWorker = require('./sitescan.worker');
+const createSeoWorker = require('./seo.worker');
 const logger = require('../utils/logger');
 
 // Register all Mongoose models so populate() works
@@ -18,6 +19,7 @@ require('../models/SecurityAudit');
 require('../models/Notification');
 require('../models/PluginAudit');
 require('../models/SiteScan');
+require('../models/SeoAudit');
 
 async function startWorkers() {
   await connectDB();
@@ -27,6 +29,7 @@ async function startWorkers() {
   const securityWorker = createSecurityWorker(connection);
   const pluginWorker = createPluginWorker(connection);
   const siteScanWorker = createSiteScanWorker(connection);
+  const seoWorker = createSeoWorker(connection);
 
   logger.info('All workers started');
 
@@ -38,6 +41,7 @@ async function startWorkers() {
     await securityWorker.close();
     await pluginWorker.close();
     await siteScanWorker.close();
+    await seoWorker.close();
     await mongoose.connection.close();
     process.exit(0);
   };

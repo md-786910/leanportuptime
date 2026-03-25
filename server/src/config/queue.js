@@ -13,6 +13,7 @@ const sslQueue = new Queue('ssl-checks', { connection });
 const securityQueue = new Queue('security-checks', { connection });
 const pluginQueue = new Queue('plugin-checks', { connection });
 const siteScanQueue = new Queue('sitescan-checks', { connection });
+const seoQueue = new Queue('seo-checks', { connection });
 const notificationQueue = new Queue('notifications', { connection });
 
 module.exports = {
@@ -21,6 +22,7 @@ module.exports = {
   securityQueue,
   pluginQueue,
   siteScanQueue,
+  seoQueue,
   notificationQueue,
   connection,
 };
