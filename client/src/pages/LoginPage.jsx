@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import { useAuth } from '../hooks/useAuth';
@@ -8,11 +8,13 @@ import { useAuthStore } from '../store/authStore';
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to={from} replace />;
 
   const validate = () => {
     const errs = {};

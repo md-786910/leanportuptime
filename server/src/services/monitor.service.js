@@ -24,7 +24,7 @@ class MonitorService {
           method: 'GET',
           timeout: 30000,
           headers: {
-            'User-Agent': 'WP-Sentinel/1.0 (WordPress Monitor)',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
           },
         },
         (res) => {

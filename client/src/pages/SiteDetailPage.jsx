@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSite } from '../hooks/useSites';
 import { useSiteMutations } from '../hooks/useSiteMutations';
 import { useCheckSummary, useCheckHistory } from '../hooks/useChecks';
@@ -26,7 +26,9 @@ export default function SiteDetailPage() {
   const { site, isLoading } = useSite(id);
   const { triggerCheck, togglePause, deleteSite } = useSiteMutations();
 
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
+  const setActiveTab = (tab) => setSearchParams({ tab }, { replace: true });
   const [period, setPeriod] = useState('24h');
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);

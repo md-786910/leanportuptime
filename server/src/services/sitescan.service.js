@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 const logger = require('../utils/logger');
+const proxy = require('../utils/proxyFetch');
 
 // Known malicious script domains
 const MALICIOUS_DOMAINS = [
@@ -880,91 +881,19 @@ class SiteScanService {
   // ========== HTTP HELPERS ==========
 
   _httpGetTimed(url) {
-    return new Promise((resolve, reject) => {
-      const start = Date.now();
-      const parsedUrl = new URL(url);
-      const client = parsedUrl.protocol === 'https:' ? https : http;
-      const req = client.request(
-        {
-          hostname: parsedUrl.hostname,
-          port: parsedUrl.port,
-          path: parsedUrl.pathname + parsedUrl.search,
-          method: 'GET',
-          timeout: 15000,
-          headers: { 'User-Agent': 'WP-Sentinel/1.0' },
-        },
-        (res) => {
-          let body = '';
-          let size = 0;
-          const maxSize = 5 * 1024 * 1024; // 5MB cap
-          res.on('data', (chunk) => {
-            size += chunk.length;
-            if (size <= maxSize) body += chunk;
-          });
-          res.on('end', () =>
-            resolve({
-              statusCode: res.statusCode,
-              headers: res.headers,
-              body,
-              responseTime: Date.now() - start,
-            })
-          );
-        }
-      );
-      req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
-      req.on('error', reject);
-      req.end();
-    });
+    return proxy.httpGetTimed(url, { timeout: 15000 });
   }
 
-  _httpHead(url) {
-    return this._httpRequest(url, 'HEAD');
+  _httpHead(url, opts) {
+    return proxy.httpHead(url, opts);
   }
 
-  _httpGet(url) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = new URL(url);
-      const client = parsedUrl.protocol === 'https:' ? https : http;
-      const req = client.request(
-        {
-          hostname: parsedUrl.hostname,
-          port: parsedUrl.port,
-          path: parsedUrl.pathname + parsedUrl.search,
-          method: 'GET',
-          timeout: 10000,
-          headers: { 'User-Agent': 'WP-Sentinel/1.0' },
-        },
-        (res) => {
-          let body = '';
-          res.on('data', (chunk) => { body += chunk; });
-          res.on('end', () => resolve({ statusCode: res.statusCode, headers: res.headers, body }));
-        }
-      );
-      req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
-      req.on('error', reject);
-      req.end();
-    });
+  _httpGet(url, opts) {
+    return proxy.httpGet(url, opts);
   }
 
-  _httpRequest(url, method) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = new URL(url);
-      const client = parsedUrl.protocol === 'https:' ? https : http;
-      const req = client.request(
-        {
-          hostname: parsedUrl.hostname,
-          port: parsedUrl.port,
-          path: parsedUrl.pathname + parsedUrl.search,
-          method,
-          timeout: 5000,
-          headers: { 'User-Agent': 'WP-Sentinel/1.0' },
-        },
-        (res) => { res.resume(); resolve({ statusCode: res.statusCode, headers: res.headers }); }
-      );
-      req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
-      req.on('error', reject);
-      req.end();
-    });
+  _httpRequest(url, method, opts) {
+    return proxy.httpRequest(url, method, opts);
   }
 }
 

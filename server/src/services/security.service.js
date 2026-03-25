@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 const logger = require('../utils/logger');
+const proxy = require('../utils/proxyFetch');
 
 class SecurityService {
   async runAudit(siteUrl) {
@@ -42,7 +43,7 @@ class SecurityService {
     const httpUrl = `http://${url.hostname}${url.pathname}`;
 
     try {
-      const response = await this._httpHead(httpUrl);
+      const response = await this._httpHead(httpUrl, { followRedirects: false });
       const location = response.headers?.location || '';
       const pass = location.startsWith('https://');
       return {
@@ -231,7 +232,7 @@ class SecurityService {
 
   async _checkBlacklist(siteUrl) {
     try {
-      const response = await this._httpGet(siteUrl);
+      const response = await this._httpGet(siteUrl, { followRedirects: false });
       const body = response.body.toLowerCase();
 
       const indicators = [
@@ -311,40 +312,16 @@ class SecurityService {
     return 0;
   }
 
-  _httpHead(url) {
-    return this._httpRequest(url, 'HEAD');
+  _httpHead(url, opts) {
+    return proxy.httpHead(url, opts);
   }
 
-  _httpGet(url) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = new URL(url);
-      const client = parsedUrl.protocol === 'https:' ? https : http;
-      const req = client.request(
-        { hostname: parsedUrl.hostname, port: parsedUrl.port, path: parsedUrl.pathname + parsedUrl.search, method: 'GET', timeout: 10000, headers: { 'User-Agent': 'WP-Sentinel/1.0' } },
-        (res) => {
-          let body = '';
-          res.on('data', (chunk) => { body += chunk; });
-          res.on('end', () => resolve({ statusCode: res.statusCode, headers: res.headers, body }));
-        }
-      );
-      req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
-      req.on('error', reject);
-      req.end();
-    });
+  _httpGet(url, opts) {
+    return proxy.httpGet(url, opts);
   }
 
-  _httpRequest(url, method) {
-    return new Promise((resolve, reject) => {
-      const parsedUrl = new URL(url);
-      const client = parsedUrl.protocol === 'https:' ? https : http;
-      const req = client.request(
-        { hostname: parsedUrl.hostname, port: parsedUrl.port, path: parsedUrl.pathname, method, timeout: 10000, headers: { 'User-Agent': 'WP-Sentinel/1.0' } },
-        (res) => { res.resume(); resolve({ statusCode: res.statusCode, headers: res.headers }); }
-      );
-      req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
-      req.on('error', reject);
-      req.end();
-    });
+  _httpRequest(url, method, opts) {
+    return proxy.httpRequest(url, method, opts);
   }
 }
 

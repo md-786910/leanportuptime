@@ -3,6 +3,9 @@ import { devtools } from "zustand/middleware";
 import axios from "axios";
 import { API_ENDPOINT } from "../api/api";
 const REACT_APP_API_URL = API_ENDPOINT;
+
+let _hydrating = false;
+
 export const useAuthStore = create(
   devtools(
     (set, get) => ({
@@ -25,6 +28,8 @@ export const useAuthStore = create(
         }),
 
       hydrate: async () => {
+        if (_hydrating) return;
+        _hydrating = true;
         try {
           const { data } = await axios.post(
             `${REACT_APP_API_URL || ""}/api/auth/refresh`,
