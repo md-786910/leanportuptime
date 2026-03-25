@@ -150,74 +150,129 @@ class ReportService {
     const buffers = [];
     doc.on('data', (chunk) => buffers.push(chunk));
 
-    const C = { primary: '#0F172A', accent: '#2563EB', ok: '#16A34A', warn: '#D97706', bad: '#DC2626', muted: '#64748B', light: '#F1F5F9', white: '#FFFFFF', border: '#CBD5E1' };
+    // ── Design tokens ──
+    const C = {
+      primary: '#0F172A', accent: '#2563EB', accentDark: '#1E40AF',
+      ok: '#16A34A', warn: '#D97706', bad: '#DC2626',
+      muted: '#64748B', light: '#F1F5F9', white: '#FFFFFF',
+      border: '#CBD5E1', rowAlt: '#F8FAFC', headerBg: '#E2E8F0',
+      okBg: '#F0FDF4', warnBg: '#FFFBEB', badBg: '#FEF2F2',
+    };
     const M = 50;
     const PW = 595.28;
     const CW = PW - M * 2;
-    const MAX_Y = 775;
+    const CONTENT_TOP = 55;
+    const MAX_Y = 768;
 
     const generatedAt = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const scanDate = audit.scannedAt ? new Date(audit.scannedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A';
+    const scanDate = audit.scannedAt
+      ? new Date(audit.scannedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : 'N/A';
 
+    // ── Color helpers ──
     const sc = (s) => (s >= 80 ? C.ok : s >= 50 ? C.warn : C.bad);
+    const scBg = (s) => (s >= 80 ? C.okBg : s >= 50 ? C.warnBg : C.badBg);
     const stC = (s) => (s === 'pass' ? C.ok : s === 'fail' ? C.bad : C.warn);
     const stI = (s) => (s === 'pass' ? 'PASS' : s === 'fail' ? 'FAIL' : 'WARN');
-    const sev = (s) => (s || 'low').toUpperCase();
-    const cut = (s, n = 120) => { if (!s) return ''; return s.length > n ? s.slice(0, n) + '...' : s; };
+    const sevColors = { critical: '#DC2626', high: '#EA580C', medium: '#D97706', low: '#64748B' };
 
-    // All text uses lineBreak:false for positioned calls to prevent auto-paging
+    // ── Text helper: always lineBreak:false to prevent auto-paging ──
     const txt = (str, x, y, opts = {}) => {
-      doc.text(str || '', x, y, { lineBreak: false, ...opts });
+      doc.text(String(str || ''), x, y, { lineBreak: false, ...opts });
     };
 
-    // Flowing text — uses lineBreak but we pre-measure and ensureSpace
-    const flow = (str, x, w) => {
-      const s = cut(str, 180);
-      const h = doc.heightOfString(s, { width: w });
-      if (doc.y + h > MAX_Y) { newPage(); }
-      doc.text(s, x, doc.y, { width: w });
+    // ── Width-aware text truncation ──
+    const fitText = (str, maxW, sz, fnt = 'Helvetica') => {
+      if (!str) return '';
+      doc.font(fnt).fontSize(sz);
+      if (doc.widthOfString(str) <= maxW) return str;
+      let s = str;
+      while (s.length > 0 && doc.widthOfString(s + '...') > maxW) s = s.slice(0, -1);
+      return s + '...';
     };
 
+    // ── Page infrastructure ──
     const hdr = () => {
       doc.save();
-      doc.fontSize(8).font('Helvetica-Bold').fillColor(C.accent);
-      txt('LEANPORT', M, 20);
-      doc.fontSize(7).font('Helvetica').fillColor(C.muted);
-      txt(site.name, M, 20, { width: CW, align: 'right' });
-      doc.moveTo(M, 35).lineTo(PW - M, 35).lineWidth(0.5).strokeColor(C.border).stroke();
+      doc.fontSize(9).font('Helvetica-Bold').fillColor(C.accent);
+      txt('LEANPORT', M, 18);
+      doc.fontSize(8).font('Helvetica').fillColor(C.muted);
+      txt(site.name, M, 19, { width: CW, align: 'right' });
+      doc.moveTo(M, 40).lineTo(PW - M, 40).lineWidth(0.75).strokeColor(C.border).stroke();
       doc.restore();
     };
 
     const ftr = (n) => {
       doc.save();
-      doc.moveTo(M, 800).lineTo(PW - M, 800).lineWidth(0.5).strokeColor(C.border).stroke();
-      doc.fontSize(7).font('Helvetica').fillColor(C.muted);
-      txt(generatedAt, M, 805);
-      txt(`Page ${n}`, M, 805, { width: CW, align: 'center' });
-      txt('Confidential', M, 805, { width: CW, align: 'right' });
+      doc.moveTo(M, 790).lineTo(PW - M, 790).lineWidth(0.5).strokeColor(C.border).stroke();
+      doc.fontSize(7.5).font('Helvetica').fillColor(C.muted);
+      txt(generatedAt, M, 796);
+      txt(`Page ${n}`, M, 796, { width: CW, align: 'center' });
+      txt('Confidential', M, 796, { width: CW, align: 'right' });
       doc.restore();
     };
 
-    const newPage = () => { doc.addPage(); hdr(); doc.y = 50; };
-
+    const newPage = () => { doc.addPage(); hdr(); doc.y = CONTENT_TOP; };
     const ensureSpace = (h) => { if (doc.y + h > MAX_Y) newPage(); };
 
-    const bar = (x, y, w, score, h = 8) => {
+    // ── Visual components ──
+    const bar = (x, y, w, score, h = 10) => {
       doc.save();
-      doc.roundedRect(x, y, w, h, 4).fillColor(C.light).fill();
+      doc.roundedRect(x, y, w, h, h / 2).fillColor(C.light).fill();
       const fw = Math.max(0, (score / 100) * w);
-      if (fw > 0) doc.roundedRect(x, y, fw, h, 4).fillColor(sc(score)).fill();
+      if (fw > 0) doc.roundedRect(x, y, fw, h, h / 2).fillColor(sc(score)).fill();
       doc.restore();
+    };
+
+    const badge = (label, x, y, color) => {
+      doc.save();
+      doc.roundedRect(x, y, 38, 15, 3).fillColor(color).fill();
+      doc.fontSize(7.5).font('Helvetica-Bold').fillColor(C.white);
+      txt(label, x, y + 3.5, { width: 38, align: 'center' });
+      doc.restore();
+    };
+
+    const sevBadge = (level, x, y) => {
+      const lbl = (level || 'low').toUpperCase();
+      const col = sevColors[level] || sevColors.low;
+      doc.save();
+      doc.roundedRect(x, y, 50, 15, 3).fillColor(col).fill();
+      doc.fontSize(7).font('Helvetica-Bold').fillColor(C.white);
+      txt(lbl, x, y + 4, { width: 50, align: 'center' });
+      doc.restore();
+    };
+
+    const sectionTitle = (title) => {
+      doc.save();
+      doc.roundedRect(M, doc.y, CW, 30, 5).fillColor(C.primary).fill();
+      doc.fontSize(15).font('Helvetica-Bold').fillColor(C.white);
+      txt(title, M + 14, doc.y + 8);
+      doc.restore();
+      doc.y += 40;
     };
 
     const scoreBox = (x, y, w, label, score, passed, total) => {
       doc.save();
-      doc.roundedRect(x, y, w, 70, 6).lineWidth(1).strokeColor(C.border).stroke();
-      doc.fontSize(9).font('Helvetica').fillColor(C.muted); txt(label, x + 10, y + 8);
-      doc.fontSize(22).font('Helvetica-Bold').fillColor(sc(score)); txt(`${score}`, x + 10, y + 22);
-      doc.fontSize(9).font('Helvetica').fillColor(C.muted); txt(`/ 100`, x + 45, y + 30);
-      bar(x + 10, y + 50, w - 20, score);
-      doc.fontSize(7).font('Helvetica').fillColor(C.muted); txt(`${passed}/${total} passed`, x + 10, y + 60);
+      // Card fill + border
+      doc.roundedRect(x, y, w, 82, 6).fillColor(C.white).fill();
+      doc.roundedRect(x, y, w, 82, 6).lineWidth(0.75).strokeColor(C.border).stroke();
+      // Left accent stripe
+      doc.roundedRect(x, y + 4, 4, 74, 2).fillColor(sc(score)).fill();
+      // Label
+      doc.fontSize(8.5).font('Helvetica').fillColor(C.muted);
+      txt(label, x + 14, y + 10);
+      // Score — dynamically positioned
+      doc.fontSize(24).font('Helvetica-Bold').fillColor(sc(score));
+      const ss = `${score}`;
+      txt(ss, x + 14, y + 26);
+      const sw = doc.widthOfString(ss);
+      doc.fontSize(9).font('Helvetica').fillColor(C.muted);
+      txt('/ 100', x + 14 + sw + 4, y + 35);
+      // Progress bar
+      bar(x + 14, y + 56, w - 28, score, 8);
+      // Passed count
+      doc.fontSize(7.5).font('Helvetica').fillColor(C.muted);
+      txt(`${passed}/${total} passed`, x + 14, y + 68);
       doc.restore();
     };
 
@@ -233,54 +288,90 @@ class ReportService {
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
 
-      // ═══ PAGE 1: COVER ═══
-      doc.moveDown(6);
-      doc.fontSize(36).font('Helvetica-Bold').fillColor(C.accent).text('LEANPORT', { align: 'center' });
-      doc.moveDown(0.3);
-      doc.fontSize(10).font('Helvetica').fillColor(C.muted).text('www.leanport.com', { align: 'center' });
-      doc.moveDown(3);
-      doc.moveTo(PW / 2 - 80, doc.y).lineTo(PW / 2 + 80, doc.y).lineWidth(2).strokeColor(C.accent).stroke();
-      doc.moveDown(1.5);
-      doc.fontSize(24).font('Helvetica-Bold').fillColor(C.primary).text('SEO Audit Report', { align: 'center' });
-      doc.moveDown(2);
-      doc.fontSize(14).font('Helvetica').fillColor(C.primary).text(site.name, { align: 'center' });
-      doc.moveDown(0.3);
-      doc.fontSize(11).fillColor(C.accent).text(site.url, { align: 'center' });
-      doc.moveDown(3);
+      // ═══════════════════════════════════════════
+      // PAGE 1: COVER
+      // ═══════════════════════════════════════════
+
+      // Top accent band
+      doc.save();
+      doc.rect(0, 0, PW, 6).fillColor(C.accent).fill();
+      doc.restore();
+
+      // Brand
+      doc.fontSize(38).font('Helvetica-Bold').fillColor(C.accent);
+      txt('LEANPORT', M, 160, { width: CW, align: 'center' });
+      doc.fontSize(10).font('Helvetica').fillColor(C.muted);
+      txt('www.leanport.com', M, 205, { width: CW, align: 'center' });
+
+      // Divider
+      doc.save();
+      doc.roundedRect(PW / 2 - 60, 245, 120, 3, 1.5).fillColor(C.accent).fill();
+      doc.restore();
+
+      // Title
+      doc.fontSize(26).font('Helvetica-Bold').fillColor(C.primary);
+      txt('SEO Audit Report', M, 275, { width: CW, align: 'center' });
+
+      // Site info
+      doc.fontSize(16).font('Helvetica').fillColor(C.primary);
+      txt(site.name, M, 320, { width: CW, align: 'center' });
+      doc.fontSize(12).font('Helvetica').fillColor(C.accent);
+      txt(site.url, M, 345, { width: CW, align: 'center' });
 
       // Score circle
-      const cx = PW / 2, cy = doc.y + 50, r = 45;
+      const cx = PW / 2, cy = 430, cr = 50;
       doc.save();
-      doc.circle(cx, cy, r + 3).lineWidth(4).strokeColor(sc(audit.score || 0)).stroke();
-      doc.circle(cx, cy, r).fillColor(C.white).fill();
-      doc.fontSize(32).font('Helvetica-Bold').fillColor(sc(audit.score || 0));
-      txt(`${audit.score || 0}`, cx - 30, cy - 18, { width: 60, align: 'center' });
-      doc.fontSize(9).font('Helvetica').fillColor(C.muted);
-      txt('/ 100', cx - 25, cy + 16, { width: 50, align: 'center' });
+      doc.circle(cx, cy, cr + 4).lineWidth(5).strokeColor(sc(audit.score || 0)).stroke();
+      doc.circle(cx, cy, cr).fillColor('#FAFBFC').fill();
+      // Dynamically center score text
+      const scoreStr = `${audit.score || 0}`;
+      doc.fontSize(36).font('Helvetica-Bold').fillColor(sc(audit.score || 0));
+      const scoreW = doc.widthOfString(scoreStr);
+      txt(scoreStr, cx - scoreW / 2, cy - 18);
+      doc.fontSize(10).font('Helvetica').fillColor(C.muted);
+      const subW = doc.widthOfString('/ 100');
+      txt('/ 100', cx - subW / 2, cy + 18);
       doc.restore();
-      doc.y = cy + r + 20;
-      doc.fontSize(10).font('Helvetica').fillColor(C.muted).text('Overall SEO Score', { align: 'center' });
-      doc.moveDown(3);
-      doc.fontSize(9).fillColor(C.muted).text(`Scan Date: ${scanDate}`, { align: 'center' });
-      doc.moveDown(0.3);
-      doc.text(`Report Generated: ${generatedAt}`, { align: 'center' });
-      doc.moveDown(3);
-      doc.fontSize(8).fillColor(C.border).text('CONFIDENTIAL', { align: 'center' });
 
-      // ═══ PAGE 2: EXECUTIVE SUMMARY ═══
+      doc.fontSize(11).font('Helvetica').fillColor(C.muted);
+      txt('Overall SEO Score', M, cy + cr + 20, { width: CW, align: 'center' });
+
+      // Date info card
+      doc.save();
+      doc.roundedRect(PW / 2 - 130, 570, 260, 50, 6).fillColor(C.light).fill();
+      doc.fontSize(9).font('Helvetica').fillColor(C.muted);
+      txt(`Scan Date: ${scanDate}`, PW / 2 - 130, 582, { width: 260, align: 'center' });
+      txt(`Report Generated: ${generatedAt}`, PW / 2 - 130, 598, { width: 260, align: 'center' });
+      doc.restore();
+
+      // Confidential
+      doc.fontSize(8).font('Helvetica').fillColor(C.border);
+      txt('CONFIDENTIAL', M, 720, { width: CW, align: 'center' });
+
+      // Bottom accent band
+      doc.save();
+      doc.rect(0, 841.89 - 6, PW, 6).fillColor(C.accent).fill();
+      doc.restore();
+
+      // ═══════════════════════════════════════════
+      // PAGE 2: EXECUTIVE SUMMARY
+      // ═══════════════════════════════════════════
       newPage();
-      doc.fontSize(18).font('Helvetica-Bold').fillColor(C.primary).text('Executive Summary');
-      doc.moveDown(0.5);
-      doc.fontSize(11).font('Helvetica').fillColor(C.primary).text('Overall SEO Score');
-      doc.moveDown(0.3);
-      const barY = doc.y;
-      bar(M, barY, CW, audit.score || 0, 12);
-      doc.y = barY + 16;
-      doc.fontSize(11).font('Helvetica-Bold').fillColor(sc(audit.score || 0)).text(`${audit.score || 0} / 100`);
-      doc.moveDown(1.5);
+      sectionTitle('Executive Summary');
+
+      // Overall score bar
+      doc.fontSize(11).font('Helvetica-Bold').fillColor(C.primary);
+      txt('Overall SEO Score', M, doc.y);
+      doc.y += 18;
+      const barY2 = doc.y;
+      bar(M, barY2, CW - 80, audit.score || 0, 14);
+      doc.fontSize(13).font('Helvetica-Bold').fillColor(sc(audit.score || 0));
+      txt(`${audit.score || 0} / 100`, M + CW - 70, barY2);
+      doc.y = barY2 + 28;
 
       // 4 score boxes
-      const bw = (CW - 30) / 4;
+      const gap = 12;
+      const bw = (CW - gap * 3) / 4;
       const bY = doc.y;
       [
         { l: 'Meta Tags', s: audit.metaTagsScore || 0, k: 'meta-tags' },
@@ -289,65 +380,136 @@ class ReportService {
         { l: 'Performance', s: audit.performanceScore || 0, k: 'performance' },
       ].forEach((c, i) => {
         const cc = byCategory[c.k] || [];
-        scoreBox(M + i * (bw + 10), bY, bw, c.l, c.s, cc.filter((x) => x.status === 'pass').length, cc.length);
+        scoreBox(M + i * (bw + gap), bY, bw, c.l, c.s, cc.filter((x) => x.status === 'pass').length, cc.length);
       });
-      doc.y = bY + 85;
+      doc.y = bY + 96;
 
-      doc.fontSize(11).font('Helvetica-Bold').fillColor(C.primary).text('Audit Statistics');
-      doc.moveDown(0.3);
-      doc.fontSize(10).font('Helvetica').fillColor(C.primary);
-      doc.text(`Total: ${audit.totalChecks || 0}    Passed: ${audit.passedChecks || 0}    Failed: ${audit.failedChecks || 0}    Warnings: ${audit.warnChecks || 0}`);
-      doc.moveDown(1.5);
+      // Stats card
+      doc.save();
+      doc.roundedRect(M, doc.y, CW, 44, 6).fillColor(C.light).fill();
+      const statsY = doc.y + 6;
+      const sw2 = CW / 4;
+      [
+        { l: 'Total Checks', v: audit.totalChecks || 0, c: C.primary },
+        { l: 'Passed', v: audit.passedChecks || 0, c: C.ok },
+        { l: 'Failed', v: audit.failedChecks || 0, c: C.bad },
+        { l: 'Warnings', v: audit.warnChecks || 0, c: C.warn },
+      ].forEach((s, i) => {
+        const sx = M + i * sw2;
+        doc.fontSize(14).font('Helvetica-Bold').fillColor(s.c);
+        txt(`${s.v}`, sx, statsY, { width: sw2, align: 'center' });
+        doc.fontSize(8).font('Helvetica').fillColor(C.muted);
+        txt(s.l, sx, statsY + 18, { width: sw2, align: 'center' });
+      });
+      doc.restore();
+      doc.y += 58;
 
+      // Top critical issues
       if (issues.length > 0) {
-        doc.fontSize(11).font('Helvetica-Bold').fillColor(C.bad).text('Top Critical Issues');
-        doc.moveDown(0.5);
+        doc.fontSize(12).font('Helvetica-Bold').fillColor(C.primary);
+        txt('Top Critical Issues', M, doc.y);
+        doc.y += 22;
+
         for (const iss of issues.slice(0, 5)) {
-          doc.fontSize(9).font('Helvetica-Bold').fillColor(stC(iss.status));
-          doc.text(`[${stI(iss.status)}] ${iss.check} — ${sev(iss.severity)}`);
-          doc.fontSize(8).font('Helvetica').fillColor(C.primary);
-          doc.text(cut(iss.message, 100));
-          doc.moveDown(0.3);
+          ensureSpace(36);
+          const iy = doc.y;
+          // Row background
+          doc.save();
+          doc.roundedRect(M, iy, CW, 30, 4).fillColor(iss.status === 'fail' ? C.badBg : C.warnBg).fill();
+          doc.restore();
+          // Status badge
+          badge(stI(iss.status), M + 8, iy + 8, stC(iss.status));
+          // Check name
+          doc.fontSize(9.5).font('Helvetica-Bold').fillColor(C.primary);
+          txt(fitText(iss.check, 200, 9.5, 'Helvetica-Bold'), M + 54, iy + 4);
+          // Severity badge
+          sevBadge(iss.severity, PW - M - 58, iy + 8);
+          // Message
+          doc.fontSize(8.5).font('Helvetica').fillColor(C.muted);
+          txt(fitText(iss.message, CW - 64, 8.5), M + 54, iy + 18);
+          doc.y = iy + 34;
         }
       }
 
-      // ═══ PAGE 3: PAGESPEED ═══
+      // ═══════════════════════════════════════════
+      // PAGE 3: PAGESPEED INSIGHTS
+      // ═══════════════════════════════════════════
       newPage();
-      doc.fontSize(18).font('Helvetica-Bold').fillColor(C.primary).text('PageSpeed Insights');
-      doc.moveDown(0.5);
+      sectionTitle('PageSpeed Insights');
 
       const ps = audit.pageSpeed;
       if (ps && (ps.mobile || ps.desktop)) {
-        doc.fontSize(12).font('Helvetica-Bold').fillColor(C.accent).text('Lighthouse Scores');
-        doc.moveDown(0.5);
+        // ── Lighthouse Scores ──
+        doc.save();
+        doc.roundedRect(M, doc.y, 4, 16, 2).fillColor(C.accent).fill();
+        doc.restore();
+        doc.fontSize(12).font('Helvetica-Bold').fillColor(C.accentDark);
+        txt('Lighthouse Scores', M + 12, doc.y + 1);
+        doc.y += 26;
+
+        // Table header
+        const lhColCat = M;
+        const lhColMob = M + Math.round(CW * 0.5);
+        const lhColDesk = M + Math.round(CW * 0.75);
         let ty = doc.y;
+        doc.save();
+        doc.roundedRect(M, ty, CW, 22, 4).fillColor(C.headerBg).fill();
         doc.fontSize(8).font('Helvetica-Bold').fillColor(C.muted);
-        txt('CATEGORY', M, ty); txt('MOBILE', M + 160, ty, { width: 50, align: 'center' }); txt('DESKTOP', M + 300, ty, { width: 50, align: 'center' });
-        doc.y = ty + 14;
-        doc.moveTo(M, doc.y).lineTo(M + 380, doc.y).lineWidth(0.5).strokeColor(C.border).stroke();
-        doc.y += 6;
+        txt('CATEGORY', lhColCat + 12, ty + 6);
+        txt('MOBILE', lhColMob, ty + 6, { width: Math.round(CW * 0.25), align: 'center' });
+        txt('DESKTOP', lhColDesk, ty + 6, { width: Math.round(CW * 0.25), align: 'center' });
+        doc.restore();
+        doc.y = ty + 24;
 
-        const lhRow = (label, mob, desk) => {
+        const lhRow = (label, mob, desk, idx) => {
           const y = doc.y;
-          doc.fontSize(9).font('Helvetica').fillColor(C.primary); txt(label, M, y);
-          doc.fontSize(10).font('Helvetica-Bold').fillColor(mob != null ? sc(mob) : C.muted); txt(mob != null ? `${mob}` : '—', M + 160, y, { width: 50, align: 'center' });
-          doc.fontSize(10).font('Helvetica-Bold').fillColor(desk != null ? sc(desk) : C.muted); txt(desk != null ? `${desk}` : '—', M + 300, y, { width: 50, align: 'center' });
-          doc.y = y + 18;
+          if (idx % 2 === 1) {
+            doc.save();
+            doc.rect(M, y, CW, 24).fillColor(C.rowAlt).fill();
+            doc.restore();
+          }
+          doc.fontSize(10).font('Helvetica').fillColor(C.primary);
+          txt(label, lhColCat + 12, y + 5);
+          // Mobile score
+          doc.fontSize(12).font('Helvetica-Bold').fillColor(mob != null ? sc(mob) : C.muted);
+          txt(mob != null ? `${mob}` : '—', lhColMob, y + 4, { width: Math.round(CW * 0.25), align: 'center' });
+          // Desktop score
+          doc.fontSize(12).font('Helvetica-Bold').fillColor(desk != null ? sc(desk) : C.muted);
+          txt(desk != null ? `${desk}` : '—', lhColDesk, y + 4, { width: Math.round(CW * 0.25), align: 'center' });
+          doc.y = y + 24;
         };
-        lhRow('Performance', ps.mobile?.performance, ps.desktop?.performance);
-        lhRow('Accessibility', ps.mobile?.accessibility, ps.desktop?.accessibility);
-        lhRow('Best Practices', ps.mobile?.bestPractices, ps.desktop?.bestPractices);
-        lhRow('SEO', ps.mobile?.seo, ps.desktop?.seo);
-        doc.moveDown(2);
+        lhRow('Performance', ps.mobile?.performance, ps.desktop?.performance, 0);
+        lhRow('Accessibility', ps.mobile?.accessibility, ps.desktop?.accessibility, 1);
+        lhRow('Best Practices', ps.mobile?.bestPractices, ps.desktop?.bestPractices, 2);
+        lhRow('SEO', ps.mobile?.seo, ps.desktop?.seo, 3);
 
-        doc.fontSize(12).font('Helvetica-Bold').fillColor(C.accent).text('Core Web Vitals');
-        doc.moveDown(0.5);
+        // Bottom border
+        doc.moveTo(M, doc.y).lineTo(PW - M, doc.y).lineWidth(0.5).strokeColor(C.border).stroke();
+        doc.y += 24;
+
+        // ── Core Web Vitals ──
+        doc.save();
+        doc.roundedRect(M, doc.y, 4, 16, 2).fillColor(C.accent).fill();
+        doc.restore();
+        doc.fontSize(12).font('Helvetica-Bold').fillColor(C.accentDark);
+        txt('Core Web Vitals', M + 12, doc.y + 1);
+        doc.y += 26;
+
+        // CWV columns — proportional to full CW
+        const cwvX = { metric: M, mob: M + Math.round(CW * 0.42), desk: M + Math.round(CW * 0.60), good: M + Math.round(CW * 0.78), poor: M + Math.round(CW * 0.89) };
+        const cwvW = { mob: Math.round(CW * 0.18), desk: Math.round(CW * 0.18), good: Math.round(CW * 0.11), poor: Math.round(CW * 0.11) };
+
         ty = doc.y;
+        doc.save();
+        doc.roundedRect(M, ty, CW, 22, 4).fillColor(C.headerBg).fill();
         doc.fontSize(8).font('Helvetica-Bold').fillColor(C.muted);
-        txt('METRIC', M, ty); txt('MOBILE', M + 220, ty, { width: 60, align: 'center' }); txt('DESKTOP', M + 300, ty, { width: 60, align: 'center' }); txt('GOOD', M + 380, ty, { width: 40, align: 'center' }); txt('POOR', M + 430, ty, { width: 40, align: 'center' });
-        doc.y = ty + 14;
-        doc.moveTo(M, doc.y).lineTo(M + 470, doc.y).lineWidth(0.5).strokeColor(C.border).stroke();
-        doc.y += 6;
+        txt('METRIC', cwvX.metric + 12, ty + 6);
+        txt('MOBILE', cwvX.mob, ty + 6, { width: cwvW.mob, align: 'center' });
+        txt('DESKTOP', cwvX.desk, ty + 6, { width: cwvW.desk, align: 'center' });
+        txt('GOOD', cwvX.good, ty + 6, { width: cwvW.good, align: 'center' });
+        txt('POOR', cwvX.poor, ty + 6, { width: cwvW.poor, align: 'center' });
+        doc.restore();
+        doc.y = ty + 24;
 
         const cwvs = [
           { l: 'First Contentful Paint (FCP)', k: 'fcp', u: 'ms', g: 1800, p: 3000 },
@@ -358,23 +520,39 @@ class ReportService {
           { l: 'Interaction to Next Paint (INP)', k: 'inp', u: 'ms', g: 200, p: 500 },
           { l: 'Time to First Byte (TTFB)', k: 'ttfb', u: 'ms', g: 800, p: 1800 },
         ];
-        for (const m of cwvs) {
+        const fmtVal = (v, m) => { if (v == null) return '—'; if (m.k === 'cls') return v.toFixed(3); if (m.u === 'ms' && v >= 1000) return `${(v / 1000).toFixed(1)}s`; return `${v}${m.u}`; };
+        const valColor = (v, m) => (v == null ? C.muted : v <= m.g ? C.ok : v <= m.p ? C.warn : C.bad);
+
+        cwvs.forEach((m, idx) => {
           const y = doc.y;
+          if (idx % 2 === 1) {
+            doc.save(); doc.rect(M, y, CW, 22).fillColor(C.rowAlt).fill(); doc.restore();
+          }
           const mv = ps.mobile?.[m.k], dv = ps.desktop?.[m.k];
-          const fmt = (v) => { if (v == null) return '—'; if (m.k === 'cls') return v.toFixed(3); if (m.u === 'ms' && v >= 1000) return `${(v / 1000).toFixed(1)}s`; return `${v}${m.u}`; };
-          const mc = (v) => (v == null ? C.muted : v <= m.g ? C.ok : v <= m.p ? C.warn : C.bad);
-          doc.fontSize(9).font('Helvetica').fillColor(C.primary); txt(m.l, M, y);
-          doc.fontSize(9).font('Helvetica-Bold').fillColor(mc(mv)); txt(fmt(mv), M + 220, y, { width: 60, align: 'center' });
-          doc.fontSize(9).font('Helvetica-Bold').fillColor(mc(dv)); txt(fmt(dv), M + 300, y, { width: 60, align: 'center' });
-          doc.fontSize(8).font('Helvetica').fillColor(C.ok); txt(`≤${m.g}`, M + 380, y, { width: 40, align: 'center' });
-          doc.fontSize(8).font('Helvetica').fillColor(C.bad); txt(`>${m.p}`, M + 430, y, { width: 40, align: 'center' });
-          doc.y = y + 18;
-        }
+          doc.fontSize(9).font('Helvetica').fillColor(C.primary);
+          txt(m.l, cwvX.metric + 12, y + 5);
+          doc.fontSize(9.5).font('Helvetica-Bold').fillColor(valColor(mv, m));
+          txt(fmtVal(mv, m), cwvX.mob, y + 5, { width: cwvW.mob, align: 'center' });
+          doc.fontSize(9.5).font('Helvetica-Bold').fillColor(valColor(dv, m));
+          txt(fmtVal(dv, m), cwvX.desk, y + 5, { width: cwvW.desk, align: 'center' });
+          doc.fontSize(8).font('Helvetica').fillColor(C.ok);
+          txt(`\u2264${m.g}`, cwvX.good, y + 5, { width: cwvW.good, align: 'center' });
+          doc.fontSize(8).font('Helvetica').fillColor(C.bad);
+          txt(`>${m.p}`, cwvX.poor, y + 5, { width: cwvW.poor, align: 'center' });
+          doc.y = y + 22;
+        });
+        doc.moveTo(M, doc.y).lineTo(PW - M, doc.y).lineWidth(0.5).strokeColor(C.border).stroke();
       } else {
-        doc.fontSize(11).font('Helvetica').fillColor(C.muted).text('PageSpeed data not available.');
+        doc.save();
+        doc.roundedRect(M, doc.y, CW, 50, 6).fillColor(C.light).fill();
+        doc.fontSize(11).font('Helvetica').fillColor(C.muted);
+        txt('PageSpeed data not available. Run a new audit to fetch Lighthouse scores.', M, doc.y + 18, { width: CW, align: 'center' });
+        doc.restore();
       }
 
-      // ═══ PAGES 4-7: CATEGORY DETAILS ═══
+      // ═══════════════════════════════════════════
+      // PAGES 4-7: CATEGORY DETAILS
+      // ═══════════════════════════════════════════
       const catPages = [
         { k: 'meta-tags', t: 'Meta Tags Analysis', s: audit.metaTagsScore },
         { k: 'content', t: 'Content Analysis', s: audit.contentScore },
@@ -382,102 +560,184 @@ class ReportService {
         { k: 'performance', t: 'Performance Analysis', s: audit.performanceScore },
       ];
 
+      // Column layout for check tables
+      const col = {
+        status: { x: M, w: 44 },
+        check: { x: M + 44, w: 139 },
+        sev: { x: M + 183, w: 59 },
+        msg: { x: M + 242, w: CW - 242 },
+      };
+
       for (const cat of catPages) {
         newPage();
-        doc.fontSize(18).font('Helvetica-Bold').fillColor(C.primary).text(cat.t);
-        doc.moveDown(0.3);
-        doc.fontSize(11).font('Helvetica').fillColor(C.primary).text('Category Score');
-        const bry = doc.y + 2;
-        bar(M, bry, 200, cat.s || 0, 10);
-        doc.fontSize(11).font('Helvetica-Bold').fillColor(sc(cat.s || 0));
-        txt(`${cat.s || 0} / 100`, M + 210, bry);
-        doc.y = bry + 20;
+        sectionTitle(cat.t);
 
-        const checks = byCategory[cat.k] || [];
-        if (checks.length === 0) { doc.fontSize(10).font('Helvetica').fillColor(C.muted).text('No checks.'); continue; }
+        // Category score row
+        doc.fontSize(11).font('Helvetica-Bold').fillColor(C.primary);
+        txt('Category Score', M, doc.y);
+        doc.y += 18;
+        const bry = doc.y;
+        bar(M, bry, 250, cat.s || 0, 12);
+        doc.fontSize(13).font('Helvetica-Bold').fillColor(sc(cat.s || 0));
+        txt(`${cat.s || 0} / 100`, M + 262, bry - 1);
+        const catChecks = byCategory[cat.k] || [];
+        const catPassed = catChecks.filter((x) => x.status === 'pass').length;
+        doc.fontSize(9).font('Helvetica').fillColor(C.muted);
+        txt(`${catPassed}/${catChecks.length} checks passed`, M + 330, bry + 1);
+        doc.y = bry + 24;
+
+        if (catChecks.length === 0) {
+          doc.fontSize(10).font('Helvetica').fillColor(C.muted);
+          txt('No checks in this category.', M, doc.y);
+          continue;
+        }
 
         // Table header
-        ensureSpace(22);
+        ensureSpace(26);
         const thy = doc.y;
-        doc.roundedRect(M, thy, CW, 16, 3).fillColor(C.light).fill();
-        doc.fontSize(7).font('Helvetica-Bold').fillColor(C.muted);
-        txt('STATUS', M + 6, thy + 4); txt('CHECK', M + 55, thy + 4); txt('SEVERITY', M + 240, thy + 4); txt('MESSAGE', M + 310, thy + 4);
-        doc.y = thy + 20;
+        doc.save();
+        doc.roundedRect(M, thy, CW, 22, 4).fillColor(C.headerBg).fill();
+        doc.fontSize(8).font('Helvetica-Bold').fillColor(C.muted);
+        txt('STATUS', col.status.x + 4, thy + 6);
+        txt('CHECK', col.check.x + 4, thy + 6);
+        txt('SEVERITY', col.sev.x + 2, thy + 6);
+        txt('MESSAGE', col.msg.x + 4, thy + 6);
+        doc.restore();
+        doc.y = thy + 24;
 
-        for (const chk of checks) {
-          // Each check: 1 line for main row + optional impact/fix lines
+        let rowIdx = 0;
+        for (const chk of catChecks) {
           const hasExtra = chk.status !== 'pass' && (chk.impact || chk.fix);
-          const rowH = hasExtra ? 50 : 16;
+          const rowH = hasExtra ? 52 : 22;
           ensureSpace(rowH);
 
           const y = doc.y;
-          doc.fontSize(7).font('Helvetica-Bold').fillColor(stC(chk.status)); txt(stI(chk.status), M + 6, y);
-          doc.fontSize(8).font('Helvetica-Bold').fillColor(C.primary); txt(cut(chk.check, 35), M + 55, y);
-          doc.fontSize(7).font('Helvetica').fillColor(C.muted); txt(sev(chk.severity), M + 240, y);
-          doc.fontSize(7).font('Helvetica').fillColor(C.primary); txt(cut(chk.message, 60), M + 310, y);
-          doc.y = y + 14;
 
+          // Zebra row background
+          if (rowIdx % 2 === 1) {
+            doc.save(); doc.rect(M, y, CW, rowH).fillColor(C.rowAlt).fill(); doc.restore();
+          }
+
+          // Status badge
+          badge(stI(chk.status), col.status.x + 3, y + 3, stC(chk.status));
+
+          // Check name
+          doc.fontSize(8.5).font('Helvetica-Bold').fillColor(C.primary);
+          txt(fitText(chk.check, col.check.w - 8, 8.5, 'Helvetica-Bold'), col.check.x + 4, y + 4);
+
+          // Severity badge
+          sevBadge(chk.severity, col.sev.x + 2, y + 3);
+
+          // Message
+          doc.fontSize(8.5).font('Helvetica').fillColor(C.primary);
+          txt(fitText(chk.message, col.msg.w - 8, 8.5), col.msg.x + 4, y + 4);
+
+          doc.y = y + 20;
+
+          // Impact / Fix sub-rows
           if (chk.status !== 'pass' && chk.impact) {
-            doc.fontSize(7).font('Helvetica-Bold').fillColor(C.warn); txt('Impact:', M + 55, doc.y);
-            doc.fontSize(7).font('Helvetica').fillColor(C.primary); txt(cut(chk.impact, 90), M + 95, doc.y);
-            doc.y += 11;
+            doc.fontSize(8).font('Helvetica-Bold').fillColor(C.warn);
+            txt('Impact:', M + 52, doc.y);
+            doc.fontSize(8).font('Helvetica').fillColor(C.primary);
+            txt(fitText(chk.impact, CW - 100, 8), M + 94, doc.y);
+            doc.y += 14;
           }
           if (chk.status !== 'pass' && chk.fix) {
-            doc.fontSize(7).font('Helvetica-Bold').fillColor(C.ok); txt('Fix:', M + 55, doc.y);
-            doc.fontSize(7).font('Helvetica').fillColor(C.primary); txt(cut(chk.fix, 90), M + 80, doc.y);
-            doc.y += 11;
+            doc.fontSize(8).font('Helvetica-Bold').fillColor(C.accent);
+            txt('Fix:', M + 52, doc.y);
+            doc.fontSize(8).font('Helvetica').fillColor(C.primary);
+            txt(fitText(chk.fix, CW - 82, 8), M + 72, doc.y);
+            doc.y += 14;
           }
 
+          // Row separator
+          doc.moveTo(M, doc.y).lineTo(PW - M, doc.y).lineWidth(0.3).strokeColor(C.border).stroke();
           doc.y += 2;
-          doc.moveTo(M, doc.y).lineTo(PW - M, doc.y).lineWidth(0.3).strokeColor(C.light).stroke();
-          doc.y += 3;
+          rowIdx++;
         }
       }
 
-      // ═══ PAGE 8: RECOMMENDATIONS ═══
+      // ═══════════════════════════════════════════
+      // PAGE 8: RECOMMENDATIONS
+      // ═══════════════════════════════════════════
       newPage();
-      doc.fontSize(18).font('Helvetica-Bold').fillColor(C.primary).text('Recommendations');
-      doc.moveDown(0.3);
-      doc.fontSize(10).font('Helvetica').fillColor(C.muted).text('Prioritized by severity.');
-      doc.moveDown(1);
+      sectionTitle('Recommendations');
+      doc.fontSize(9).font('Helvetica').fillColor(C.muted);
+      txt('Prioritized by severity. Address critical and high-severity issues first.', M, doc.y);
+      doc.y += 20;
 
       if (issues.length === 0) {
-        doc.fontSize(12).font('Helvetica').fillColor(C.ok).text('All checks passed!');
+        doc.save();
+        doc.roundedRect(M, doc.y + 20, CW, 60, 8).fillColor(C.okBg).fill();
+        doc.roundedRect(M, doc.y + 20, CW, 60, 8).lineWidth(1).strokeColor(C.ok).stroke();
+        doc.fontSize(16).font('Helvetica-Bold').fillColor(C.ok);
+        txt('All checks passed!', M, doc.y + 40, { width: CW, align: 'center' });
+        doc.restore();
       } else {
         let num = 1;
         for (const iss of issues) {
-          ensureSpace(55);
+          const hasImpact = !!iss.impact;
+          const hasFix = !!iss.fix;
+          const cardH = 32 + 16 + (hasImpact ? 14 : 0) + (hasFix ? 14 : 0) + 8;
+          ensureSpace(cardH + 12);
 
           const y = doc.y;
-          doc.roundedRect(M, y, 20, 16, 3).fillColor(stC(iss.status)).fill();
-          doc.fontSize(8).font('Helvetica-Bold').fillColor(C.white); txt(`${num}`, M + 2, y + 3, { width: 16, align: 'center' });
 
-          doc.fontSize(10).font('Helvetica-Bold').fillColor(C.primary); txt(iss.check, M + 28, y);
-          doc.fontSize(7).font('Helvetica-Bold').fillColor(stC(iss.status)); txt(`${stI(iss.status)} · ${sev(iss.severity)}`, PW - M - 80, y + 2, { width: 80, align: 'right' });
-          doc.y = y + 18;
+          // Card background + border
+          doc.save();
+          doc.roundedRect(M, y, CW, cardH, 6).fillColor(C.white).fill();
+          doc.roundedRect(M, y, CW, cardH, 6).lineWidth(0.75).strokeColor(C.border).stroke();
+          // Left accent stripe
+          doc.roundedRect(M + 1, y + 4, 4, cardH - 8, 2).fillColor(stC(iss.status)).fill();
+          doc.restore();
 
-          doc.fontSize(8).font('Helvetica').fillColor(C.primary); txt(cut(iss.message, 110), M + 28, doc.y);
-          doc.y += 12;
+          // Number circle
+          doc.save();
+          doc.circle(M + 24, y + 16, 11).fillColor(stC(iss.status)).fill();
+          doc.fontSize(9).font('Helvetica-Bold').fillColor(C.white);
+          const numStr = `${num}`;
+          const numW = doc.widthOfString(numStr);
+          txt(numStr, M + 24 - numW / 2, y + 12);
+          doc.restore();
 
-          if (iss.impact) {
-            doc.fontSize(7).font('Helvetica-Bold').fillColor(C.warn); txt('Impact:', M + 28, doc.y);
-            doc.fontSize(7).font('Helvetica').fillColor(C.primary); txt(cut(iss.impact, 100), M + 68, doc.y);
-            doc.y += 11;
+          // Check name
+          doc.fontSize(11).font('Helvetica-Bold').fillColor(C.primary);
+          txt(fitText(iss.check, CW - 160, 11, 'Helvetica-Bold'), M + 42, y + 9);
+
+          // Status + severity badges
+          badge(stI(iss.status), PW - M - 98, y + 9, stC(iss.status));
+          sevBadge(iss.severity, PW - M - 56, y + 9);
+
+          // Message
+          let cy2 = y + 32;
+          doc.fontSize(9).font('Helvetica').fillColor(C.primary);
+          txt(fitText(iss.message, CW - 30, 9), M + 16, cy2);
+          cy2 += 16;
+
+          // Impact
+          if (hasImpact) {
+            doc.fontSize(8).font('Helvetica-Bold').fillColor(C.warn);
+            txt('Impact:', M + 16, cy2);
+            doc.fontSize(8).font('Helvetica').fillColor(C.primary);
+            txt(fitText(iss.impact, CW - 72, 8), M + 58, cy2);
+            cy2 += 14;
           }
-          if (iss.fix) {
-            doc.fontSize(7).font('Helvetica-Bold').fillColor(C.accent); txt('Fix:', M + 28, doc.y);
-            doc.fontSize(7).font('Helvetica').fillColor(C.primary); txt(cut(iss.fix, 100), M + 50, doc.y);
-            doc.y += 11;
+
+          // Fix
+          if (hasFix) {
+            doc.fontSize(8).font('Helvetica-Bold').fillColor(C.accent);
+            txt('Fix:', M + 16, cy2);
+            doc.fontSize(8).font('Helvetica').fillColor(C.primary);
+            txt(fitText(iss.fix, CW - 54, 8), M + 38, cy2);
+            cy2 += 14;
           }
 
-          doc.y += 3;
-          doc.moveTo(M, doc.y).lineTo(PW - M, doc.y).lineWidth(0.3).strokeColor(C.border).stroke();
-          doc.y += 6;
+          doc.y = y + cardH + 10;
           num++;
         }
       }
 
-      // ── Footers ──
+      // ── Footers on all pages (except cover) ──
       const tp = doc.bufferedPageRange().count;
       for (let i = 0; i < tp; i++) { doc.switchToPage(i); if (i > 0) ftr(i); }
 
