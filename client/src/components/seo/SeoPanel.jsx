@@ -477,14 +477,16 @@ function CheckListByCategory({ checks, category }) {
 
 // ========== Main Component ==========
 
-export default function SeoPanel({ siteId }) {
-  const { audit, isLoading, scanning, startScanning } = useSeoAudit(siteId);
-  const scanMutation = useSeoTrigger(siteId, { onScanStart: startScanning });
-  const pageSpeedMutation = usePageSpeedFetch(siteId);
+export default function SeoPanel({ siteId, readOnly = false, auditData: externalAudit }) {
+  const { audit: fetchedAudit, isLoading, scanning, startScanning } = useSeoAudit(readOnly ? null : siteId);
+  const scanMutation = useSeoTrigger(readOnly ? null : siteId, { onScanStart: startScanning });
+  const pageSpeedMutation = usePageSpeedFetch(readOnly ? null : siteId);
   const [activeStrategy, setActiveStrategy] = useState('mobile');
   const [downloading, setDownloading] = useState(false);
 
-  if (isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  const audit = externalAudit ?? fetchedAudit;
+
+  if (!readOnly && isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
 
   return (
     <div className="space-y-6">
@@ -493,40 +495,42 @@ export default function SeoPanel({ siteId }) {
         <div>
           {audit && <p className="text-xs text-gray-500 dark:text-gray-400">Last scan: {formatDate(audit.scannedAt)}</p>}
         </div>
-        <div className="flex items-center gap-2">
-          {audit && (
-            <button
-              onClick={async () => {
-                setDownloading(true);
-                try { await downloadSeoReport(siteId); } catch {} finally { setDownloading(false); }
-              }}
-              disabled={downloading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            {audit && (
+              <button
+                onClick={async () => {
+                  setDownloading(true);
+                  try { await downloadSeoReport(siteId); } catch {} finally { setDownloading(false); }
+                }}
+                disabled={downloading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              >
+                {downloading ? (
+                  <Spinner size="xs" />
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
+                {downloading ? 'Generating...' : 'Download Report'}
+              </button>
+            )}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => scanMutation.mutate()}
+              isLoading={scanMutation.isPending}
+              disabled={scanning}
             >
-              {downloading ? (
-                <Spinner size="xs" />
-              ) : (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              )}
-              {downloading ? 'Generating...' : 'Download Report'}
-            </button>
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => scanMutation.mutate()}
-            isLoading={scanMutation.isPending}
-            disabled={scanning}
-          >
-            {scanning ? 'Scanning...' : 'Run SEO Audit'}
-          </Button>
-        </div>
+              {scanning ? 'Scanning...' : 'Run SEO Audit'}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Scanning Overlay */}
-      {scanning && <ScanningOverlay />}
+      {!readOnly && scanning && <ScanningOverlay />}
 
       {audit ? (
         <>
@@ -587,16 +591,18 @@ export default function SeoPanel({ siteId }) {
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Diagnose performance issues</h3>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => pageSpeedMutation.mutate()}
-                      disabled={pageSpeedMutation.isPending}
-                      title="Re-fetch PageSpeed data"
-                      className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
-                    >
-                      <svg className={`w-4 h-4 ${pageSpeedMutation.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
+                    {!readOnly && (
+                      <button
+                        onClick={() => pageSpeedMutation.mutate()}
+                        disabled={pageSpeedMutation.isPending}
+                        title="Re-fetch PageSpeed data"
+                        className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                      >
+                        <svg className={`w-4 h-4 ${pageSpeedMutation.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </button>
+                    )}
                   <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
                     {audit.pageSpeed.mobile && (
                       <button

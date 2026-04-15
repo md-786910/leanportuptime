@@ -29,4 +29,19 @@ const authLimiter = rateLimit({
   },
 });
 
-module.exports = { apiLimiter, authLimiter };
+const publicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'development' ? 500 : 30,
+  keyGenerator: (req) => req.params.token || req.ip,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: 'Too many requests, please try again later',
+    },
+  },
+});
+
+module.exports = { apiLimiter, authLimiter, publicLimiter };

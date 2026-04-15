@@ -2,7 +2,7 @@ import StatusBadge from '../common/StatusBadge';
 import Button from '../common/Button';
 import { formatRelative } from '../../utils/formatters';
 
-export default function SiteHeader({ site, onTriggerCheck, onTogglePause, onEdit, onDelete, isCheckLoading }) {
+export default function SiteHeader({ site, onTriggerCheck, onTogglePause, onEdit, onDelete, onShare, isCheckLoading }) {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
@@ -30,6 +30,7 @@ export default function SiteHeader({ site, onTriggerCheck, onTogglePause, onEdit
         <Button variant="secondary" size="sm" onClick={onTogglePause}>
           {site.paused ? 'Resume' : 'Pause'}
         </Button>
+        <Button variant="secondary" size="sm" onClick={onShare}>Share</Button>
         <Button variant="secondary" size="sm" onClick={onEdit}>Edit</Button>
         <Button variant="danger" size="sm" onClick={onDelete}>Delete</Button>
       </div>

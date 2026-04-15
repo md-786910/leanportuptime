@@ -9,11 +9,12 @@ const tabs = [
   { key: 'history', label: 'History' },
 ];
 
-export default function SiteDetailTabs({ activeTab, onTabChange }) {
+export default function SiteDetailTabs({ activeTab, onTabChange, tabs: customTabs }) {
+  const displayTabs = customTabs || tabs;
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
       <nav className="flex gap-0 -mb-px overflow-x-auto">
-        {tabs.map((tab) => (
+        {displayTabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => onTabChange(tab.key)}

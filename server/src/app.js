@@ -19,6 +19,8 @@ const pluginRoutes = require("./routes/plugin.routes");
 const siteScanRoutes = require("./routes/sitescan.routes");
 const seoRoutes = require("./routes/seo.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
+const shareLinkRoutes = require("./routes/sharelinks.routes");
+const publicRoutes = require("./routes/public.routes");
 
 const app = express();
 
@@ -54,6 +56,8 @@ app.use("/api/sites/:id/sitescan", siteScanRoutes);
 app.use("/api/sites/:id/seo", seoRoutes);
 app.use("/api/sites/:id/reports", reportsRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/sites/:id/share-links", shareLinkRoutes);
+app.use("/api/public/share", publicRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -1,5 +1,6 @@
 const Site = require('../models/Site');
 const Check = require('../models/Check');
+const ShareLink = require('../models/ShareLink');
 const { uptimeQueue } = require('../config/queue');
 
 exports.list = async (req, res, next) => {
@@ -98,7 +99,10 @@ exports.remove = async (req, res, next) => {
     }
 
     // Clean up related data
-    await Check.deleteMany({ siteId: site._id });
+    await Promise.all([
+      Check.deleteMany({ siteId: site._id }),
+      ShareLink.deleteMany({ siteId: site._id }),
+    ]);
 
     res.json({ success: true, data: { message: 'Site deleted' } });
   } catch (error) {

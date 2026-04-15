@@ -6,11 +6,13 @@ import ScoreBar from './ScoreBar';
 import SecurityCheckList from './SecurityCheckList';
 import { formatDate } from '../../utils/formatters';
 
-export default function SecurityPanel({ siteId }) {
-  const { audit, isLoading } = useSecurity(siteId);
-  const scanMutation = useSecurityScan(siteId);
+export default function SecurityPanel({ siteId, readOnly = false, auditData: externalAudit }) {
+  const { audit: fetchedAudit, isLoading } = useSecurity(readOnly ? null : siteId);
+  const scanMutation = useSecurityScan(readOnly ? null : siteId);
 
-  if (isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  const audit = externalAudit ?? fetchedAudit;
+
+  if (!readOnly && isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
 
   return (
     <div className="space-y-6">
@@ -18,9 +20,11 @@ export default function SecurityPanel({ siteId }) {
         <div>
           {audit && <p className="text-xs text-gray-500 dark:text-gray-400">Last scan: {formatDate(audit.scannedAt)}</p>}
         </div>
-        <Button variant="secondary" size="sm" onClick={() => scanMutation.mutate()} isLoading={scanMutation.isPending}>
-          Run Scan
-        </Button>
+        {!readOnly && (
+          <Button variant="secondary" size="sm" onClick={() => scanMutation.mutate()} isLoading={scanMutation.isPending}>
+            Run Scan
+          </Button>
+        )}
       </div>
 
       {audit ? (

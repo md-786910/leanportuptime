@@ -18,6 +18,7 @@ import SiteDetailPage from './pages/SiteDetailPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import PublicSharePage from './pages/PublicSharePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +64,9 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           </Route>
+
+          {/* Public share route - no auth required */}
+          <Route path="/share/:token" element={<PublicSharePage />} />
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>

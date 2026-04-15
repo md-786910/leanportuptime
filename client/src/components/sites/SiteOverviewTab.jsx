@@ -7,10 +7,12 @@ import { useSecurity } from '../../hooks/useSecurity';
 import { formatResponseTime, formatUptime, formatRelative, formatDate, formatDaysRemaining } from '../../utils/formatters';
 import { CHECK_INTERVALS } from '../../utils/constants';
 
-export default function SiteOverviewTab({ site, summary, checks = [], period = '24h' }) {
+export default function SiteOverviewTab({ site, summary, checks = [], period = '24h', readOnly = false, sslData: externalSsl, securityData: externalAudit }) {
   const intervalLabel = CHECK_INTERVALS.find((i) => i.value === site.interval)?.label || `${site.interval / 1000}s`;
-  const { ssl } = useSSL(site._id);
-  const { audit } = useSecurity(site._id);
+  const { ssl: fetchedSsl } = useSSL(readOnly ? null : site._id);
+  const { audit: fetchedAudit } = useSecurity(readOnly ? null : site._id);
+  const ssl = externalSsl || fetchedSsl;
+  const audit = externalAudit || fetchedAudit;
   const days = period === '24h' ? 1 : period === '7d' ? 7 : 30;
 
   const kpis = [

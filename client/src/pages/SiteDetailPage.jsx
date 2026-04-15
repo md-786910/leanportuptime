@@ -10,6 +10,7 @@ import SiteHeader from "../components/sites/SiteHeader";
 import SiteDetailTabs from "../components/sites/SiteDetailTabs";
 import SiteOverviewTab from "../components/sites/SiteOverviewTab";
 import EditSiteModal from "../components/sites/EditSiteModal";
+import ShareLinkModal from "../components/sites/ShareLinkModal";
 import ExportButton from "../components/reports/ExportButton";
 import ResponseChart from "../components/monitoring/ResponseChart";
 import UptimeBar from "../components/monitoring/UptimeBar";
@@ -33,6 +34,7 @@ export default function SiteDetailPage() {
   const [period, setPeriod] = useState("24h");
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showShare, setShowShare] = useState(false);
 
   const { summary } = useCheckSummary(id, period);
   const { checks } = useCheckHistory(id, { limit: 100 });
@@ -61,6 +63,7 @@ export default function SiteDetailPage() {
           site={site}
           onTriggerCheck={() => triggerCheck.mutate(id)}
           onTogglePause={() => togglePause.mutate(id)}
+          onShare={() => setShowShare(true)}
           onEdit={() => setShowEdit(true)}
           onDelete={() => setShowDelete(true)}
           isCheckLoading={triggerCheck.isPending}
@@ -195,6 +198,11 @@ export default function SiteDetailPage() {
         </div>
       )}
 
+      <ShareLinkModal
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+        siteId={id}
+      />
       <EditSiteModal
         isOpen={showEdit}
         onClose={() => setShowEdit(false)}
