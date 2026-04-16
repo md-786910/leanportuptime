@@ -2,10 +2,22 @@ const Site = require('../models/Site');
 const Check = require('../models/Check');
 const { uptimeQueue } = require('../config/queue');
 
+function siteFilter(user) {
+  if (user.role === 'admin' && !user.invitedBy) return { userId: user._id };
+  if (user.role === 'admin' && user.invitedBy) return { userId: user.invitedBy };
+  return { _id: { $in: user.sharedSites || [] } };
+}
+
+function canAccessSite(user, site) {
+  if (user.role === 'admin' && !user.invitedBy) return site.userId.equals(user._id);
+  if (user.role === 'admin' && user.invitedBy) return site.userId.equals(user.invitedBy);
+  return (user.sharedSites || []).some((id) => id.equals(site._id));
+}
+
 exports.list = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, tag } = req.query;
-    const filter = { userId: req.user._id };
+    const filter = siteFilter(req.user);
     if (status) filter.currentStatus = status;
     if (tag) filter.tags = tag;
 
@@ -55,8 +67,8 @@ exports.create = async (req, res, next) => {
 
 exports.get = async (req, res, next) => {
   try {
-    const site = await Site.findOne({ _id: req.params.id, userId: req.user._id });
-    if (!site) {
+    const site = await Site.findById(req.params.id);
+    if (!site || !canAccessSite(req.user, site)) {
       return res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Site not found' },
@@ -70,8 +82,9 @@ exports.get = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
+    const ownerFilter = { _id: req.params.id, userId: req.user.invitedBy || req.user._id };
     const site = await Site.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
+      ownerFilter,
       req.body,
       { new: true, runValidators: true }
     );
@@ -89,7 +102,7 @@ exports.update = async (req, res, next) => {
 
 exports.remove = async (req, res, next) => {
   try {
-    const site = await Site.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    const site = await Site.findOneAndDelete({ _id: req.params.id, userId: req.user.invitedBy || req.user._id });
     if (!site) {
       return res.status(404).json({
         success: false,
@@ -108,8 +121,8 @@ exports.remove = async (req, res, next) => {
 
 exports.triggerCheck = async (req, res, next) => {
   try {
-    const site = await Site.findOne({ _id: req.params.id, userId: req.user._id });
-    if (!site) {
+    const site = await Site.findById(req.params.id);
+    if (!site || !canAccessSite(req.user, site)) {
       return res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Site not found' },
@@ -130,8 +143,8 @@ exports.triggerCheck = async (req, res, next) => {
 
 exports.togglePause = async (req, res, next) => {
   try {
-    const site = await Site.findOne({ _id: req.params.id, userId: req.user._id });
-    if (!site) {
+    const site = await Site.findById(req.params.id);
+    if (!site || !canAccessSite(req.user, site)) {
       return res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Site not found' },

@@ -22,12 +22,14 @@ export default function SiteListToolbar({ onAddSite, statusFilter, onStatusFilte
           ))}
         </select>
       </div>
-      <Button onClick={onAddSite}>
-        <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-        Add Site
-      </Button>
+      {onAddSite && (
+        <Button onClick={onAddSite}>
+          <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Site
+        </Button>
+      )}
     </div>
   );
 }

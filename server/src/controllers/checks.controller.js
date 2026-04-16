@@ -1,21 +1,11 @@
 const Check = require('../models/Check');
-const Site = require('../models/Site');
 
 exports.getHistory = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const site = req.site;
     const { cursor, limit = 50, from, to } = req.query;
 
-    // Verify site ownership
-    const site = await Site.findOne({ _id: id, userId: req.user._id });
-    if (!site) {
-      return res.status(404).json({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Site not found' },
-      });
-    }
-
-    const filter = { siteId: id };
+    const filter = { siteId: site._id };
     if (cursor) filter._id = { $lt: cursor };
     if (from || to) {
       filter.timestamp = {};
@@ -45,16 +35,8 @@ exports.getHistory = async (req, res, next) => {
 
 exports.getSummary = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const site = req.site;
     const { period = '24h' } = req.query;
-
-    const site = await Site.findOne({ _id: id, userId: req.user._id });
-    if (!site) {
-      return res.status(404).json({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Site not found' },
-      });
-    }
 
     const periodMap = { '24h': 1, '7d': 7, '30d': 30 };
     const days = periodMap[period] || 1;

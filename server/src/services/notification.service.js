@@ -116,6 +116,37 @@ class NotificationService {
     });
   }
 
+  async sendInvitationEmail(toEmail, inviterName, siteNames, acceptUrl) {
+    if (!this.transporter) {
+      throw new Error('SMTP not configured');
+    }
+
+    const siteList = siteNames.length > 0
+      ? siteNames.map((n) => `<li>${n}</li>`).join('')
+      : '<li>All projects (admin access)</li>';
+
+    await this.transporter.sendMail({
+      from: config.smtp.from,
+      to: toEmail,
+      subject: `[WP Sentinel] You've been invited to monitor sites`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4f46e5;">WP Sentinel Invitation</h2>
+          <p><strong>${inviterName}</strong> has invited you to collaborate on WP Sentinel.</p>
+          <p>Shared projects:</p>
+          <ul>${siteList}</ul>
+          <p>This invitation expires in <strong>10 minutes</strong>.</p>
+          <p style="margin: 24px 0;">
+            <a href="${acceptUrl}" style="background: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+              Accept Invitation
+            </a>
+          </p>
+          <p style="color: #6b7280; font-size: 12px;">If you didn't expect this invitation, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+  }
+
   async _sendSlack(webhookUrl, site, message) {
     const { default: fetch } = await import("node-fetch");
     await fetch(webhookUrl, {

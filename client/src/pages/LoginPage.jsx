@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import Input from '../components/common/Input';
+import PasswordInput from '../components/common/PasswordInput';
 import Button from '../components/common/Button';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthStore } from '../store/authStore';
@@ -47,10 +48,9 @@ export default function LoginPage() {
           error={errors.email}
           placeholder="you@example.com"
         />
-        <Input
+        <PasswordInput
           label="Password"
           id="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={errors.password}

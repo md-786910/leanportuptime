@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuthStore } from '../store/authStore';
 import { useSites } from '../hooks/useSites';
 import KPICards from '../components/dashboard/KPICards';
 import SiteListToolbar from '../components/dashboard/SiteListToolbar';
@@ -7,6 +8,8 @@ import Pagination from '../components/common/Pagination';
 import AddSiteModal from '../components/sites/AddSiteModal';
 
 export default function DashboardPage() {
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === 'admin';
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -26,7 +29,7 @@ export default function DashboardPage() {
       <KPICards sites={sites} />
 
       <SiteListToolbar
-        onAddSite={() => setShowAddModal(true)}
+        onAddSite={isAdmin ? () => setShowAddModal(true) : null}
         statusFilter={statusFilter}
         onStatusFilterChange={(v) => { setStatusFilter(v); setPage(1); }}
       />

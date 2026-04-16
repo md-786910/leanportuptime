@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import Input from '../components/common/Input';
+import PasswordInput from '../components/common/PasswordInput';
 import Button from '../components/common/Button';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthStore } from '../store/authStore';
@@ -42,8 +43,8 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Name" id="name" value={form.name} onChange={update('name')} error={errors.name} placeholder="John Doe" />
         <Input label="Email" id="email" type="email" value={form.email} onChange={update('email')} error={errors.email} placeholder="you@example.com" />
-        <Input label="Password" id="password" type="password" value={form.password} onChange={update('password')} error={errors.password} placeholder="Min 8 characters" />
-        <Input label="Confirm Password" id="confirmPassword" type="password" value={form.confirmPassword} onChange={update('confirmPassword')} error={errors.confirmPassword} placeholder="Repeat password" />
+        <PasswordInput label="Password" id="password" value={form.password} onChange={update('password')} error={errors.password} placeholder="Min 8 characters" />
+        <PasswordInput label="Confirm Password" id="confirmPassword" value={form.confirmPassword} onChange={update('confirmPassword')} error={errors.confirmPassword} placeholder="Repeat password" />
         <Button type="submit" isLoading={isLoading} className="w-full">
           Create account
         </Button>

@@ -40,3 +40,13 @@ const auth = async (req, res, next) => {
 };
 
 module.exports = auth;
+
+module.exports.requireAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Admin access required' },
+    });
+  }
+  next();
+};

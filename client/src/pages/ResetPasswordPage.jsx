@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Input from '../components/common/Input';
+import PasswordInput from '../components/common/PasswordInput';
 import Button from '../components/common/Button';
 import { useAuth } from '../hooks/useAuth';
 
@@ -34,8 +34,8 @@ export default function ResetPasswordPage() {
     <div>
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Set new password</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="New Password" id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} placeholder="Min 8 characters" />
-        <Input label="Confirm Password" id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={errors.confirmPassword} placeholder="Repeat password" />
+        <PasswordInput label="New Password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} placeholder="Min 8 characters" />
+        <PasswordInput label="Confirm Password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={errors.confirmPassword} placeholder="Repeat password" />
         <Button type="submit" isLoading={isLoading} className="w-full">
           Reset password
         </Button>

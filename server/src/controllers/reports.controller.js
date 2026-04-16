@@ -1,16 +1,8 @@
-const Site = require('../models/Site');
 const reportService = require('../services/report.service');
 
 exports.generatePDF = async (req, res, next) => {
   try {
-    const site = await Site.findOne({ _id: req.params.id, userId: req.user._id });
-    if (!site) {
-      return res.status(404).json({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Site not found' },
-      });
-    }
-
+    const site = req.site;
     const { range = '30d' } = req.query;
     const pdfBuffer = await reportService.generatePDF(site._id, range);
 
@@ -28,14 +20,7 @@ exports.generatePDF = async (req, res, next) => {
 
 exports.generateSEOPDF = async (req, res, next) => {
   try {
-    const site = await Site.findOne({ _id: req.params.id, userId: req.user._id });
-    if (!site) {
-      return res.status(404).json({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Site not found' },
-      });
-    }
-
+    const site = req.site;
     const pdfBuffer = await reportService.generateSEOPDF(site._id);
     const safeName = site.name.replace(/[^a-zA-Z0-9-_]/g, '_');
 

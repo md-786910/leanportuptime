@@ -42,6 +42,22 @@ const userSchema = new mongoose.Schema(
       default: 0,
     },
     lockUntil: Date,
+    role: {
+      type: String,
+      enum: ['admin', 'viewer'],
+      default: 'admin',
+    },
+    invitedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    sharedSites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Site',
+      },
+    ],
   },
   {
     timestamps: true,

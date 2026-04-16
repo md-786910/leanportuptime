@@ -6,6 +6,8 @@ const cookieParser = require("cookie-parser");
 const config = require("./config");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const errorHandler = require("./middleware/errorHandler");
+const auth = require("./middleware/auth");
+const siteAccess = require("./middleware/siteAccess");
 
 // Route imports
 
@@ -19,6 +21,8 @@ const pluginRoutes = require("./routes/plugin.routes");
 const siteScanRoutes = require("./routes/sitescan.routes");
 const seoRoutes = require("./routes/seo.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
+const invitationRoutes = require("./routes/invitation.routes");
+const teamRoutes = require("./routes/team.routes");
 
 const app = express();
 
@@ -46,14 +50,16 @@ app.get("/api/health", (req, res) => {
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/sites", sitesRoutes);
-app.use("/api/sites/:id/checks", checksRoutes);
-app.use("/api/sites/:id/ssl", sslRoutes);
-app.use("/api/sites/:id/security", securityRoutes);
-app.use("/api/sites/:id/plugins", pluginRoutes);
-app.use("/api/sites/:id/sitescan", siteScanRoutes);
-app.use("/api/sites/:id/seo", seoRoutes);
-app.use("/api/sites/:id/reports", reportsRoutes);
+app.use("/api/sites/:id/checks", auth, siteAccess, checksRoutes);
+app.use("/api/sites/:id/ssl", auth, siteAccess, sslRoutes);
+app.use("/api/sites/:id/security", auth, siteAccess, securityRoutes);
+app.use("/api/sites/:id/plugins", auth, siteAccess, pluginRoutes);
+app.use("/api/sites/:id/sitescan", auth, siteAccess, siteScanRoutes);
+app.use("/api/sites/:id/seo", auth, siteAccess, seoRoutes);
+app.use("/api/sites/:id/reports", auth, siteAccess, reportsRoutes);
 app.use("/api/notifications", notificationsRoutes);
+app.use("/api/invitations", invitationRoutes);
+app.use("/api/users/team", teamRoutes);
 
 // 404 handler
 app.use((req, res) => {

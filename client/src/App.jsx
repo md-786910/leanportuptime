@@ -17,6 +17,8 @@ import DashboardPage from './pages/DashboardPage';
 import SiteDetailPage from './pages/SiteDetailPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingsPage';
+import TeamPage from './pages/TeamPage';
+import AcceptInvitationPage from './pages/AcceptInvitationPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -64,12 +66,16 @@ export default function App() {
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           </Route>
 
+          {/* Standalone public route */}
+          <Route path="/accept-invitation/:token" element={<AcceptInvitationPage />} />
+
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/sites/:id" element={<SiteDetailPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/team" element={<TeamPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

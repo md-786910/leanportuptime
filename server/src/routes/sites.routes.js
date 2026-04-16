@@ -2,6 +2,7 @@ const router = require('express').Router();
 const Joi = require('joi');
 const sitesController = require('../controllers/sites.controller');
 const auth = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const createSiteSchema = Joi.object({
@@ -45,11 +46,11 @@ const updateSiteSchema = Joi.object({
 router.use(auth);
 
 router.get('/', sitesController.list);
-router.post('/', validate(createSiteSchema), sitesController.create);
+router.post('/', requireAdmin, validate(createSiteSchema), sitesController.create);
 router.get('/:id', sitesController.get);
-router.patch('/:id', validate(updateSiteSchema), sitesController.update);
-router.delete('/:id', sitesController.remove);
+router.patch('/:id', requireAdmin, validate(updateSiteSchema), sitesController.update);
+router.delete('/:id', requireAdmin, sitesController.remove);
 router.post('/:id/check', sitesController.triggerCheck);
-router.post('/:id/pause', sitesController.togglePause);
+router.post('/:id/pause', requireAdmin, sitesController.togglePause);
 
 module.exports = router;
