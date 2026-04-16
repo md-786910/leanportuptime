@@ -1,5 +1,5 @@
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ override: true });
 
 function parseProbes(raw) {
   return (raw || "")
@@ -10,7 +10,7 @@ function parseProbes(raw) {
       return { name: name.trim(), url: url.trim() };
     });
 }
-
+console.log(process.env.SSL_EMAIL_LIST_TO_SEND);
 module.exports = {
   env: process.env.NODE_ENV || "development",
   port: parseInt(process.env.PORT, 10) || 5000,
@@ -29,6 +29,10 @@ module.exports = {
     pass: process.env.SMTP_PASS,
     from: process.env.SMTP_FROM || "noreply@wpsentinel.com",
   },
+  sslEmailListToSend: (process.env.SSL_EMAIL_LIST_TO_SEND || "")
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean),
   clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
   probes: parseProbes(process.env.PROBE_URLS),
   probeSecret: process.env.PROBE_SECRET || "",

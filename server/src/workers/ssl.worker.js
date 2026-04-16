@@ -1,12 +1,12 @@
-const { Worker } = require('bullmq');
-const sslService = require('../services/ssl.service');
-const Site = require('../models/Site');
-const SSLCert = require('../models/SSLCert');
-const Notification = require('../models/Notification');
-const notificationService = require('../services/notification.service');
-const logger = require('../utils/logger');
+const { Worker } = require("bullmq");
+const sslService = require("../services/ssl.service");
+const Site = require("../models/Site");
+const SSLCert = require("../models/SSLCert");
+const Notification = require("../models/Notification");
+const notificationService = require("../services/notification.service");
+const logger = require("../utils/logger");
 
-const EXPIRY_THRESHOLDS = [30, 14, 7, 1];
+const EXPIRY_THRESHOLDS = [30, 14, 7, 2, 2, 1];
 
 async function shouldNotify(siteId, daysRemaining) {
   // Find the matching threshold
@@ -19,7 +19,7 @@ async function shouldNotify(siteId, daysRemaining) {
 
   const existing = await Notification.findOne({
     siteId,
-    type: 'ssl_expiry',
+    type: "ssl_expiry",
     createdAt: { $gte: today },
   });
 
@@ -28,7 +28,7 @@ async function shouldNotify(siteId, daysRemaining) {
 
 function createSSLWorker(connection) {
   const worker = new Worker(
-    'ssl-checks',
+    "ssl-checks",
     async (job) => {
       const { siteId, url } = job.data;
       logger.debug(`SSL check started: ${url}`);
@@ -39,7 +39,7 @@ function createSSLWorker(connection) {
       await SSLCert.create({ siteId, ...result });
 
       // Update site's embedded SSL data
-      const site = await Site.findById(siteId).populate('userId', 'email');
+      const site = await Site.findById(siteId).populate("userId", "email");
       if (!site) return;
 
       site.ssl = {
@@ -63,8 +63,8 @@ function createSSLWorker(connection) {
             await notificationService.notify(
               site.userId._id,
               site,
-              'ssl_expiry',
-              `⚠️ SSL certificate for ${site.name} has EXPIRED! Immediate action required.`
+              "ssl_expiry",
+              `⚠️ SSL certificate for ${site.name} has EXPIRED! Immediate action required.`,
             );
             logger.warn(`SSL EXPIRED: ${site.name} (${url})`);
           }
@@ -72,24 +72,27 @@ function createSSLWorker(connection) {
           // Certificate expiring soon — notify at 30, 14, 7, 1 day thresholds
           const canNotify = await shouldNotify(siteId, result.daysRemaining);
           if (canNotify) {
-            const urgency = result.daysRemaining <= 7 ? '🔴 URGENT' : '⚠️ Warning';
+            const urgency =
+              result.daysRemaining <= 7 ? "🔴 URGENT" : "⚠️ Warning";
             await notificationService.notify(
               site.userId._id,
               site,
-              'ssl_expiry',
-              `${urgency}: SSL certificate for ${site.name} expires in ${result.daysRemaining} days`
+              "ssl_expiry",
+              `${urgency}: SSL certificate for ${site.name} expires in ${result.daysRemaining} days`,
             );
           }
         }
       }
 
-      logger.debug(`SSL check completed: ${url} — ${result.daysRemaining} days remaining`);
+      logger.debug(
+        `SSL check completed: ${url} — ${result.daysRemaining} days remaining`,
+      );
       return result;
     },
-    { connection, concurrency: 5 }
+    { connection, concurrency: 5 },
   );
 
-  worker.on('failed', (job, err) => {
+  worker.on("failed", (job, err) => {
     logger.error(`SSL job failed [${job?.data?.url}]: ${err.message}`);
   });
 

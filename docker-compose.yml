@@ -7,11 +7,10 @@ services:
     restart: unless-stopped
     ports:
       - "5000:5000"
-    env_file:
-      - ./server/.env
     volumes:
       - ./server/src:/app/src
       - ./server/server.js:/app/server.js
+      - ./server/.env:/app/.env
     depends_on:
       mongo:
         condition: service_healthy
@@ -26,11 +25,10 @@ services:
       dockerfile: Dockerfile
     container_name: wp-sentinel-worker
     restart: unless-stopped
-    command: npx nodemon --watch src --legacy-watch --polling-interval 1000 src/workers/index.js
-    env_file:
-      - ./server/.env
+    command: npx nodemon --watch src --watch .env --legacy-watch --polling-interval 1000 src/workers/index.js
     volumes:
       - ./server/src:/app/src
+      - ./server/.env:/app/.env
     depends_on:
       mongo:
         condition: service_healthy

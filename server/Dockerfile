@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["npx", "nodemon", "--watch", "src", "--watch", "server.js", "--legacy-watch", "--polling-interval", "1000", "server.js"]
+CMD ["npx", "nodemon", "--watch", "src", "--watch", "server.js", "--watch", ".env", "--legacy-watch", "--polling-interval", "1000", "server.js"]
