@@ -43,6 +43,24 @@ module.exports = {
       process.env.GOOGLE_REDIRECT_URI ||
       "http://localhost:5000/api/google/callback",
   },
+  backlinks: {
+    provider: process.env.BACKLINKS_PROVIDER || "dataforseo",
+    cacheDays: parseInt(process.env.BACKLINKS_CACHE_DAYS || "7", 10),
+    defaultMonthlyLimit: parseInt(process.env.BACKLINKS_MONTHLY_LIMIT || "4", 10),
+    providers: {
+      dataforseo: {
+        email: process.env.DATAFORSEO_EMAIL || "",
+        password: process.env.DATAFORSEO_PASSWORD || "",
+      },
+      moz: {
+        accessId: process.env.MOZ_ACCESS_ID || "",
+        secretKey: process.env.MOZ_SECRET_KEY || "",
+      },
+      ahrefs: {
+        apiToken: process.env.AHREFS_API_TOKEN || "",
+      },
+    },
+  },
   rateLimit: {
     windowMs: 15 * 60 * 1000,
     max: process.env.NODE_ENV === "development" ? 1000 : 100,

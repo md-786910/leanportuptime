@@ -1,5 +1,6 @@
 const config = require('../config');
 const searchConsoleService = require('../services/searchConsole.service');
+const resolveGoogleUser = require('../utils/resolveGoogleUser');
 
 exports.connect = async (req, res, next) => {
   try {
@@ -50,7 +51,10 @@ exports.disconnect = async (req, res, next) => {
 
 exports.status = async (req, res, next) => {
   try {
-    const user = req.user;
+    // For viewers, report the site-owner (inviter)'s Google connection status
+    // so the UI correctly reflects whether Google data is available for them to view.
+    const effectiveUser = await resolveGoogleUser(req);
+    const user = effectiveUser || req.user;
     const connected = !!(user.google && user.google.connectedAt);
     res.json({
       success: true,

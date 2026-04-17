@@ -19,6 +19,7 @@ import {
   useGscInsights,
 } from '../../hooks/useSearchConsole';
 import { themeColor } from './colorThemes';
+import { useIsViewer } from '../../hooks/useRole';
 import TopQueriesTable from './TopQueriesTable';
 import TopPagesTable from './TopPagesTable';
 import DeviceBreakdown from './DeviceBreakdown';
@@ -177,6 +178,7 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
   const { performance, isLoading, error } = useGscPerformance(siteId, period);
   const { insights, isLoading: insightsLoading } = useGscInsights(siteId, period);
   const unlinkMutation = useGscUnlink(siteId);
+  const isViewer = useIsViewer();
 
   if (isLoading) {
     return (
@@ -218,18 +220,20 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => unlinkMutation.mutate()}
-              disabled={unlinkMutation.isPending}
-              className="text-xs text-gray-400 hover:text-red-500 transition-colors"
-              title="Unlink property"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-              </svg>
-            </button>
-          </div>
+          {!isViewer && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => unlinkMutation.mutate()}
+                disabled={unlinkMutation.isPending}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                title="Unlink property"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Period pills */}
@@ -396,10 +400,28 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
   );
 }
 
+// ========== Viewer-only read-only notice ==========
+function ViewerNotConfigured({ message }) {
+  return (
+    <Card>
+      <div className="text-center py-8">
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Search Console Not Configured</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">{message}</p>
+      </div>
+    </Card>
+  );
+}
+
 // ========== Main export ==========
 export default function SearchConsoleSection({ siteId, themeKey, viewMode }) {
   const { googleStatus, isLoading: googleLoading } = useGoogleStatus();
   const { gscStatus, isLoading: gscLoading } = useGscStatus(siteId);
+  const isViewer = useIsViewer();
 
   // Handle Google OAuth callback redirect
   const [searchParams, setSearchParams] = useSearchParams();
@@ -425,11 +447,17 @@ export default function SearchConsoleSection({ siteId, themeKey, viewMode }) {
 
   // State 1: Google not connected
   if (!googleStatus?.connected) {
+    if (isViewer) {
+      return <ViewerNotConfigured message="Google account not connected. Contact the site owner to connect Google Search Console." />;
+    }
     return <ConnectState siteId={siteId} />;
   }
 
   // State 2: Connected but no property linked
   if (!gscStatus?.linked) {
+    if (isViewer) {
+      return <ViewerNotConfigured message="No Search Console property linked to this site. Contact the site owner to link a property." />;
+    }
     return <PropertySelector siteId={siteId} />;
   }
 

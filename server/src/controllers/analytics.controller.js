@@ -1,5 +1,6 @@
 const analyticsService = require('../services/analytics.service');
 const Site = require('../models/Site');
+const resolveGoogleUser = require('../utils/resolveGoogleUser');
 
 /**
  * Compute date range from a period string.
@@ -29,8 +30,9 @@ function dateRange(period) {
 exports.getStatus = async (req, res, next) => {
   try {
     const site = req.site;
-    const user = req.user;
-    const googleConnected = !!(user.google && user.google.connectedAt);
+    // Viewers inherit the site owner's Google connection
+    const effectiveUser = await resolveGoogleUser(req);
+    const googleConnected = !!(effectiveUser?.google && effectiveUser.google.connectedAt);
     const linked = !!(site.analytics && site.analytics.propertyId);
 
     res.json({
@@ -50,7 +52,8 @@ exports.getStatus = async (req, res, next) => {
 
 exports.listProperties = async (req, res, next) => {
   try {
-    const properties = await analyticsService.listProperties(req.user);
+    const effectiveUser = await resolveGoogleUser(req);
+    const properties = await analyticsService.listProperties(effectiveUser);
     res.json({ success: true, data: properties });
   } catch (error) {
     if (error.statusCode === 400) {
@@ -121,9 +124,10 @@ exports.getOverview = async (req, res, next) => {
     const period = req.query.period || '28d';
     const { startDate, endDate } = dateRange(period);
 
+    const effectiveUser = await resolveGoogleUser(req);
     const [overview, trend] = await Promise.all([
-      analyticsService.getOrganicOverview(req.user, propertyId, { startDate, endDate }),
-      analyticsService.getOrganicTrend(req.user, propertyId, { startDate, endDate }),
+      analyticsService.getOrganicOverview(effectiveUser, propertyId, { startDate, endDate }),
+      analyticsService.getOrganicTrend(effectiveUser, propertyId, { startDate, endDate }),
     ]);
 
     res.json({
@@ -169,9 +173,10 @@ exports.getWebsite = async (req, res, next) => {
     const period = req.query.period || '28d';
     const { startDate, endDate } = dateRange(period);
 
+    const effectiveUser = await resolveGoogleUser(req);
     const [overview, details] = await Promise.all([
-      analyticsService.getWebsiteOverview(req.user, propertyId, { startDate, endDate }),
-      analyticsService.getWebsiteDetails(req.user, propertyId, { startDate, endDate }),
+      analyticsService.getWebsiteOverview(effectiveUser, propertyId, { startDate, endDate }),
+      analyticsService.getWebsiteDetails(effectiveUser, propertyId, { startDate, endDate }),
     ]);
 
     res.json({
@@ -210,7 +215,8 @@ exports.getInsights = async (req, res, next) => {
     const period = req.query.period || '28d';
     const { startDate, endDate } = dateRange(period);
 
-    const insights = await analyticsService.getOrganicInsights(req.user, propertyId, {
+    const effectiveUser = await resolveGoogleUser(req);
+    const insights = await analyticsService.getOrganicInsights(effectiveUser, propertyId, {
       startDate,
       endDate,
       rowLimit: 10,

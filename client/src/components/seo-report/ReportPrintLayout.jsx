@@ -67,7 +67,14 @@ const CWV = [
 
 const SCORE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
 
-const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, siteUrl, scores, strategy, history, themeKey, gscPerformance, gscInsights, websiteData, organicOverview, organicInsights }, ref) {
+const METRIC_LABELS = {
+  domain_rank: 'Domain Rank',
+  domain_authority: 'Domain Authority',
+  citation_flow: 'Citation Flow',
+  trust_flow: 'Trust Flow',
+};
+
+const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, siteUrl, scores, strategy, history, themeKey, gscPerformance, gscInsights, websiteData, organicOverview, organicInsights, backlinks }, ref) {
   const tk = themeKey || 'default';
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -130,6 +137,25 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
               );
             })}
           </div>
+        </Section>
+      )}
+
+      {/* ===== DOMAIN AUTHORITY / BACKLINKS ===== */}
+      {backlinks && backlinks.lastFetchedAt && (
+        <Section title="Domain Authority">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+            <KpiBox label={METRIC_LABELS[backlinks.providerMetric] || 'Domain Score'} value={backlinks.domainRank || 0} color={themeColor(tk, 0)} />
+            <KpiBox label="Backlinks" value={fmt(backlinks.backlinksCount)} />
+            <KpiBox label="Referring Domains" value={fmt(backlinks.referringDomains)} />
+            <KpiBox label="New Links (30d)" value={`+${fmt(backlinks.newLinksLast30d)}`} color="#059669" />
+          </div>
+          {backlinks.providerName && (
+            <p style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right', marginTop: 6 }}>
+              Provider: {backlinks.providerName.charAt(0).toUpperCase() + backlinks.providerName.slice(1)}
+              {' \u00b7 Updated '}
+              {new Date(backlinks.lastFetchedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
         </Section>
       )}
 

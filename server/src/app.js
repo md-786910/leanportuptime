@@ -26,6 +26,8 @@ const teamRoutes = require("./routes/team.routes");
 const googleRoutes = require("./routes/google.routes");
 const searchConsoleRoutes = require("./routes/searchConsole.routes");
 const analyticsRoutes = require("./routes/analytics.routes");
+const backlinksRoutes = require("./routes/backlinks.routes");
+const appSettingsRoutes = require("./routes/appSettings.routes");
 
 const app = express();
 
@@ -63,6 +65,8 @@ app.use("/api/sites/:id/reports", auth, siteAccess, reportsRoutes);
 app.use("/api/google", googleRoutes);
 app.use("/api/sites/:id/search-console", auth, siteAccess, searchConsoleRoutes);
 app.use("/api/sites/:id/analytics", auth, siteAccess, analyticsRoutes);
+app.use("/api/sites/:id/backlinks", auth, siteAccess, backlinksRoutes);
+app.use("/api/settings", auth, appSettingsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/users/team", teamRoutes);

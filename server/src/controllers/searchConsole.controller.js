@@ -1,5 +1,6 @@
 const searchConsoleService = require('../services/searchConsole.service');
 const Site = require('../models/Site');
+const resolveGoogleUser = require('../utils/resolveGoogleUser');
 
 /**
  * Compute date range from a period string.
@@ -36,8 +37,9 @@ function dateRange(period) {
 exports.getStatus = async (req, res, next) => {
   try {
     const site = req.site;
-    const user = req.user;
-    const googleConnected = !!(user.google && user.google.connectedAt);
+    // For viewers, check the site owner's Google connection (they can't connect their own)
+    const effectiveUser = await resolveGoogleUser(req);
+    const googleConnected = !!(effectiveUser?.google && effectiveUser.google.connectedAt);
     const linked = !!(site.searchConsole && site.searchConsole.property);
 
     res.json({
@@ -56,7 +58,8 @@ exports.getStatus = async (req, res, next) => {
 
 exports.listProperties = async (req, res, next) => {
   try {
-    const properties = await searchConsoleService.listProperties(req.user);
+    const effectiveUser = await resolveGoogleUser(req);
+    const properties = await searchConsoleService.listProperties(effectiveUser);
     res.json({ success: true, data: properties });
   } catch (error) {
     if (error.statusCode === 400) {
@@ -118,7 +121,10 @@ exports.getPerformance = async (req, res, next) => {
     // For 'daily' period, always include date dimension
     const dimensions = period === 'daily' ? ['date'] : [];
 
-    const result = await searchConsoleService.getPerformance(req.user, property, {
+    // Viewers use the site owner's Google credentials
+    const effectiveUser = await resolveGoogleUser(req);
+
+    const result = await searchConsoleService.getPerformance(effectiveUser, property, {
       startDate,
       endDate,
       dimensions,
@@ -127,7 +133,7 @@ exports.getPerformance = async (req, res, next) => {
     // Also fetch daily breakdown for non-daily periods (for the trend chart)
     let daily = result.daily;
     if (period !== 'daily' && period !== '24h') {
-      const dailyResult = await searchConsoleService.getPerformance(req.user, property, {
+      const dailyResult = await searchConsoleService.getPerformance(effectiveUser, property, {
         startDate,
         endDate,
         dimensions: ['date'],
@@ -169,7 +175,8 @@ exports.getInsights = async (req, res, next) => {
     const period = req.query.period || '28d';
     const { startDate, endDate } = dateRange(period);
 
-    const insights = await searchConsoleService.getInsights(req.user, property, {
+    const effectiveUser = await resolveGoogleUser(req);
+    const insights = await searchConsoleService.getInsights(effectiveUser, property, {
       startDate,
       endDate,
       rowLimit: 10,
