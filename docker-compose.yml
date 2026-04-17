@@ -11,6 +11,7 @@ services:
       - ./server/src:/app/src
       - ./server/server.js:/app/server.js
       - ./server/.env:/app/.env
+      - ./server/node_modules:/app/node_modules
     depends_on:
       mongo:
         condition: service_healthy
@@ -29,6 +30,7 @@ services:
     volumes:
       - ./server/src:/app/src
       - ./server/.env:/app/.env
+      - ./server/node_modules:/app/node_modules
     depends_on:
       mongo:
         condition: service_healthy

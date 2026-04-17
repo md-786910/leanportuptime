@@ -10,7 +10,6 @@ function parseProbes(raw) {
       return { name: name.trim(), url: url.trim() };
     });
 }
-console.log(process.env.SSL_EMAIL_LIST_TO_SEND);
 module.exports = {
   env: process.env.NODE_ENV || "development",
   port: parseInt(process.env.PORT, 10) || 5000,
@@ -37,6 +36,13 @@ module.exports = {
   probes: parseProbes(process.env.PROBE_URLS),
   probeSecret: process.env.PROBE_SECRET || "",
   pageSpeedApiKey: process.env.PAGESPEED_API_KEY || "",
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    redirectUri:
+      process.env.GOOGLE_REDIRECT_URI ||
+      "http://localhost:5000/api/google/callback",
+  },
   rateLimit: {
     windowMs: 15 * 60 * 1000,
     max: process.env.NODE_ENV === "development" ? 1000 : 100,

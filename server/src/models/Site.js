@@ -84,6 +84,15 @@ const siteSchema = new mongoose.Schema(
       linksScore: { type: Number, default: 0 },
       performanceScore: { type: Number, default: 0 },
     },
+    searchConsole: {
+      property: { type: String, default: null },
+      connectedAt: { type: Date, default: null },
+    },
+    analytics: {
+      propertyId: { type: String, default: null },
+      propertyName: { type: String, default: null },
+      connectedAt: { type: Date, default: null },
+    },
     notifications: {
       email: { type: Boolean, default: true },
       slack: { type: Boolean, default: false },

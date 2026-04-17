@@ -58,6 +58,12 @@ const userSchema = new mongoose.Schema(
         ref: 'Site',
       },
     ],
+    google: {
+      accessToken: { type: String, default: null },
+      refreshToken: { type: String, default: null },
+      email: { type: String, default: null },
+      connectedAt: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,
@@ -71,6 +77,10 @@ const userSchema = new mongoose.Schema(
         delete ret.passwordResetExpires;
         delete ret.failedLoginAttempts;
         delete ret.lockUntil;
+        if (ret.google) {
+          delete ret.google.accessToken;
+          delete ret.google.refreshToken;
+        }
         return ret;
       },
     },

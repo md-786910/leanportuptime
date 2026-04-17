@@ -1,0 +1,238 @@
+const analyticsService = require('../services/analytics.service');
+const Site = require('../models/Site');
+
+/**
+ * Compute date range from a period string.
+ * GA4 data is near-real-time, so "today" is a safe endDate.
+ */
+function dateRange(period) {
+  const end = new Date();
+  const start = new Date(end);
+
+  switch (period) {
+    case '7d':
+      start.setDate(start.getDate() - 6);
+      break;
+    case '2m':
+      start.setDate(start.getDate() - 59);
+      break;
+    case '28d':
+    default:
+      start.setDate(start.getDate() - 27);
+      break;
+  }
+
+  const fmt = (d) => d.toISOString().slice(0, 10);
+  return { startDate: fmt(start), endDate: fmt(end) };
+}
+
+exports.getStatus = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const user = req.user;
+    const googleConnected = !!(user.google && user.google.connectedAt);
+    const linked = !!(site.analytics && site.analytics.propertyId);
+
+    res.json({
+      success: true,
+      data: {
+        googleConnected,
+        linked,
+        propertyId: site.analytics?.propertyId || null,
+        propertyName: site.analytics?.propertyName || null,
+        connectedAt: site.analytics?.connectedAt || null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.listProperties = async (req, res, next) => {
+  try {
+    const properties = await analyticsService.listProperties(req.user);
+    res.json({ success: true, data: properties });
+  } catch (error) {
+    if (error.statusCode === 400) {
+      return res.status(400).json({ success: false, error: { message: error.message } });
+    }
+    // Detect insufficient scope (403 from Google)
+    if (error.code === 403 || error.response?.status === 403) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'INSUFFICIENT_SCOPE',
+          message: 'Analytics access not granted. Please reconnect your Google account.',
+        },
+      });
+    }
+    next(error);
+  }
+};
+
+exports.linkProperty = async (req, res, next) => {
+  try {
+    const { propertyId, propertyName } = req.body;
+    if (!propertyId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'propertyId is required' },
+      });
+    }
+
+    await Site.findByIdAndUpdate(req.site._id, {
+      'analytics.propertyId': propertyId,
+      'analytics.propertyName': propertyName || null,
+      'analytics.connectedAt': new Date(),
+    });
+
+    res.json({ success: true, data: { propertyId, message: 'Analytics property linked' } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.unlinkProperty = async (req, res, next) => {
+  try {
+    await Site.findByIdAndUpdate(req.site._id, {
+      'analytics.propertyId': null,
+      'analytics.propertyName': null,
+      'analytics.connectedAt': null,
+    });
+
+    res.json({ success: true, data: { message: 'Analytics property unlinked' } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getOverview = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const propertyId = site.analytics?.propertyId;
+
+    if (!propertyId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No Analytics property linked to this site' },
+      });
+    }
+
+    const period = req.query.period || '28d';
+    const { startDate, endDate } = dateRange(period);
+
+    const [overview, trend] = await Promise.all([
+      analyticsService.getOrganicOverview(req.user, propertyId, { startDate, endDate }),
+      analyticsService.getOrganicTrend(req.user, propertyId, { startDate, endDate }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        overview,
+        trend,
+        period,
+        startDate,
+        endDate,
+        fetchedAt: overview.fetchedAt,
+      },
+    });
+  } catch (error) {
+    if (error.statusCode === 400) {
+      return res.status(400).json({ success: false, error: { message: error.message } });
+    }
+    if (error.code === 403 || error.response?.status === 403) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'INSUFFICIENT_SCOPE',
+          message: 'Analytics access not granted. Please reconnect your Google account.',
+        },
+      });
+    }
+    next(error);
+  }
+};
+
+exports.getWebsite = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const propertyId = site.analytics?.propertyId;
+
+    if (!propertyId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No Analytics property linked to this site' },
+      });
+    }
+
+    const period = req.query.period || '28d';
+    const { startDate, endDate } = dateRange(period);
+
+    const [overview, details] = await Promise.all([
+      analyticsService.getWebsiteOverview(req.user, propertyId, { startDate, endDate }),
+      analyticsService.getWebsiteDetails(req.user, propertyId, { startDate, endDate }),
+    ]);
+
+    res.json({
+      success: true,
+      data: { overview, details, period, startDate, endDate },
+    });
+  } catch (error) {
+    if (error.statusCode === 400) {
+      return res.status(400).json({ success: false, error: { message: error.message } });
+    }
+    if (error.code === 403 || error.response?.status === 403) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'INSUFFICIENT_SCOPE',
+          message: 'Analytics access not granted. Please reconnect your Google account.',
+        },
+      });
+    }
+    next(error);
+  }
+};
+
+exports.getInsights = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const propertyId = site.analytics?.propertyId;
+
+    if (!propertyId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No Analytics property linked to this site' },
+      });
+    }
+
+    const period = req.query.period || '28d';
+    const { startDate, endDate } = dateRange(period);
+
+    const insights = await analyticsService.getOrganicInsights(req.user, propertyId, {
+      startDate,
+      endDate,
+      rowLimit: 10,
+    });
+
+    res.json({
+      success: true,
+      data: { ...insights, period, startDate, endDate },
+    });
+  } catch (error) {
+    if (error.statusCode === 400) {
+      return res.status(400).json({ success: false, error: { message: error.message } });
+    }
+    if (error.code === 403 || error.response?.status === 403) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'INSUFFICIENT_SCOPE',
+          message: 'Analytics access not granted. Please reconnect your Google account.',
+        },
+      });
+    }
+    next(error);
+  }
+};

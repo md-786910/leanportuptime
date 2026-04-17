@@ -20,6 +20,7 @@ import SecurityPanel from "../components/security/SecurityPanel";
 import PluginPanel from "../components/plugins/PluginPanel";
 import SiteScanPanel from "../components/sitescan/SiteScanPanel";
 import SeoPanel from "../components/seo/SeoPanel";
+import SeoReportPanel from "../components/seo-report/SeoReportPanel";
 
 export default function SiteDetailPage() {
   const { id } = useParams();
@@ -109,6 +110,7 @@ export default function SiteDetailPage() {
 
       {activeTab === "ssl" && <SSLPanel siteId={id} />}
       {activeTab === "seo" && <SeoPanel siteId={id} />}
+      {activeTab === "seo-report" && <SeoReportPanel siteId={id} siteName={site.name} siteUrl={site.url} />}
       {activeTab === "security" && <SecurityPanel siteId={id} />}
 
       {activeTab === "plugins" && <PluginPanel siteId={id} />}

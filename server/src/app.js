@@ -23,6 +23,9 @@ const seoRoutes = require("./routes/seo.routes");
 const notificationsRoutes = require("./routes/notifications.routes");
 const invitationRoutes = require("./routes/invitation.routes");
 const teamRoutes = require("./routes/team.routes");
+const googleRoutes = require("./routes/google.routes");
+const searchConsoleRoutes = require("./routes/searchConsole.routes");
+const analyticsRoutes = require("./routes/analytics.routes");
 
 const app = express();
 
@@ -57,6 +60,9 @@ app.use("/api/sites/:id/plugins", auth, siteAccess, pluginRoutes);
 app.use("/api/sites/:id/sitescan", auth, siteAccess, siteScanRoutes);
 app.use("/api/sites/:id/seo", auth, siteAccess, seoRoutes);
 app.use("/api/sites/:id/reports", auth, siteAccess, reportsRoutes);
+app.use("/api/google", googleRoutes);
+app.use("/api/sites/:id/search-console", auth, siteAccess, searchConsoleRoutes);
+app.use("/api/sites/:id/analytics", auth, siteAccess, analyticsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/users/team", teamRoutes);

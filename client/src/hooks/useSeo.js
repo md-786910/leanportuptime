@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { fetchSeoAudit, triggerSeoScan, fetchPageSpeed } from '../api/seo.api';
+import { fetchSeoAudit, triggerSeoScan, fetchPageSpeed, fetchSeoHistory } from '../api/seo.api';
 
 export const useSeoAudit = (siteId) => {
   const [scanning, setScanning] = useState(false);
@@ -51,6 +51,16 @@ export const usePageSpeedFetch = (siteId) => {
     onError: (err) =>
       toast.error(err.response?.data?.error?.message || 'Failed to fetch PageSpeed data'),
   });
+};
+
+export const useSeoHistory = (siteId) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['seoHistory', siteId],
+    queryFn: () => fetchSeoHistory(siteId),
+    enabled: !!siteId,
+    staleTime: 60000,
+  });
+  return { history: data || [], isLoading };
 };
 
 export const useSeoTrigger = (siteId, { onScanStart } = {}) => {
