@@ -15,9 +15,10 @@ export default function DashboardPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const params = { page, limit: 12 };
-  if (statusFilter) params.status = statusFilter;
+  if (statusFilter && statusFilter !== 'favorites') params.status = statusFilter;
 
   const { sites, meta, isLoading } = useSites(params);
+  const visibleSites = statusFilter === 'favorites' ? sites.filter((s) => s.isFavorite) : sites;
 
   return (
     <div className="space-y-6">
@@ -35,7 +36,7 @@ export default function DashboardPage() {
       />
 
       <SiteGrid
-        sites={sites}
+        sites={visibleSites}
         isLoading={isLoading}
         onAddSite={() => setShowAddModal(true)}
       />

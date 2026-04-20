@@ -2,6 +2,7 @@ import Button from '../common/Button';
 
 const statusOptions = [
   { label: 'All', value: '' },
+  { label: 'Favorites', value: 'favorites' },
   { label: 'Up', value: 'up' },
   { label: 'Down', value: 'down' },
   { label: 'Degraded', value: 'degraded' },
