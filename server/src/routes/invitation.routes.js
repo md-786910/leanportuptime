@@ -29,7 +29,8 @@ const acceptInvitationSchema = Joi.object({
   password: Joi.string().min(8).required(),
 });
 
-// Public route — no auth
+// Public routes — no auth
+router.get('/status/:token', invitationController.getStatus);
 router.post('/accept', validate(acceptInvitationSchema), invitationController.accept);
 
 // Protected admin routes

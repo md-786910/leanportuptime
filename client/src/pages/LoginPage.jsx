@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import Input from '../components/common/Input';
 import PasswordInput from '../components/common/PasswordInput';
 import Button from '../components/common/Button';
@@ -10,12 +10,15 @@ export default function LoginPage() {
   const { login, isLoading } = useAuth();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const from = location.state?.from?.pathname || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
 
   if (isAuthenticated) return <Navigate to={from} replace />;
+
+  const inviteNotice = searchParams.get('invite');
 
   const validate = () => {
     const errs = {};
@@ -38,6 +41,13 @@ export default function LoginPage() {
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Sign in to your account</h2>
+      {inviteNotice === 'already_accepted' && (
+        <div className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            This invitation was already accepted. Please sign in with your password.
+          </p>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Email"

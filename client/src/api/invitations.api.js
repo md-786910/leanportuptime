@@ -31,6 +31,11 @@ export const acceptInvitation = async ({ token, name, password }) => {
   return data.data;
 };
 
+export const getInvitationStatus = async (token) => {
+  const { data } = await api.get(`/api/invitations/status/${token}`);
+  return data.data;
+};
+
 // Team members
 export const fetchTeamMembers = async () => {
   const { data } = await api.get('/api/users/team');

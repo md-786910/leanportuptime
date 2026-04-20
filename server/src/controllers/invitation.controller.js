@@ -215,6 +215,36 @@ exports.resend = async (req, res, next) => {
   }
 };
 
+exports.getStatus = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const invitation = await Invitation.findOne({ token });
+
+    if (!invitation) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Invitation not found' },
+      });
+    }
+
+    let status = invitation.status;
+    if (status === 'pending' && invitation.expiresAt < new Date()) {
+      status = 'expired';
+    }
+
+    res.json({
+      success: true,
+      data: {
+        status,
+        email: invitation.email,
+        role: invitation.role,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.accept = async (req, res, next) => {
   try {
     const { token, name, password } = req.body;
