@@ -22,6 +22,13 @@ function fmtDur(s) {
   return m > 0 ? `${m}m ${Math.round(s % 60)}s` : `${Math.round(s)}s`;
 }
 
+// Fits A4 portrait (210mm - 16mm margins = 194mm ≈ 733px @ 96dpi). Chart+table
+// containers use this as the explicit pixel width so off-screen rendering
+// doesn't depend on "100%" resolving correctly.
+const CONTENT_WIDTH = 672;
+
+const TD_TRUNCATE = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+
 function Section({ title, children }) {
   return (
     <div style={{ breakInside: 'avoid', marginBottom: 24 }}>
@@ -142,7 +149,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
     .map((h) => ({ date: new Date(h.scannedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), ...h.pageSpeed[strategy] }));
 
   return (
-    <div ref={ref} style={{ width: 794, fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#ffffff', color: '#111827', padding: 32, fontSize: 12 }}>
+    <div ref={ref} style={{ width: 720, fontFamily: 'system-ui, -apple-system, sans-serif', backgroundColor: '#ffffff', color: '#111827', padding: 24, fontSize: 12 }}>
 
       {/* ===== COVER ===== */}
       <div style={{ textAlign: 'center', marginBottom: 40, paddingBottom: 24, borderBottom: '3px solid #2563eb' }}>
@@ -235,7 +242,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
             </div>
           </div>
           {channels.length > 0 && (
-            <div style={{ height: 180 }}>
+            <div style={{ width: CONTENT_WIDTH, height: 180 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={channels.slice(0, 6).map((c, i) => ({ name: c.channel.length > 14 ? c.channel.slice(0, 14) + '...' : c.channel, sessions: c.sessions, fill: themeColor(tk, i) }))} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -254,7 +261,13 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
       {/* ===== TOP GA4 EVENTS ===== */}
       {allEvents.length > 0 && (
         <Section title="Top GA4 Events">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, tableLayout: 'fixed', pageBreakInside: 'auto' }}>
+            <colgroup>
+              <col style={{ width: '5%' }} />
+              <col style={{ width: '60%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '15%' }} />
+            </colgroup>
             <thead>
               <tr style={{ backgroundColor: '#f9fafb' }}>
                 <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600, color: '#6b7280', fontSize: 10 }}>#</th>
@@ -264,10 +277,10 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
               </tr>
             </thead>
             <tbody>
-              {allEvents.slice(0, 10).map((e, i) => (
+              {allEvents.slice(0, 5).map((e, i) => (
                 <tr key={e.eventName} style={{ borderTop: '1px solid #f3f4f6' }}>
                   <td style={{ padding: '5px 8px', color: '#9ca3af' }}>{i + 1}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontSize: 10, color: '#111827' }}>{e.eventName}</td>
+                  <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontSize: 10, color: '#111827', ...TD_TRUNCATE }} title={e.eventName}>{e.eventName}</td>
                   <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, color: themeColor(tk, 0) }}>{fmt(e.eventCount)}</td>
                   <td style={{ padding: '5px 8px', textAlign: 'right', color: '#4b5563' }}>{fmt(e.totalUsers)}</td>
                 </tr>
@@ -275,7 +288,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
             </tbody>
           </table>
           <p style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right', marginTop: 6 }}>
-            Showing top 10 of {allEvents.length} events in this period.
+            Showing top 5 of {allEvents.length} events in this period.
           </p>
         </Section>
       )}
@@ -290,7 +303,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
             <KpiBox label="Avg Position" value={gscTotals.position ? gscTotals.position.toFixed(1) : '—'} />
           </div>
           {gscDaily.length > 1 && (
-            <div style={{ height: 160 }}>
+            <div style={{ width: CONTENT_WIDTH, height: 160 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={gscDaily} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -310,7 +323,15 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
       {/* ===== TOP QUERIES TABLE ===== */}
       {queries.length > 0 && (
         <Section title="Top Search Queries">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, tableLayout: 'fixed', pageBreakInside: 'auto' }}>
+            <colgroup>
+              <col style={{ width: '4%' }} />
+              <col style={{ width: '46%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '17%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+            </colgroup>
             <thead>
               <tr style={{ backgroundColor: '#f9fafb' }}>
                 <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600, color: '#6b7280', fontSize: 10 }}>#</th>
@@ -322,12 +343,12 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
               </tr>
             </thead>
             <tbody>
-              {queries.slice(0, 10).map((q, i) => {
+              {queries.slice(0, 5).map((q, i) => {
                 const posColor = q.position <= 10 ? '#059669' : q.position <= 20 ? '#d97706' : '#6b7280';
                 return (
                   <tr key={i} style={{ borderTop: '1px solid #f3f4f6' }}>
                     <td style={{ padding: '5px 8px', color: '#9ca3af' }}>{i + 1}</td>
-                    <td style={{ padding: '5px 8px', fontWeight: 500 }}>{q.query}</td>
+                    <td style={{ padding: '5px 8px', fontWeight: 500, ...TD_TRUNCATE }} title={q.query}>{q.query}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, color: themeColor(tk, 0) }}>{q.clicks.toLocaleString()}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', color: '#4b5563' }}>{q.impressions.toLocaleString()}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', color: '#4b5563' }}>{(q.ctr * 100).toFixed(2)}%</td>
@@ -343,7 +364,15 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
       {/* ===== TOP PAGES TABLE ===== */}
       {pages.length > 0 && (
         <Section title="Top Pages">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, tableLayout: 'fixed', pageBreakInside: 'auto' }}>
+            <colgroup>
+              <col style={{ width: '4%' }} />
+              <col style={{ width: '46%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '17%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '10%' }} />
+            </colgroup>
             <thead>
               <tr style={{ backgroundColor: '#f9fafb' }}>
                 <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600, color: '#6b7280', fontSize: 10 }}>#</th>
@@ -355,12 +384,13 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
               </tr>
             </thead>
             <tbody>
-              {pages.slice(0, 10).map((p, i) => {
+              {pages.slice(0, 5).map((p, i) => {
                 const posColor = p.position <= 10 ? '#059669' : p.position <= 20 ? '#d97706' : '#6b7280';
+                const pagePath = p.page.replace(/^https?:\/\/[^/]+/, '');
                 return (
                   <tr key={i} style={{ borderTop: '1px solid #f3f4f6' }}>
                     <td style={{ padding: '5px 8px', color: '#9ca3af' }}>{i + 1}</td>
-                    <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontSize: 10 }}>{p.page.replace(/^https?:\/\/[^/]+/, '')}</td>
+                    <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontSize: 10, ...TD_TRUNCATE }} title={p.page}>{pagePath}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, color: themeColor(tk, 0) }}>{p.clicks.toLocaleString()}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', color: '#4b5563' }}>{p.impressions.toLocaleString()}</td>
                     <td style={{ padding: '5px 8px', textAlign: 'right', color: '#4b5563' }}>{(p.ctr * 100).toFixed(2)}%</td>
@@ -383,7 +413,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
             <KpiBox label="Conversions" value={fmt(ov.conversions)} color={themeColor(tk, 3)} />
           </div>
           {trend.length > 1 && (
-            <div style={{ height: 140, marginBottom: 12 }}>
+            <div style={{ width: CONTENT_WIDTH, height: 140, marginBottom: 12 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trend} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -426,7 +456,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
       {/* ===== SCORE TRENDS ===== */}
       {trendHistory.length >= 2 && (
         <Section title="Score Trends">
-          <div style={{ height: 180 }}>
+          <div style={{ width: CONTENT_WIDTH, height: 180 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendHistory} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />

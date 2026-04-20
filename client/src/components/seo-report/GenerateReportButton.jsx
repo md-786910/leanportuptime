@@ -43,7 +43,7 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
           image: { type: 'jpeg', quality: 0.95 },
           html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+          pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' },
         })
         .from(element)
         .save();
