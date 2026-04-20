@@ -123,6 +123,11 @@ const siteSchema = new mongoose.Schema(
       type: [String],
       index: true,
     },
+    isFavorite: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,

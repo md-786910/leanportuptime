@@ -7,7 +7,7 @@ import { CHECK_INTERVALS } from '../../utils/constants';
 
 export default function EditSiteModal({ isOpen, onClose, site }) {
   const { updateSite } = useSiteMutations();
-  const [form, setForm] = useState({ name: '', url: '', interval: 300000, tags: '', expectedKeywords: '' });
+  const [form, setForm] = useState({ name: '', url: '', interval: 300000, isFavorite: false });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -16,8 +16,7 @@ export default function EditSiteModal({ isOpen, onClose, site }) {
         name: site.name || '',
         url: site.url || '',
         interval: site.interval || 300000,
-        tags: site.tags?.join(', ') || '',
-        expectedKeywords: site.expectedKeywords?.join(', ') || '',
+        isFavorite: !!site.isFavorite,
       });
     }
   }, [site]);
@@ -41,8 +40,7 @@ export default function EditSiteModal({ isOpen, onClose, site }) {
         name: form.name.trim(),
         url: form.url.trim(),
         interval: parseInt(form.interval, 10),
-        tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
-        expectedKeywords: form.expectedKeywords ? form.expectedKeywords.split(',').map((k) => k.trim()).filter(Boolean) : [],
+        isFavorite: form.isFavorite,
       },
     });
     onClose();
@@ -61,18 +59,15 @@ export default function EditSiteModal({ isOpen, onClose, site }) {
             ))}
           </select>
         </div>
-        <Input label="Tags" id="editTags" value={form.tags} onChange={update('tags')} />
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Expected Keywords (comma separated)</label>
-          <textarea
-            value={form.expectedKeywords}
-            onChange={update('expectedKeywords')}
-            placeholder="WordPress, company name, footer text"
-            rows={2}
-            className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.isFavorite}
+            onChange={(e) => setForm({ ...form, isFavorite: e.target.checked })}
+            className="rounded border-gray-300 dark:border-gray-600 text-brand-500 focus:ring-brand-500"
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400">Alert if any keyword is missing from the page</p>
-        </div>
+          Mark as favorite
+        </label>
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
           <Button type="submit" isLoading={updateSite.isPending}>Save Changes</Button>

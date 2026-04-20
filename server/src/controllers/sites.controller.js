@@ -23,7 +23,7 @@ exports.list = async (req, res, next) => {
 
     const [sites, total] = await Promise.all([
       Site.find(filter)
-        .sort({ createdAt: -1 })
+        .sort({ isFavorite: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit, 10))
         .lean(),

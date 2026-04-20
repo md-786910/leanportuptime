@@ -10,6 +10,7 @@ const createSiteSchema = Joi.object({
   url: Joi.string().uri({ scheme: ['http', 'https'] }).required(),
   interval: Joi.number().min(60000).max(86400000).optional(),
   tags: Joi.array().items(Joi.string()).optional(),
+  isFavorite: Joi.boolean().optional(),
   notifications: Joi.object({
     email: Joi.boolean(),
     slack: Joi.boolean(),
@@ -29,6 +30,7 @@ const updateSiteSchema = Joi.object({
   url: Joi.string().uri({ scheme: ['http', 'https'] }).optional(),
   interval: Joi.number().min(60000).max(86400000).optional(),
   tags: Joi.array().items(Joi.string()).optional(),
+  isFavorite: Joi.boolean().optional(),
   notifications: Joi.object({
     email: Joi.boolean(),
     slack: Joi.boolean(),
