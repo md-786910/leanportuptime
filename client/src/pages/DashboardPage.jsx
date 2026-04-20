@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useSites } from '../hooks/useSites';
@@ -10,9 +11,22 @@ import AddSiteModal from '../components/sites/AddSiteModal';
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.role === 'admin';
-  const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter = searchParams.get('filter') || '';
+  const page = parseInt(searchParams.get('page') || '1', 10);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const updateParams = (updates) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([k, v]) => {
+      if (v === '' || v == null) next.delete(k);
+      else next.set(k, String(v));
+    });
+    setSearchParams(next, { replace: true });
+  };
+
+  const setPage = (p) => updateParams({ page: p === 1 ? '' : p });
+  const setStatusFilter = (v) => updateParams({ filter: v, page: '' });
 
   const params = { page, limit: 12 };
   if (statusFilter && statusFilter !== 'favorites') params.status = statusFilter;
@@ -32,7 +46,7 @@ export default function DashboardPage() {
       <SiteListToolbar
         onAddSite={isAdmin ? () => setShowAddModal(true) : null}
         statusFilter={statusFilter}
-        onStatusFilterChange={(v) => { setStatusFilter(v); setPage(1); }}
+        onStatusFilterChange={setStatusFilter}
       />
 
       <SiteGrid
