@@ -1,9 +1,16 @@
 const User = require('../models/User');
 const Site = require('../models/Site');
 
+// Resolve the workspace owner id. Invited admins are transparent co-admins
+// of the original owner's workspace, so every team-scoped query uses this.
+function ownerIdOf(user) {
+  return user.invitedBy || user._id;
+}
+
 exports.list = async (req, res, next) => {
   try {
-    const members = await User.find({ invitedBy: req.user._id })
+    const ownerId = ownerIdOf(req.user);
+    const members = await User.find({ invitedBy: ownerId })
       .populate('sharedSites', 'name url')
       .sort({ createdAt: -1 })
       .lean();
@@ -16,9 +23,10 @@ exports.list = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
+    const ownerId = ownerIdOf(req.user);
     const member = await User.findOne({
       _id: req.params.userId,
-      invitedBy: req.user._id,
+      invitedBy: ownerId,
     });
     if (!member) {
       return res.status(404).json({
@@ -30,10 +38,9 @@ exports.update = async (req, res, next) => {
     const { role, sharedSites } = req.body;
     if (role) member.role = role;
     if (sharedSites) {
-      // Validate sites belong to admin
       const siteCount = await Site.countDocuments({
         _id: { $in: sharedSites },
-        userId: req.user._id,
+        userId: ownerId,
       });
       if (siteCount !== sharedSites.length) {
         return res.status(400).json({
@@ -53,9 +60,10 @@ exports.update = async (req, res, next) => {
 
 exports.remove = async (req, res, next) => {
   try {
+    const ownerId = ownerIdOf(req.user);
     const member = await User.findOneAndDelete({
       _id: req.params.userId,
-      invitedBy: req.user._id,
+      invitedBy: ownerId,
     });
     if (!member) {
       return res.status(404).json({

@@ -7,6 +7,13 @@ const config = require('../config');
 const notificationService = require('../services/notification.service');
 const logger = require('../utils/logger');
 
+// Invited admins are transparent co-admins of the original owner. Team, invites
+// and workspace-scoped lookups use this helper so everything ties back to the
+// top-level owner regardless of which admin is calling.
+function ownerIdOf(user) {
+  return user.invitedBy || user._id;
+}
+
 const generateAccessToken = (userId) => {
   return jwt.sign({ userId }, config.jwt.secret, {
     expiresIn: config.jwt.accessExpiry,
@@ -22,7 +29,7 @@ const generateRefreshToken = (userId) => {
 exports.create = async (req, res, next) => {
   try {
     const { invitations } = req.body;
-    const adminId = req.user._id;
+    const adminId = ownerIdOf(req.user);
     const results = [];
 
     for (const inv of invitations) {
@@ -98,7 +105,7 @@ exports.create = async (req, res, next) => {
 exports.list = async (req, res, next) => {
   try {
     const { status } = req.query;
-    const filter = { invitedBy: req.user._id };
+    const filter = { invitedBy: ownerIdOf(req.user) };
     if (status) filter.status = status;
 
     const invitations = await Invitation.find(filter)
@@ -114,9 +121,10 @@ exports.list = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
+    const ownerId = ownerIdOf(req.user);
     const invitation = await Invitation.findOne({
       _id: req.params.id,
-      invitedBy: req.user._id,
+      invitedBy: ownerId,
       status: 'pending',
     });
     if (!invitation) {
@@ -131,7 +139,7 @@ exports.update = async (req, res, next) => {
     if (siteIds) {
       const siteCount = await Site.countDocuments({
         _id: { $in: siteIds },
-        userId: req.user._id,
+        userId: ownerId,
       });
       if (siteCount !== siteIds.length) {
         return res.status(400).json({
@@ -152,7 +160,7 @@ exports.update = async (req, res, next) => {
 exports.remove = async (req, res, next) => {
   try {
     const invitation = await Invitation.findOneAndUpdate(
-      { _id: req.params.id, invitedBy: req.user._id, status: 'pending' },
+      { _id: req.params.id, invitedBy: ownerIdOf(req.user), status: 'pending' },
       { status: 'revoked' },
       { new: true }
     );
@@ -173,7 +181,7 @@ exports.resend = async (req, res, next) => {
   try {
     const invitation = await Invitation.findOne({
       _id: req.params.id,
-      invitedBy: req.user._id,
+      invitedBy: ownerIdOf(req.user),
     });
     if (!invitation || invitation.status === 'accepted') {
       return res.status(404).json({

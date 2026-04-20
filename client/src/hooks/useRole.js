@@ -17,3 +17,13 @@ export function useIsAdmin() {
   const user = useAuthStore((s) => s.user);
   return user?.role === 'admin';
 }
+
+/**
+ * Returns true if the current user is the original workspace owner
+ * (admin without an inviter). Invited admins share admin privileges
+ * but cannot connect or disconnect the shared Google OAuth connection.
+ */
+export function useIsOwner() {
+  const user = useAuthStore((s) => s.user);
+  return user?.role === 'admin' && !user?.invitedBy;
+}

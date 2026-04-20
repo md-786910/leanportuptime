@@ -15,7 +15,10 @@ export const useGoogleStatus = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['googleStatus'],
     queryFn: getGoogleStatus,
-    staleTime: 60000,
+    // staleTime 0 so invited admins always see the up-to-date delegated status
+    // right after login, rather than a cached "disconnected" from a prior session.
+    staleTime: 0,
+    refetchOnMount: true,
   });
   return { googleStatus: data, isLoading };
 };

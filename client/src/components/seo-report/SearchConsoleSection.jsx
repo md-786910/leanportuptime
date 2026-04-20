@@ -19,7 +19,7 @@ import {
   useGscInsights,
 } from '../../hooks/useSearchConsole';
 import { themeColor } from './colorThemes';
-import { useIsViewer } from '../../hooks/useRole';
+import { useIsViewer, useIsOwner } from '../../hooks/useRole';
 import TopQueriesTable from './TopQueriesTable';
 import TopPagesTable from './TopPagesTable';
 import DeviceBreakdown from './DeviceBreakdown';
@@ -422,6 +422,7 @@ export default function SearchConsoleSection({ siteId, themeKey, viewMode }) {
   const { googleStatus, isLoading: googleLoading } = useGoogleStatus();
   const { gscStatus, isLoading: gscLoading } = useGscStatus(siteId);
   const isViewer = useIsViewer();
+  const isOwner = useIsOwner();
 
   // Handle Google OAuth callback redirect
   const [searchParams, setSearchParams] = useSearchParams();
@@ -447,8 +448,8 @@ export default function SearchConsoleSection({ siteId, themeKey, viewMode }) {
 
   // State 1: Google not connected
   if (!googleStatus?.connected) {
-    if (isViewer) {
-      return <ViewerNotConfigured message="Google account not connected. Contact the site owner to connect Google Search Console." />;
+    if (!isOwner) {
+      return <ViewerNotConfigured message="Google account not connected. Contact the workspace owner to connect Google Search Console." />;
     }
     return <ConnectState siteId={siteId} />;
   }
