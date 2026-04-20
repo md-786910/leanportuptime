@@ -5,6 +5,7 @@ import { useAnalyticsStatus, useWebsiteAnalytics } from '../../hooks/useAnalytic
 import { themeColor } from './colorThemes';
 import ChannelBreakdownChart from './ChannelBreakdownChart';
 import TopPagesVisitedTable from './TopPagesVisitedTable';
+import GA4EventsPanel from './GA4EventsPanel';
 
 const PERIODS = [
   { key: '7d', label: '7 days' },
@@ -29,16 +30,16 @@ function formatDuration(seconds) {
 
 function KpiCard({ label, value, subtitle, color }) {
   return (
-    <div className="rounded-xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-1">
+    <div className="rounded-xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-1 hover:border-gray-200 dark:hover:border-gray-700 transition-colors">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
           {label}
         </span>
       </div>
-      <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{value}</span>
+      <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">{value}</span>
       {subtitle && (
-        <span className="text-[10px] text-gray-400 dark:text-gray-500">{subtitle}</span>
+        <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">{subtitle}</span>
       )}
     </div>
   );
@@ -72,7 +73,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
 
   const overview = data?.overview || {};
   const details = data?.details || {};
-  const events = details.events || { fileDownloads: 0, formRequests: 0 };
+  const events = details.events || {};
 
   return (
     <div className="space-y-4">
@@ -106,35 +107,44 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
           ))}
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {/* KPI Cards — event-based metrics (File Downloads / Form Requests) live in the Event panel below */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           <KpiCard
-            label="Unique Visitors"
-            value={formatNumber(overview.uniqueVisitors)}
+            label="Sessions"
+            value={formatNumber(overview.sessions)}
             color={themeColor(themeKey, 0)}
+          />
+          <KpiCard
+            label="Total Users"
+            value={formatNumber(overview.uniqueVisitors)}
+            color={themeColor(themeKey, 1)}
+          />
+          <KpiCard
+            label="New Users"
+            value={formatNumber(overview.newUsers)}
+            color={themeColor(themeKey, 2)}
+          />
+          <KpiCard
+            label="Page Views"
+            value={formatNumber(overview.pageViews)}
+            color={themeColor(themeKey, 3)}
           />
           <KpiCard
             label="Bounce Rate"
             value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'}
-            color={themeColor(themeKey, 1)}
-          />
-          <KpiCard
-            label="Avg. Time on Page"
-            value={formatDuration(overview.avgTimeOnPage)}
-            color={themeColor(themeKey, 2)}
-          />
-          <KpiCard
-            label="File Downloads"
-            value={formatNumber(events.fileDownloads)}
-            color={themeColor(themeKey, 3)}
-          />
-          <KpiCard
-            label="Form Requests"
-            value={formatNumber(events.formRequests)}
-            subtitle={events.formRequests === 0 ? 'Requires GA4 event setup' : undefined}
             color={themeColor(themeKey, 4)}
           />
+          <KpiCard
+            label="Avg. Time"
+            value={formatDuration(overview.avgTimeOnPage)}
+            color={themeColor(themeKey, 5)}
+          />
         </div>
+      </Card>
+
+      {/* All GA4 events */}
+      <Card>
+        <GA4EventsPanel events={events.allEvents || []} themeKey={themeKey} />
       </Card>
 
       {/* Traffic by Channel + Top Pages */}

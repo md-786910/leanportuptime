@@ -74,11 +74,58 @@ const METRIC_LABELS = {
   trust_flow: 'Trust Flow',
 };
 
+const EVENT_STATUS = {
+  TRACKED_WITH_DATA: 'tracked_with_data',
+  TRACKED_NO_DATA_IN_RANGE: 'tracked_no_data_in_range',
+  NOT_DETECTED: 'not_detected',
+};
+
+function normalizeEventMetric(metric, fallbackSetupMessage) {
+  if (metric && typeof metric === 'object' && !Array.isArray(metric)) {
+    return {
+      count: metric.count ?? 0,
+      status: metric.status || EVENT_STATUS.NOT_DETECTED,
+      detectedEventNames: metric.detectedEventNames || [],
+      setupMessage: metric.setupMessage || fallbackSetupMessage,
+    };
+  }
+
+  const count = typeof metric === 'number' ? metric : 0;
+  return {
+    count,
+    status: count > 0 ? EVENT_STATUS.TRACKED_WITH_DATA : EVENT_STATUS.TRACKED_NO_DATA_IN_RANGE,
+    detectedEventNames: [],
+    setupMessage: fallbackSetupMessage,
+  };
+}
+
+function eventSubtitle(metric) {
+  if (metric.status === EVENT_STATUS.TRACKED_NO_DATA_IN_RANGE) {
+    return 'Tracked in GA4, no events in this period.';
+  }
+
+  if (metric.status === EVENT_STATUS.NOT_DETECTED) {
+    return metric.setupMessage;
+  }
+
+  return null;
+}
+
 const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, siteUrl, scores, strategy, history, themeKey, gscPerformance, gscInsights, websiteData, organicOverview, organicInsights, backlinks }, ref) {
   const tk = themeKey || 'default';
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const channels = websiteData?.details?.channels || [];
+  const websiteEvents = websiteData?.details?.events || {};
+  const allEvents = Array.isArray(websiteEvents.allEvents) ? websiteEvents.allEvents : [];
+  const fileDownloads = normalizeEventMetric(
+    websiteEvents.fileDownloads,
+    'No matching GA4 event detected. Set up GA4\'s standard file_download event to report this metric.'
+  );
+  const formRequests = normalizeEventMetric(
+    websiteEvents.formRequests,
+    'No matching GA4 event detected. Set up a form-submit event such as generate_lead, form_submit, contact_form, form_submission, contact_form_submit, wpforms_submit to report this metric.'
+  );
   const totalSessions = channels.reduce((sum, c) => sum + c.sessions, 0);
   const gscTotals = gscPerformance?.totals || {};
   const gscDaily = gscPerformance?.daily || [];
@@ -88,6 +135,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
   const trend = organicOverview?.trend || [];
   const devices = organicInsights?.devices || [];
   const countries = organicInsights?.countries || [];
+  const hasWebsiteAnalytics = Boolean(websiteData?.overview || channels.length > 0 || websiteEvents.fileDownloads || websiteEvents.formRequests);
 
   const trendHistory = (history || [])
     .filter((h) => h.pageSpeed?.[strategy])
@@ -160,26 +208,75 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({ siteName, site
       )}
 
       {/* ===== GOOGLE ANALYTICS ===== */}
-      {channels.length > 0 && (
+      {hasWebsiteAnalytics && (
         <Section title="Google Analytics">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
-            <KpiBox label="Sessions" value={fmt(totalSessions)} color={themeColor(tk, 0)} />
-            <KpiBox label="Unique Visitors" value={fmt(websiteData?.overview?.uniqueVisitors)} color={themeColor(tk, 1)} />
+            <KpiBox label="Sessions" value={fmt(websiteData?.overview?.sessions)} color={themeColor(tk, 0)} />
+            <KpiBox label="Total Users" value={fmt(websiteData?.overview?.uniqueVisitors)} color={themeColor(tk, 1)} />
+            <KpiBox label="New Users" value={fmt(websiteData?.overview?.newUsers)} color={themeColor(tk, 2)} />
+            <KpiBox label="Page Views" value={fmt(websiteData?.overview?.pageViews)} color={themeColor(tk, 3)} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
             <KpiBox label="Bounce Rate" value={websiteData?.overview?.bounceRate != null ? `${(websiteData.overview.bounceRate * 100).toFixed(1)}%` : '—'} />
-            <KpiBox label="Conversions" value={fmt(organicOverview?.overview?.conversions)} color={themeColor(tk, 3)} />
+            <KpiBox label="Avg. Time" value={fmtDur(websiteData?.overview?.avgTimeOnPage)} />
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+              <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>File Downloads</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>{fmt(fileDownloads.count)}</div>
+              {eventSubtitle(fileDownloads) && (
+                <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 6, lineHeight: 1.4 }}>{eventSubtitle(fileDownloads)}</div>
+              )}
+            </div>
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+              <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'uppercase', marginBottom: 4 }}>Form Requests</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>{fmt(formRequests.count)}</div>
+              {eventSubtitle(formRequests) && (
+                <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 6, lineHeight: 1.4 }}>{eventSubtitle(formRequests)}</div>
+              )}
+            </div>
           </div>
-          <div style={{ height: 180 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={channels.slice(0, 6).map((c, i) => ({ name: c.channel.length > 14 ? c.channel.slice(0, 14) + '...' : c.channel, sessions: c.sessions, fill: themeColor(tk, i) }))} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <Bar dataKey="sessions" radius={[4, 4, 0, 0]}>
-                  {channels.slice(0, 6).map((_, i) => <Cell key={i} fill={themeColor(tk, i)} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {channels.length > 0 && (
+            <div style={{ height: 180 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={channels.slice(0, 6).map((c, i) => ({ name: c.channel.length > 14 ? c.channel.slice(0, 14) + '...' : c.channel, sessions: c.sessions, fill: themeColor(tk, i) }))} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                  <Bar dataKey="sessions" radius={[4, 4, 0, 0]}>
+                    {channels.slice(0, 6).map((_, i) => <Cell key={i} fill={themeColor(tk, i)} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Section>
+      )}
+
+      {/* ===== TOP GA4 EVENTS ===== */}
+      {allEvents.length > 0 && (
+        <Section title="Top GA4 Events">
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f9fafb' }}>
+                <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600, color: '#6b7280', fontSize: 10 }}>#</th>
+                <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600, color: '#6b7280', fontSize: 10 }}>Event Name</th>
+                <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 600, color: '#6b7280', fontSize: 10 }}>Count</th>
+                <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 600, color: '#6b7280', fontSize: 10 }}>Users</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allEvents.slice(0, 10).map((e, i) => (
+                <tr key={e.eventName} style={{ borderTop: '1px solid #f3f4f6' }}>
+                  <td style={{ padding: '5px 8px', color: '#9ca3af' }}>{i + 1}</td>
+                  <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontSize: 10, color: '#111827' }}>{e.eventName}</td>
+                  <td style={{ padding: '5px 8px', textAlign: 'right', fontWeight: 600, color: themeColor(tk, 0) }}>{fmt(e.eventCount)}</td>
+                  <td style={{ padding: '5px 8px', textAlign: 'right', color: '#4b5563' }}>{fmt(e.totalUsers)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right', marginTop: 6 }}>
+            Showing top 10 of {allEvents.length} events in this period.
+          </p>
         </Section>
       )}
 

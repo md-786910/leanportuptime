@@ -12,6 +12,7 @@ import { useBacklinksStatus, useBacklinksRefresh } from '../../hooks/useBacklink
 import { useIsViewer } from '../../hooks/useRole';
 import TopQueriesTable from './TopQueriesTable';
 import TopPagesTable from './TopPagesTable';
+import GA4EventsPanel from './GA4EventsPanel';
 
 // ======================== Helpers ========================
 function fmt(n) {
@@ -669,11 +670,33 @@ function ScoreTrendSection({ history, historyLoading, strategy }) {
 }
 
 // ======================== Main Export ========================
+// ======================== All GA4 Events Section ========================
+function EventsSection({ siteId, themeKey }) {
+  const { analyticsStatus } = useAnalyticsStatus(siteId);
+  const { data, isLoading } = useWebsiteAnalytics(siteId, '28d');
+
+  if (!analyticsStatus?.linked) return null;
+  if (isLoading) return null;
+
+  const allEvents = data?.details?.events?.allEvents || [];
+  if (allEvents.length === 0) return null;
+
+  return (
+    <div>
+      <SectionTitle title="Event and clicks" />
+      <Card>
+        <GA4EventsPanel events={allEvents} themeKey={themeKey} />
+      </Card>
+    </div>
+  );
+}
+
 export default function ChartsDashboard({ siteId, themeKey, scores, strategy, history, historyLoading }) {
   return (
     <div className="space-y-8">
       <SiteHealthSection scores={scores} themeKey={themeKey} />
       <GASection siteId={siteId} themeKey={themeKey} />
+      <EventsSection siteId={siteId} themeKey={themeKey} />
       <GSCSection siteId={siteId} themeKey={themeKey} />
       <TablesSection siteId={siteId} themeKey={themeKey} />
       <CoreVitalsSection scores={scores} />

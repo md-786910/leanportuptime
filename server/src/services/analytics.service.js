@@ -9,6 +9,59 @@ const ORGANIC_FILTER = {
   },
 };
 
+const FORM_EVENT_NAMES = [
+  'generate_lead',
+  'form_submit',
+  'form_start',
+  'contact_form',
+  'form_submission',
+  'contact_form_submit',
+  'wpforms_submit',
+];
+
+const EVENT_STATUS = {
+  TRACKED_WITH_DATA: 'tracked_with_data',
+  TRACKED_NO_DATA_IN_RANGE: 'tracked_no_data_in_range',
+  NOT_DETECTED: 'not_detected',
+};
+
+function buildTrackedEventMetric({ count, detectedEventNames, missingMessage }) {
+  const uniqueDetectedEventNames = [...new Set((detectedEventNames || []).filter(Boolean))];
+
+  if (uniqueDetectedEventNames.length > 0) {
+    return {
+      count,
+      status: count > 0 ? EVENT_STATUS.TRACKED_WITH_DATA : EVENT_STATUS.TRACKED_NO_DATA_IN_RANGE,
+      detectedEventNames: uniqueDetectedEventNames,
+      setupMessage: null,
+    };
+  }
+
+  return {
+    count: 0,
+    status: EVENT_STATUS.NOT_DETECTED,
+    detectedEventNames: [],
+    setupMessage: missingMessage,
+  };
+}
+
+function emptyWebsiteEvents() {
+  return {
+    fileDownloads: buildTrackedEventMetric({
+      count: 0,
+      detectedEventNames: [],
+      missingMessage: 'No matching GA4 event detected. Set up GA4\'s standard file_download event to report this metric.',
+    }),
+    formRequests: buildTrackedEventMetric({
+      count: 0,
+      detectedEventNames: [],
+      missingMessage: `No matching GA4 event detected. Set up a form-submit event such as ${FORM_EVENT_NAMES.join(', ')} to report this metric.`,
+    }),
+    allEvents: [],
+    trackingNotes: [],
+  };
+}
+
 class AnalyticsService {
   _createOAuth2Client() {
     return new google.auth.OAuth2(
@@ -265,7 +318,10 @@ class AnalyticsService {
       requestBody: {
         dateRanges: [{ startDate, endDate }],
         metrics: [
+          { name: 'sessions' },
           { name: 'totalUsers' },
+          { name: 'newUsers' },
+          { name: 'screenPageViews' },
           { name: 'bounceRate' },
           { name: 'averageSessionDuration' },
         ],
@@ -274,14 +330,17 @@ class AnalyticsService {
 
     const row = data.rows?.[0];
     if (!row) {
-      return { uniqueVisitors: 0, bounceRate: 0, avgTimeOnPage: 0, fetchedAt: new Date() };
+      return { sessions: 0, uniqueVisitors: 0, newUsers: 0, pageViews: 0, bounceRate: 0, avgTimeOnPage: 0, fetchedAt: new Date() };
     }
 
     const vals = row.metricValues.map((v) => parseFloat(v.value) || 0);
     return {
-      uniqueVisitors: vals[0],
-      bounceRate: vals[1],
-      avgTimeOnPage: vals[2],
+      sessions: vals[0],
+      uniqueVisitors: vals[1],
+      newUsers: vals[2],
+      pageViews: vals[3],
+      bounceRate: vals[4],
+      avgTimeOnPage: vals[5],
       fetchedAt: new Date(),
     };
   }
@@ -314,11 +373,6 @@ class AnalyticsService {
    * Fetch website details: events, channels, top pages in parallel.
    */
   async getWebsiteDetails(user, propertyId, { startDate, endDate }) {
-    const FORM_EVENT_NAMES = [
-      'generate_lead', 'form_submit', 'contact_form',
-      'form_submission', 'contact_form_submit', 'wpforms_submit',
-    ];
-
     const fetchEvents = async () => {
       const auth = await this._getAuthClient(user);
       const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
@@ -328,7 +382,10 @@ class AnalyticsService {
         requestBody: {
           dateRanges: [{ startDate, endDate }],
           dimensions: [{ name: 'eventName' }],
-          metrics: [{ name: 'eventCount' }],
+          metrics: [
+            { name: 'eventCount' },
+            { name: 'totalUsers' },
+          ],
           orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
           limit: 50,
         },
@@ -336,13 +393,44 @@ class AnalyticsService {
 
       let fileDownloads = 0;
       let formRequests = 0;
+      const detectedFileDownloadEvents = [];
+      const detectedFormEvents = [];
+      const allEvents = [];
+
       for (const row of data.rows || []) {
         const eventName = row.dimensionValues[0].value;
         const count = parseFloat(row.metricValues[0].value) || 0;
-        if (eventName === 'file_download') fileDownloads = count;
-        if (FORM_EVENT_NAMES.includes(eventName)) formRequests += count;
+        const users = parseFloat(row.metricValues[1]?.value) || 0;
+
+        allEvents.push({ eventName, eventCount: count, totalUsers: users });
+
+        if (eventName === 'file_download') {
+          fileDownloads = count;
+          detectedFileDownloadEvents.push(eventName);
+        }
+        if (FORM_EVENT_NAMES.includes(eventName)) {
+          formRequests += count;
+          detectedFormEvents.push(eventName);
+        }
       }
-      return { fileDownloads, formRequests };
+
+      return {
+        fileDownloads: buildTrackedEventMetric({
+          count: fileDownloads,
+          detectedEventNames: detectedFileDownloadEvents,
+          missingMessage: 'No matching GA4 event detected. Set up GA4\'s standard file_download event to report this metric.',
+        }),
+        formRequests: buildTrackedEventMetric({
+          count: formRequests,
+          detectedEventNames: detectedFormEvents,
+          missingMessage: `No matching GA4 event detected. Set up a form-submit event such as ${FORM_EVENT_NAMES.join(', ')} to report this metric.`,
+        }),
+        allEvents,
+        trackingNotes: [
+          'File downloads use GA4\'s standard file_download event.',
+          `Form requests recognize these GA4 event names: ${FORM_EVENT_NAMES.join(', ')}.`,
+        ],
+      };
     };
 
     const fetchChannels = async () => {
@@ -376,7 +464,7 @@ class AnalyticsService {
     ]);
 
     return {
-      events: events.status === 'fulfilled' ? events.value : { fileDownloads: 0, formRequests: 0 },
+      events: events.status === 'fulfilled' ? events.value : emptyWebsiteEvents(),
       channels: channels.status === 'fulfilled' ? channels.value : [],
       topPages: topPages.status === 'fulfilled' ? topPages.value : [],
       fetchedAt: new Date(),

@@ -92,7 +92,7 @@ function MetricBarRow({ metric, value, themeKey, index, expanded }) {
 }
 
 export default function MetricsSection({ scores, themeKey, viewMode }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const effectiveShowDetails = viewMode === 'details' ? true : viewMode === 'charts' ? false : showDetails;
 
