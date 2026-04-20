@@ -23,6 +23,12 @@ exports.list = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
+    if (req.params.userId === String(req.user._id)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'SELF_EDIT_FORBIDDEN', message: 'You cannot edit your own team entry' },
+      });
+    }
     const ownerId = ownerIdOf(req.user);
     const member = await User.findOne({
       _id: req.params.userId,
@@ -60,6 +66,12 @@ exports.update = async (req, res, next) => {
 
 exports.remove = async (req, res, next) => {
   try {
+    if (req.params.userId === String(req.user._id)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'SELF_REMOVE_FORBIDDEN', message: 'You cannot remove yourself from the team' },
+      });
+    }
     const ownerId = ownerIdOf(req.user);
     const member = await User.findOneAndDelete({
       _id: req.params.userId,

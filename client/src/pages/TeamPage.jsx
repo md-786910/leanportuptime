@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useInvitations, useTeamMembers, useInvitationMutations, useTeamMutations } from '../hooks/useInvitations';
+import { useAuthStore } from '../store/authStore';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
@@ -19,13 +20,25 @@ export default function TeamPage() {
   const [confirmRevoke, setConfirmRevoke] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const currentUser = useAuthStore((s) => s.user);
   const { members, isLoading: membersLoading } = useTeamMembers();
   const { invitations, isLoading: invLoading } = useInvitations();
   const { createInvitations, deleteInvitation, resendInvitation } = useInvitationMutations();
   const { updateMember, removeMember } = useTeamMutations();
 
   const pendingInvitations = invitations.filter((inv) => inv.status === 'pending');
-  const filteredMembers = members.filter(
+
+  // Include the logged-in user in the list so they can see themselves alongside
+  // co-admins and viewers. Deduplicate in case the backend already returns them
+  // (shouldn't, since team.controller filters by invitedBy — but be safe).
+  const membersWithSelf = currentUser
+    ? [
+        { ...currentUser, _self: true },
+        ...members.filter((m) => m._id !== currentUser._id),
+      ]
+    : members;
+
+  const filteredMembers = membersWithSelf.filter(
     (m) =>
       m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -291,27 +304,42 @@ export default function TeamPage() {
                     /* Normal display row */
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{member.name}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-2">
+                          {member.name}
+                          {member._self && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
+                              You
+                            </span>
+                          )}
+                        </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{member.email}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={member.role === 'admin' ? 'info' : 'neutral'}>{member.role}</Badge>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {member.sharedSites?.length || 0} project{member.sharedSites?.length !== 1 ? 's' : ''}
-                        </span>
+                        {!member._self && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {member.sharedSites?.length || 0} project{member.sharedSites?.length !== 1 ? 's' : ''}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => startEdit(member)}>
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setConfirmDelete(member)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </Button>
+                        {member._self ? (
+                          <span className="text-xs text-gray-400 dark:text-gray-500 italic">Cannot edit yourself</span>
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => startEdit(member)}>
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setConfirmDelete(member)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              Remove
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
