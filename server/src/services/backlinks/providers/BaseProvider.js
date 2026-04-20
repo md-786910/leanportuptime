@@ -14,6 +14,9 @@
  *     providerMetric: String,     // "domain_rank" | "domain_authority" | "citation_flow"
  *     raw: Object,                // original provider response for debugging
  *   }
+ *
+ * fetchBacklinksList(domain, { limit }) → { items: [...], raw }
+ * Each item: { sourceUrl, targetUrl, anchor, doFollow, firstSeen, lastSeen, linkType, domainFromRank }
  */
 class BaseBacklinksProvider {
   constructor(config) {
@@ -30,6 +33,14 @@ class BaseBacklinksProvider {
 
   async fetchSummary(domain) { // eslint-disable-line no-unused-vars
     throw new Error('Provider must override fetchSummary(domain)');
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  async fetchBacklinksList(domain, { limit = 100 } = {}) {
+    const err = new Error('Provider does not support per-link listing');
+    err.code = 'FEATURE_NOT_SUPPORTED';
+    err.statusCode = 501;
+    throw err;
   }
 }
 

@@ -14,6 +14,11 @@ class BacklinksService {
     return provider.fetchSummary(domain);
   }
 
+  async fetchBacklinksList(domain, opts) {
+    const provider = getProvider();
+    return provider.fetchBacklinksList(domain, opts);
+  }
+
   getProviderInfo() {
     try {
       const provider = getProvider();

@@ -1,9 +1,72 @@
 const BaseBacklinksProvider = require('./BaseProvider');
 
-const DATAFORSEO_ENDPOINT = 'https://api.dataforseo.com/v3/backlinks/summary/live';
+const SUMMARY_ENDPOINT = 'https://api.dataforseo.com/v3/backlinks/summary/live';
+const BACKLINKS_LIST_ENDPOINT = 'https://api.dataforseo.com/v3/backlinks/backlinks/live';
 
 function stripProtocol(url) {
   return (url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+
+async function callDataForSEO(endpoint, body, auth) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    const e = new Error(`DataForSEO request failed: ${err.message}`);
+    e.statusCode = 502;
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (response.status === 429) {
+    const e = new Error('DataForSEO rate limit exceeded');
+    e.statusCode = 429;
+    throw e;
+  }
+
+  if (!response.ok) {
+    const e = new Error(`DataForSEO API returned ${response.status}`);
+    e.statusCode = 502;
+    throw e;
+  }
+
+  const data = await response.json();
+
+  if (data?.status_code && data.status_code !== 20000) {
+    console.error('[DataForSEO] Top-level error:', data.status_code, data.status_message);
+    const e = new Error(`DataForSEO: ${data.status_message || 'Unknown error'}`);
+    e.statusCode = 502;
+    throw e;
+  }
+
+  const task = data?.tasks?.[0];
+  if (!task) {
+    console.error('[DataForSEO] No task in response:', JSON.stringify(data).slice(0, 500));
+    const e = new Error('DataForSEO returned no task data');
+    e.statusCode = 502;
+    throw e;
+  }
+
+  if (task.status_code && task.status_code !== 20000) {
+    console.error('[DataForSEO] Task error:', task.status_code, task.status_message);
+    const e = new Error(`DataForSEO: ${task.status_message || `Task error ${task.status_code}`}`);
+    e.statusCode = task.status_code === 40501 ? 402 : 502; // 402 = payment required
+    throw e;
+  }
+
+  return { data, task };
 }
 
 class DataForSEOProvider extends BaseBacklinksProvider {
@@ -15,77 +78,30 @@ class DataForSEOProvider extends BaseBacklinksProvider {
     return !!(this.config.email && this.config.password);
   }
 
-  async fetchSummary(domain) {
+  _auth() {
+    return Buffer.from(`${this.config.email}:${this.config.password}`).toString('base64');
+  }
+
+  _assertConfigured() {
     if (!this.isConfigured()) {
       const err = new Error('DataForSEO credentials not configured');
       err.code = 'PROVIDER_NOT_CONFIGURED';
       err.statusCode = 503;
       throw err;
     }
+  }
+
+  async fetchSummary(domain) {
+    this._assertConfigured();
 
     const target = stripProtocol(domain);
-    const auth = Buffer.from(`${this.config.email}:${this.config.password}`).toString('base64');
+    const auth = this._auth();
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
-
-    let response;
-    try {
-      response = await fetch(DATAFORSEO_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([{ target, internal_list_limit: 10 }]),
-        signal: controller.signal,
-      });
-    } catch (err) {
-      const e = new Error(`DataForSEO request failed: ${err.message}`);
-      e.statusCode = 502;
-      throw e;
-    } finally {
-      clearTimeout(timeout);
-    }
-
-    if (response.status === 429) {
-      const e = new Error('DataForSEO rate limit exceeded');
-      e.statusCode = 429;
-      throw e;
-    }
-
-    if (!response.ok) {
-      const e = new Error(`DataForSEO API returned ${response.status}`);
-      e.statusCode = 502;
-      throw e;
-    }
-
-    const data = await response.json();
-
-    // DataForSEO returns HTTP 200 but embeds errors at task level
-    // Top-level status_code: 20000 = success
-    if (data?.status_code && data.status_code !== 20000) {
-      console.error('[DataForSEO] Top-level error:', data.status_code, data.status_message);
-      const e = new Error(`DataForSEO: ${data.status_message || 'Unknown error'}`);
-      e.statusCode = 502;
-      throw e;
-    }
-
-    const task = data?.tasks?.[0];
-    if (!task) {
-      console.error('[DataForSEO] No task in response:', JSON.stringify(data).slice(0, 500));
-      const e = new Error('DataForSEO returned no task data');
-      e.statusCode = 502;
-      throw e;
-    }
-
-    // Task-level status (e.g. 40501 = not enough credits, 40400 = not found)
-    if (task.status_code && task.status_code !== 20000) {
-      console.error('[DataForSEO] Task error:', task.status_code, task.status_message, 'target:', target);
-      const e = new Error(`DataForSEO: ${task.status_message || `Task error ${task.status_code}`}`);
-      e.statusCode = task.status_code === 40501 ? 402 : 502; // 402 = payment required
-      throw e;
-    }
+    const { data, task } = await callDataForSEO(
+      SUMMARY_ENDPOINT,
+      [{ target, internal_list_limit: 10 }],
+      auth
+    );
 
     const result = task.result?.[0];
     if (!result) {
@@ -119,6 +135,35 @@ class DataForSEOProvider extends BaseBacklinksProvider {
       providerMetric: 'domain_rank',
       raw: result,
     };
+  }
+
+  async fetchBacklinksList(domain, { limit = 100 } = {}) {
+    this._assertConfigured();
+
+    const target = stripProtocol(domain);
+    const auth = this._auth();
+
+    const { data, task } = await callDataForSEO(
+      BACKLINKS_LIST_ENDPOINT,
+      [{ target, limit, mode: 'as_is', order_by: ['last_seen,desc'] }],
+      auth
+    );
+
+    const result = task.result?.[0];
+    const rawItems = result?.items || [];
+
+    const items = rawItems.map((it) => ({
+      sourceUrl: it.url_from || '',
+      targetUrl: it.url_to || '',
+      anchor: it.anchor || '',
+      doFollow: !!it.dofollow,
+      firstSeen: it.first_seen ? new Date(it.first_seen) : null,
+      lastSeen: it.last_seen ? new Date(it.last_seen) : null,
+      linkType: it.item_type || 'anchor',
+      domainFromRank: typeof it.rank === 'number' ? Math.round(it.rank / 10) : 0,
+    }));
+
+    return { items, raw: data };
   }
 }
 

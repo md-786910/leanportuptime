@@ -1,4 +1,4 @@
-import api from './axiosInstance';
+import api from "./axiosInstance";
 
 export const fetchSSL = async (siteId) => {
   const { data } = await api.get(`/api/sites/${siteId}/ssl`);

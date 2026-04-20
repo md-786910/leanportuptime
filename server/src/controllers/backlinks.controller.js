@@ -36,6 +36,9 @@ exports.getStatus = async (req, res, next) => {
           providerMetric: bl.providerMetric || null,
           lastFetchedAt,
           fetchError: bl.fetchError || null,
+          items: bl.items || [],
+          listFetchedAt: bl.listFetchedAt || null,
+          listFetchError: bl.listFetchError || null,
         },
         isStale: backlinksService.isStale(lastFetchedAt),
         hasData: !!lastFetchedAt,
@@ -105,7 +108,21 @@ exports.refresh = async (req, res, next) => {
       });
     }
 
+    // Also fetch per-link list. Partial failure allowed: summary still commits
+    // even if list fetch fails (e.g. provider doesn't support listing, or network error).
+    // Quota still increments by 1 — the refresh click is a single user-facing action.
+    let listItems = null;
+    let listFetchError = null;
+    try {
+      const list = await backlinksService.fetchBacklinksList(site.url, { limit: 100 });
+      listItems = list.items;
+    } catch (err) {
+      console.warn('[Backlinks] List fetch failed (summary committed):', err.message);
+      listFetchError = err.message;
+    }
+
     // Save data + increment counter
+    const now = new Date();
     const newCount = currentCount + 1;
     const update = {
       'backlinks.domainRank': summary.domainRank,
@@ -115,13 +132,24 @@ exports.refresh = async (req, res, next) => {
       'backlinks.lostLinksLast30d': summary.lostLinksLast30d,
       'backlinks.providerName': summary.providerName,
       'backlinks.providerMetric': summary.providerMetric,
-      'backlinks.lastFetchedAt': new Date(),
+      'backlinks.lastFetchedAt': now,
       'backlinks.fetchError': null,
       'backlinks.refreshCountThisMonth': newCount,
       'backlinks.monthKey': currentMonthKey,
     };
+    if (listItems) {
+      update['backlinks.items'] = listItems;
+      update['backlinks.listFetchedAt'] = now;
+      update['backlinks.listFetchError'] = null;
+    } else {
+      update['backlinks.listFetchError'] = listFetchError;
+    }
 
     await Site.findByIdAndUpdate(site._id, update);
+
+    // Read existing items if list fetch failed (so response is consistent with DB)
+    const existingItems = site.backlinks?.items || [];
+    const existingListFetchedAt = site.backlinks?.listFetchedAt || null;
 
     res.json({
       success: true,
@@ -134,8 +162,11 @@ exports.refresh = async (req, res, next) => {
           lostLinksLast30d: summary.lostLinksLast30d,
           providerName: summary.providerName,
           providerMetric: summary.providerMetric,
-          lastFetchedAt: new Date(),
+          lastFetchedAt: now,
           fetchError: null,
+          items: listItems || existingItems,
+          listFetchedAt: listItems ? now : existingListFetchedAt,
+          listFetchError,
         },
         isStale: false,
         hasData: true,

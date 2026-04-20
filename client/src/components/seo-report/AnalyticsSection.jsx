@@ -219,9 +219,9 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Google Analytics (Organic)
-            </h3>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium uppercase">
+              Organic Search
+            </span>
             {overviewData?.fetchedAt && (
               <span className="text-[11px] text-gray-400 dark:text-gray-500">
                 Last update: {timeAgo(overviewData.fetchedAt)}

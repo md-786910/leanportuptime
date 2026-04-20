@@ -22,7 +22,12 @@
       "Bash(xargs ls *)",
       "Bash(find /e/uptimeTools/client/src/index* -o /e/uptimeTools/client/src/main*)",
       "Read(//c/Users/mdash/.claude/plans\" 2>/dev/null; echo ---; cat C:Usersmdash.claudeplansgraceful-honking-bachman.md 2>/dev/**)",
-      "Read(//c/Users/mdash/.claude/plans/**)"
+      "Read(//c/Users/mdash/.claude/plans/**)",
+      "Bash(awk 'NR==319{print \"// Domain Authority / Backlinks section extracted to ./BacklinksSection.jsx\"; skip=1; next} skip && /^}$/{skip=0; next} !skip' /media/ashif/ssd2/leanportuptime/client/src/components/seo-report/ChartsDashboard.jsx)",
+      "Read(//tmp/**)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

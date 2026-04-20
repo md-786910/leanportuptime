@@ -15,6 +15,32 @@ import AnalyticsSection from './AnalyticsSection';
 import WebsiteAnalyticsSection from './WebsiteAnalyticsSection';
 import ChartsDashboard from './ChartsDashboard';
 import GenerateReportButton from './GenerateReportButton';
+import ReportSection from './ReportSection';
+import BacklinksSection from './BacklinksSection';
+
+const GaugeIcon = (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2.5 2.5M4.5 12a7.5 7.5 0 1115 0 7.5 7.5 0 01-15 0z" />
+  </svg>
+);
+
+const SearchIcon = (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+  </svg>
+);
+
+const AnalyticsIcon = (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 14v4m4-8v8m4-12v12m4-6v6" />
+  </svg>
+);
+
+const LinkIcon = (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+  </svg>
+);
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -52,7 +78,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
   // Empty state — no PageSpeed data at all
   if (!hasPageSpeed) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <Card>
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -81,21 +107,49 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
           </div>
         </Card>
 
-        {/* Search Console still shows even without PageSpeed */}
-        <SearchConsoleSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
-        <WebsiteAnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
-        <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+        {/* Organic search performance — GSC + GA4 Organic */}
+        <ReportSection
+          title="Search Performance"
+          description="Organic search visibility — impressions, clicks, and queries from Google, combined with engagement and conversions from organic sessions."
+          accent="blue"
+          icon={SearchIcon}
+        >
+          <SearchConsoleSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+        </ReportSection>
+
+        {/* Off-page authority — Domain Authority + Backlinks */}
+        <ReportSection
+          title="Off-Page SEO"
+          description="Domain authority, backlinks, and referring domains — signals of your site's trust and reputation across the web."
+          accent="amber"
+          icon={LinkIcon}
+        >
+          <Card>
+            <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} />
+          </Card>
+        </ReportSection>
+
+        {/* All-site traffic — GA4 all sources */}
+        <ReportSection
+          title="Website Traffic"
+          description="All-traffic analytics from GA4 — sessions, users, events, and channels across every source."
+          accent="emerald"
+          icon={AnalyticsIcon}
+        >
+          <WebsiteAnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+        </ReportSection>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">SEO Report</h2>
+            <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100">SEO Report</h1>
             {audit?.scannedAt && (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                 Last scan: {formatDate(audit.scannedAt)}
@@ -135,39 +189,68 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
         <ChartsDashboard siteId={siteId} themeKey={colorTheme} scores={scores} strategy={activeStrategy} history={history} historyLoading={historyLoading} />
       ) : (
         <>
-          {/* Score Gauges */}
-          <Card>
-            <ScoreGaugesRow scores={scores} themeKey={colorTheme} />
-          </Card>
+          {/* Site Performance — Lighthouse */}
+          <ReportSection
+            title="Site Performance"
+            description="Lighthouse audit results for speed, Core Web Vitals, and SEO health."
+            accent="violet"
+            icon={GaugeIcon}
+          >
+            <Card>
+              <ScoreGaugesRow scores={scores} themeKey={colorTheme} />
+            </Card>
 
-          {/* Core Web Vitals */}
-          <Card>
-            <MetricsSection scores={scores} themeKey={colorTheme} viewMode={viewMode} />
-          </Card>
+            <Card>
+              <MetricsSection scores={scores} themeKey={colorTheme} viewMode={viewMode} />
+            </Card>
 
-          {/* Score Trends */}
-          <Card>
-            {historyLoading ? (
-              <div className="flex justify-center py-8">
-                <Spinner size="sm" />
-              </div>
-            ) : (
-              <ScoreTrendChart
-                history={history}
-                themeKey={colorTheme}
-                strategy={activeStrategy}
-              />
-            )}
-          </Card>
+            <Card>
+              {historyLoading ? (
+                <div className="flex justify-center py-8">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <ScoreTrendChart
+                  history={history}
+                  themeKey={colorTheme}
+                  strategy={activeStrategy}
+                />
+              )}
+            </Card>
+          </ReportSection>
 
-          {/* Google Search Console */}
-          <SearchConsoleSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          {/* Organic search performance — GSC + GA4 Organic */}
+          <ReportSection
+            title="Search Performance"
+            description="Organic search visibility — impressions, clicks, and queries from Google, combined with engagement and conversions from organic sessions."
+            accent="blue"
+            icon={SearchIcon}
+          >
+            <SearchConsoleSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+            <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          </ReportSection>
 
-          {/* Website Analytics (all traffic) */}
-          <WebsiteAnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          {/* Off-page authority — Domain Authority + Backlinks */}
+          <ReportSection
+            title="Off-Page SEO"
+            description="Domain authority, backlinks, and referring domains — signals of your site's trust and reputation across the web."
+            accent="amber"
+            icon={LinkIcon}
+          >
+            <Card>
+              <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} />
+            </Card>
+          </ReportSection>
 
-          {/* Google Analytics (Organic) */}
-          <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          {/* All-site traffic — GA4 all sources */}
+          <ReportSection
+            title="Website Traffic"
+            description="All-traffic analytics from GA4 — sessions, users, events, and channels across every source."
+            accent="emerald"
+            icon={AnalyticsIcon}
+          >
+            <WebsiteAnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          </ReportSection>
         </>
       )}
     </div>

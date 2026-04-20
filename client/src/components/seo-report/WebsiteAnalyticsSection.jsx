@@ -81,10 +81,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Website Analytics
-            </h3>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium uppercase">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-medium uppercase">
               All Traffic
             </span>
           </div>
@@ -107,37 +104,27 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
           ))}
         </div>
 
-        {/* KPI Cards — event-based metrics (File Downloads / Form Requests) live in the Event panel below */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          <KpiCard
-            label="Sessions"
-            value={formatNumber(overview.sessions)}
-            color={themeColor(themeKey, 0)}
-          />
+        {/* KPI Cards — session/page_view counts are shown in the Event panel below; keep only non-event metrics here */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard
             label="Total Users"
             value={formatNumber(overview.uniqueVisitors)}
-            color={themeColor(themeKey, 1)}
+            color={themeColor(themeKey, 0)}
           />
           <KpiCard
             label="New Users"
             value={formatNumber(overview.newUsers)}
-            color={themeColor(themeKey, 2)}
-          />
-          <KpiCard
-            label="Page Views"
-            value={formatNumber(overview.pageViews)}
-            color={themeColor(themeKey, 3)}
+            color={themeColor(themeKey, 1)}
           />
           <KpiCard
             label="Bounce Rate"
             value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'}
-            color={themeColor(themeKey, 4)}
+            color={themeColor(themeKey, 2)}
           />
           <KpiCard
             label="Avg. Time"
             value={formatDuration(overview.avgTimeOnPage)}
-            color={themeColor(themeKey, 5)}
+            color={themeColor(themeKey, 3)}
           />
         </div>
       </Card>
