@@ -9,6 +9,9 @@ export const useSeoReportStore = create(
       viewMode: 'charts',
       setViewMode: (mode) => set({ viewMode: mode }),
     }),
-    { name: 'wp-sentinel-seo-report' }
+    {
+      name: 'wp-sentinel-seo-report',
+      partialize: (state) => ({ colorTheme: state.colorTheme }),
+    }
   )
 );
