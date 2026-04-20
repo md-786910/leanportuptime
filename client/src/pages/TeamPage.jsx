@@ -316,10 +316,13 @@ export default function TeamPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={member.role === 'admin' ? 'info' : 'neutral'}>{member.role}</Badge>
-                        {!member._self && (
+                        {!member._self && member.role !== 'admin' && (
                           <span className="text-xs text-gray-500 dark:text-gray-400">
                             {member.sharedSites?.length || 0} project{member.sharedSites?.length !== 1 ? 's' : ''}
                           </span>
+                        )}
+                        {!member._self && member.role === 'admin' && (
+                          <span className="text-xs text-gray-400 dark:text-gray-500 italic">All projects</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2">

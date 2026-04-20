@@ -9,8 +9,9 @@ function ownerIdOf(user) {
 
 exports.list = async (req, res, next) => {
   try {
-    const ownerId = ownerIdOf(req.user);
-    const members = await User.find({ invitedBy: ownerId })
+    // Single-tenant instance: list every registered user on the platform,
+    // minus the caller (the frontend prepends them as "You" already).
+    const members = await User.find({ _id: { $ne: req.user._id } })
       .populate('sharedSites', 'name url')
       .sort({ createdAt: -1 })
       .lean();
