@@ -66,7 +66,7 @@ export default function SiteDetailPage() {
           onDelete={() => setShowDelete(true)}
           isCheckLoading={triggerCheck.isPending}
         />
-        <ExportButton siteId={id} />
+        {!["seo", "seo-report"].includes(activeTab) && <ExportButton siteId={id} />}
       </div>
 
       <SiteDetailTabs activeTab={activeTab} onTabChange={setActiveTab} />

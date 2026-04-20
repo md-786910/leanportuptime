@@ -106,7 +106,7 @@ class NotificationService {
     await this.transporter.sendMail({
       from: config.smtp.from,
       to: recipients.join(","),
-      subject: `[WP Sentinel] SSL: ${site.name} - ${type.toUpperCase()}`,
+      subject: `[WP Sentinel]: ${site.name} - ${type.toUpperCase()}`,
       html: `
     <h3>WP Sentinel SSL Alert</h3>
     <p><strong>${site.name}</strong> (${site.url})</p>
@@ -118,12 +118,13 @@ class NotificationService {
 
   async sendInvitationEmail(toEmail, inviterName, siteNames, acceptUrl) {
     if (!this.transporter) {
-      throw new Error('SMTP not configured');
+      throw new Error("SMTP not configured");
     }
 
-    const siteList = siteNames.length > 0
-      ? siteNames.map((n) => `<li>${n}</li>`).join('')
-      : '<li>All projects (admin access)</li>';
+    const siteList =
+      siteNames.length > 0
+        ? siteNames.map((n) => `<li>${n}</li>`).join("")
+        : "<li>All projects (admin access)</li>";
 
     await this.transporter.sendMail({
       from: config.smtp.from,
