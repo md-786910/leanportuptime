@@ -3,7 +3,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { getGoogleAuthUrl } from '../../api/searchConsole.api';
-import { useGoogleStatus } from '../../hooks/useSearchConsole';
+import { useGoogleStatus, useGoogleDisconnect } from '../../hooks/useSearchConsole';
 import {
   useAnalyticsStatus,
   useAnalyticsProperties,
@@ -178,6 +178,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
   const { data: overviewData, isLoading, error } = useAnalyticsOverview(siteId, period);
   const { insights, isLoading: insightsLoading } = useAnalyticsInsights(siteId, period);
   const unlinkMutation = useAnalyticsUnlink(siteId);
+  const disconnectMutation = useGoogleDisconnect();
   const isViewer = useIsViewer();
 
   // Detect insufficient scope from overview fetch
@@ -199,12 +200,31 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
   }
 
   if (error) {
+    const errMsg = error.response?.data?.error?.message || 'Failed to load Analytics data';
+    const busy = unlinkMutation.isPending || disconnectMutation.isPending;
     return (
       <Card>
         <div className="text-center py-8">
-          <p className="text-sm text-red-500 dark:text-red-400">
-            {error.response?.data?.error?.message || 'Failed to load Analytics data'}
-          </p>
+          <p className="text-sm text-red-500 dark:text-red-400 mb-4">{errMsg}</p>
+          {!isViewer && (
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => unlinkMutation.mutate()}
+                isLoading={unlinkMutation.isPending}
+                disabled={busy}
+              >
+                Change Property
+              </Button>
+              <Button
+                onClick={() => disconnectMutation.mutate()}
+                isLoading={disconnectMutation.isPending}
+                disabled={busy}
+              >
+                Reconnect Google
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     );

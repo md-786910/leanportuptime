@@ -178,6 +178,7 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
   const { performance, isLoading, error } = useGscPerformance(siteId, period);
   const { insights, isLoading: insightsLoading } = useGscInsights(siteId, period);
   const unlinkMutation = useGscUnlink(siteId);
+  const disconnectMutation = useGoogleDisconnect();
   const isViewer = useIsViewer();
 
   if (isLoading) {
@@ -191,12 +192,31 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
   }
 
   if (error) {
+    const errMsg = error.response?.data?.error?.message || 'Failed to load Search Console data';
+    const busy = unlinkMutation.isPending || disconnectMutation.isPending;
     return (
       <Card>
         <div className="text-center py-8">
-          <p className="text-sm text-red-500 dark:text-red-400">
-            {error.response?.data?.error?.message || 'Failed to load Search Console data'}
-          </p>
+          <p className="text-sm text-red-500 dark:text-red-400 mb-4">{errMsg}</p>
+          {!isViewer && (
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => unlinkMutation.mutate()}
+                isLoading={unlinkMutation.isPending}
+                disabled={busy}
+              >
+                Change Property
+              </Button>
+              <Button
+                onClick={() => disconnectMutation.mutate()}
+                isLoading={disconnectMutation.isPending}
+                disabled={busy}
+              >
+                Reconnect Google
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     );
