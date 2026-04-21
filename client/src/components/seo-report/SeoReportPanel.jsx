@@ -17,6 +17,7 @@ import ChartsDashboard from './ChartsDashboard';
 import GenerateReportButton from './GenerateReportButton';
 import ReportSection from './ReportSection';
 import BacklinksSection from './BacklinksSection';
+import KeywordRankingsSection from './KeywordRankingsSection';
 import { GaugeIcon, SearchIcon, AnalyticsIcon, LinkIcon } from './chartIcons';
 
 function formatDate(dateStr) {
@@ -38,6 +39,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
   const viewMode = useSeoReportStore((s) => s.viewMode);
 
   const [activeStrategy, setActiveStrategy] = useState('mobile');
+  const [keywordsExpanded, setKeywordsExpanded] = useState(false);
 
   if (isLoading) {
     return (
@@ -207,15 +209,39 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
             <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
           </ReportSection>
 
-          {/* Off-page authority — Domain Authority + Backlinks */}
+          {/* Off-page authority — Domain Authority + Backlinks + tracked keyword rankings */}
           <ReportSection
             title="Off-Page SEO"
-            description="Domain authority, backlinks, and referring domains — signals of your site's trust and reputation across the web."
+            description="Domain authority, backlinks, and tracked keyword rankings — signals of your site's trust and visibility across the web."
             accent="amber"
             icon={LinkIcon}
           >
             <Card>
               <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} />
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setKeywordsExpanded((v) => !v)}
+                  className={`w-full flex items-center justify-between text-left ${keywordsExpanded ? 'mb-3 pb-2 border-b border-gray-200 dark:border-gray-700' : ''}`}
+                  aria-expanded={keywordsExpanded}
+                >
+                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
+                    Keyword Rankings
+                  </h3>
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform ${keywordsExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {keywordsExpanded && (
+                  <KeywordRankingsSection siteId={siteId} themeKey={colorTheme} />
+                )}
+              </div>
             </Card>
           </ReportSection>
 

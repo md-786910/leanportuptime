@@ -61,6 +61,19 @@ module.exports = {
       },
     },
   },
+  keywords: {
+    provider: process.env.KEYWORDS_PROVIDER || "dataforseo",
+    defaultLocationCode: parseInt(process.env.KEYWORDS_LOCATION_CODE || "2276", 10),
+    defaultLanguageCode: process.env.KEYWORDS_LANGUAGE_CODE || "de",
+    defaultMonthlyLimit: parseInt(process.env.KEYWORDS_MONTHLY_LIMIT || "4", 10),
+    historyMaxEntries: parseInt(process.env.KEYWORDS_HISTORY_MAX || "30", 10),
+    providers: {
+      dataforseo: {
+        email: process.env.DATAFORSEO_EMAIL || "",
+        password: process.env.DATAFORSEO_PASSWORD || "",
+      },
+    },
+  },
   rateLimit: {
     windowMs: 15 * 60 * 1000,
     max: process.env.NODE_ENV === "development" ? 1000 : 100,

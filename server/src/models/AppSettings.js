@@ -4,6 +4,8 @@ const appSettingsSchema = new mongoose.Schema(
   {
     key: { type: String, default: 'global', unique: true, index: true },
     backlinksMonthlyLimit: { type: Number, default: 4, min: 1, max: 1000 },
+    keywordsMonthlyLimit: { type: Number, default: 4, min: 1, max: 1000 },
+    maxKeywordsPerSite: { type: Number, default: 30, min: 1, max: 500 },
   },
   { timestamps: true }
 );

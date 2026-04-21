@@ -10,6 +10,7 @@ import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnaly
 import TopQueriesTable from './TopQueriesTable';
 import TopPagesTable from './TopPagesTable';
 import BacklinksSection from './BacklinksSection';
+import TopKeywordsPanel from './TopKeywordsPanel';
 import ReportSection from './ReportSection';
 import { GaugeIcon, SearchIcon, AnalyticsIcon, LinkIcon } from './chartIcons';
 
@@ -239,6 +240,9 @@ function DomainAuthoritySection({ siteId, themeKey }) {
     >
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 p-4">
         <BacklinksSection siteId={siteId} themeKey={themeKey} showTitle={false} />
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <TopKeywordsPanel siteId={siteId} />
+        </div>
       </div>
     </ReportSection>
   );
