@@ -1,3 +1,4 @@
+@import 'react-datepicker/dist/react-datepicker.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,4 +16,88 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+/* react-datepicker theme — align with Tailwind brand + dark mode */
+.react-datepicker {
+  @apply font-sans border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+}
+.react-datepicker__header {
+  @apply bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 rounded-t-lg;
+}
+.react-datepicker__current-month,
+.react-datepicker-year-header,
+.react-datepicker__day-name {
+  @apply text-gray-900 dark:text-gray-100 font-medium;
+}
+.react-datepicker__month-text,
+.react-datepicker__quarter-text,
+.react-datepicker__year-text,
+.react-datepicker__day {
+  @apply text-gray-700 dark:text-gray-200 rounded-md;
+}
+.react-datepicker__month-text:hover,
+.react-datepicker__quarter-text:hover,
+.react-datepicker__year-text:hover,
+.react-datepicker__day:hover {
+  @apply bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300;
+}
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--keyboard-selected,
+.react-datepicker__quarter-text--selected,
+.react-datepicker__quarter-text--keyboard-selected,
+.react-datepicker__year-text--selected,
+.react-datepicker__year-text--keyboard-selected,
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  @apply bg-brand-500 text-white;
+}
+.react-datepicker__month-text--selected:hover,
+.react-datepicker__day--selected:hover {
+  @apply bg-brand-600 text-white;
+}
+.react-datepicker__month-text--disabled,
+.react-datepicker__day--disabled {
+  @apply text-gray-300 dark:text-gray-600 cursor-not-allowed;
+}
+.react-datepicker__month-text--disabled:hover,
+.react-datepicker__day--disabled:hover {
+  @apply bg-transparent text-gray-300 dark:text-gray-600;
+}
+.react-datepicker__navigation-icon::before,
+.react-datepicker__year-read-view--down-arrow {
+  @apply border-gray-500 dark:border-gray-400;
+}
+.react-datepicker__navigation:hover *::before {
+  @apply border-brand-500;
+}
+.react-datepicker__triangle {
+  display: none;
+}
+.react-datepicker-popper {
+  z-index: 40;
+}
+.react-datepicker__day--outside-month {
+  @apply text-gray-300 dark:text-gray-600;
+}
+.react-datepicker__day--today {
+  @apply font-semibold text-brand-600 dark:text-brand-400;
+}
+.react-datepicker__header__dropdown select {
+  @apply text-xs px-1 py-0.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 mx-0.5;
+}
+/* Inline mode inside our DateRangePicker wrapper: drop its own border/bg
+   so the wrapper's rounded border/shadow is the only one visible. */
+.daterangepicker-inline .react-datepicker {
+  @apply border-0 shadow-none bg-transparent;
+}
+.react-datepicker__day--in-range,
+.react-datepicker__day--in-selecting-range {
+  @apply bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300;
+}
+.react-datepicker__day--range-start,
+.react-datepicker__day--range-end,
+.react-datepicker__day--selecting-range-start,
+.react-datepicker__day--selecting-range-end {
+  @apply bg-brand-500 text-white;
 }

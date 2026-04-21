@@ -2,6 +2,7 @@ const BaseBacklinksProvider = require('./BaseProvider');
 
 const SUMMARY_ENDPOINT = 'https://api.dataforseo.com/v3/backlinks/summary/live';
 const BACKLINKS_LIST_ENDPOINT = 'https://api.dataforseo.com/v3/backlinks/backlinks/live';
+const HISTORY_ENDPOINT = 'https://api.dataforseo.com/v3/backlinks/history/live';
 
 function stripProtocol(url) {
   return (url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -114,7 +115,7 @@ class DataForSEOProvider extends BaseBacklinksProvider {
         newLinksLast30d: 0,
         lostLinksLast30d: 0,
         providerName: 'dataforseo',
-        providerMetric: 'domain_rank',
+        providerMetric: 'domain_authority',
         raw: data,
       };
     }
@@ -132,9 +133,49 @@ class DataForSEOProvider extends BaseBacklinksProvider {
       newLinksLast30d: result.referring_domains_new_1m || result.backlinks_new_1m || 0,
       lostLinksLast30d: result.referring_domains_lost_1m || result.backlinks_lost_1m || 0,
       providerName: 'dataforseo',
-      providerMetric: 'domain_rank',
+      providerMetric: 'domain_authority',
       raw: result,
     };
+  }
+
+  async fetchHistory(domain, { months = 12 } = {}) {
+    this._assertConfigured();
+
+    const target = stripProtocol(domain);
+    const auth = this._auth();
+
+    const now = new Date();
+    const dateTo = now.toISOString().slice(0, 10);
+    const from = new Date(now);
+    from.setMonth(from.getMonth() - months);
+    const dateFrom = from.toISOString().slice(0, 10);
+
+    const { data, task } = await callDataForSEO(
+      HISTORY_ENDPOINT,
+      [{ target, date_from: dateFrom, date_to: dateTo }],
+      auth
+    );
+
+    const result = task.result?.[0];
+    const rawItems = result?.items || [];
+
+    // Log once so we can verify field names against live payload
+    if (rawItems[0]) {
+      console.log('[DataForSEO] History sample for', target, ':', JSON.stringify(rawItems[0]).slice(0, 500));
+    }
+
+    const history = rawItems.map((it) => ({
+      monthKey: typeof it.date === 'string' ? it.date.slice(0, 7) : '',
+      newDomains: it.new_referring_domains || 0,
+      lostDomains: it.lost_referring_domains || 0,
+      newBacklinks: it.new_backlinks || 0,
+      lostBacklinks: it.lost_backlinks || 0,
+      backlinks: it.backlinks || 0,
+      referringDomains: it.referring_domains || 0,
+      rank: typeof it.rank === 'number' ? Math.round(it.rank / 10) : 0,
+    })).filter((h) => h.monthKey);
+
+    return { history, raw: data };
   }
 
   async fetchBacklinksList(domain, { limit = 100 } = {}) {

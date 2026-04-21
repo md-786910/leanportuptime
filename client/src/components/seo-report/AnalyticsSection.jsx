@@ -13,7 +13,7 @@ import {
   useAnalyticsInsights,
 } from '../../hooks/useAnalytics';
 import { themeColor } from './colorThemes';
-import { useIsViewer, useIsOwner } from '../../hooks/useRole';
+import { useIsViewer, useIsAdmin } from '../../hooks/useRole';
 import OrganicTrendChart from './OrganicTrendChart';
 import OrganicLandingPagesTable from './OrganicLandingPagesTable';
 import NewVsReturningChart from './NewVsReturningChart';
@@ -375,7 +375,7 @@ export default function AnalyticsSection({ siteId, themeKey, viewMode }) {
   const { googleStatus, isLoading: googleLoading } = useGoogleStatus();
   const { analyticsStatus, isLoading: analyticsLoading } = useAnalyticsStatus(siteId);
   const isViewer = useIsViewer();
-  const isOwner = useIsOwner();
+  const isAdmin = useIsAdmin();
 
   if (googleLoading || analyticsLoading) {
     return (
@@ -389,8 +389,8 @@ export default function AnalyticsSection({ siteId, themeKey, viewMode }) {
 
   // State 1: Google not connected
   if (!googleStatus?.connected) {
-    if (!isOwner) {
-      return <ViewerNotConfigured message="Google account not connected. Contact the workspace owner to connect Google Analytics." />;
+    if (!isAdmin) {
+      return <ViewerNotConfigured message="Google account not connected. Contact a workspace admin to connect Google Analytics." />;
     }
     return <ConnectState needsReconnect={false} />;
   }

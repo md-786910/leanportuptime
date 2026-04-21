@@ -42,6 +42,14 @@ class BaseBacklinksProvider {
     err.statusCode = 501;
     throw err;
   }
+
+  // eslint-disable-next-line no-unused-vars
+  async fetchHistory(domain, { months = 12 } = {}) {
+    const err = new Error('Provider does not support backlinks history');
+    err.code = 'FEATURE_NOT_SUPPORTED';
+    err.statusCode = 501;
+    throw err;
+  }
 }
 
 module.exports = BaseBacklinksProvider;

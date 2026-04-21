@@ -30,10 +30,18 @@ exports.create = async (req, res, next) => {
   try {
     const { invitations } = req.body;
     const adminId = ownerIdOf(req.user);
+    const isInvitedAdmin = !!req.user.invitedBy;
     const results = [];
 
     for (const inv of invitations) {
       const { email, role = 'viewer', siteIds = [] } = inv;
+
+      // Only the original owner may mint new admins. Invited admins can
+      // invite viewers only to prevent cascading admin sprawl.
+      if (isInvitedAdmin && role === 'admin') {
+        results.push({ email, error: 'Only the workspace owner can invite admins' });
+        continue;
+      }
 
       // Validate sites belong to admin
       if (siteIds.length > 0) {

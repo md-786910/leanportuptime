@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useInvitations, useTeamMembers, useInvitationMutations, useTeamMutations } from '../hooks/useInvitations';
 import { useAuthStore } from '../store/authStore';
+import { useIsOwner } from '../hooks/useRole';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
@@ -21,6 +22,7 @@ export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const currentUser = useAuthStore((s) => s.user);
+  const isOwner = useIsOwner();
   const { members, isLoading: membersLoading } = useTeamMembers();
   const { invitations, isLoading: invLoading } = useInvitations();
   const { createInvitations, deleteInvitation, resendInvitation } = useInvitationMutations();
@@ -145,7 +147,7 @@ export default function TeamPage() {
                     className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   >
                     <option value="viewer">Viewer</option>
-                    <option value="admin">Admin</option>
+                    {isOwner && <option value="admin">Admin</option>}
                   </select>
                 </div>
                 {inviteRows.length > 1 && (
@@ -276,7 +278,7 @@ export default function TeamPage() {
                             className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                           >
                             <option value="viewer">Viewer</option>
-                            <option value="admin">Admin</option>
+                            {isOwner && <option value="admin">Admin</option>}
                           </select>
                         </div>
                         <div className="flex gap-2">
@@ -328,6 +330,8 @@ export default function TeamPage() {
                       <div className="flex items-center gap-2">
                         {member._self ? (
                           <span className="text-xs text-gray-400 dark:text-gray-500 italic">Cannot edit yourself</span>
+                        ) : member.role === 'admin' && !isOwner ? (
+                          <span className="text-xs text-gray-400 dark:text-gray-500 italic">Owner-only</span>
                         ) : (
                           <>
                             <Button variant="ghost" size="sm" onClick={() => startEdit(member)}>

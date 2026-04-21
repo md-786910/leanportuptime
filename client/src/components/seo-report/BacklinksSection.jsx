@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import Spinner from '../common/Spinner';
+import DateRangePicker from '../common/DateRangePicker';
 import { themeColor } from './colorThemes';
 import { useBacklinksStatus, useBacklinksRefresh } from '../../hooks/useBacklinks';
 import { useIsViewer } from '../../hooks/useRole';
@@ -11,11 +13,78 @@ const METRIC_LABELS = {
   trust_flow: 'Trust Flow',
 };
 
+const PERIODS = [
+  { key: '1m', label: '1 month', months: 1 },
+  { key: '3m', label: '3 months', months: 3 },
+  { key: '6m', label: '6 months', months: 6 },
+  { key: '12m', label: '12 months', months: 12 },
+  { key: 'custom', label: 'Custom', months: null },
+];
+
 function fmt(n) {
   if (n == null) return '—';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatMonthKey(key) {
+  if (!key || key.length < 7) return key || '';
+  const [y, m] = key.split('-');
+  const idx = parseInt(m, 10) - 1;
+  return `${MONTH_NAMES[idx] || m} ${y}`;
+}
+function monthKeyToDate(key, endOfMonth = false) {
+  if (!key || key.length < 7) return null;
+  const [y, m] = key.split('-').map(Number);
+  if (endOfMonth) return new Date(y, m, 0);
+  return new Date(y, (m || 1) - 1, 1);
+}
+function dateToMonthKey(d) {
+  if (!d) return '';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function formatDayDate(d) {
+  if (!d) return '';
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Sums monthly buckets of history within a period. Returns null if not computable.
+// Also reports whether the requested window extends beyond the stored months.
+function sumPeriod(history, period, customFrom, customTo) {
+  if (!history?.length) return null;
+  const sorted = [...history].sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+  const available = sorted.map((h) => h.monthKey);
+  const minStored = available[0];
+  const maxStored = available[available.length - 1];
+
+  let start;
+  let end;
+  let requestedStart;
+  if (period === 'custom') {
+    if (!customFrom || !customTo || customFrom > customTo) return null;
+    requestedStart = customFrom;
+    start = customFrom;
+    end = customTo;
+  } else {
+    const cfg = PERIODS.find((p) => p.key === period);
+    end = maxStored;
+    const firstIdx = Math.max(0, sorted.length - cfg.months);
+    requestedStart = sorted[firstIdx].monthKey;
+    start = requestedStart;
+  }
+
+  const slice = sorted.filter((h) => h.monthKey >= start && h.monthKey <= end);
+  const totals = slice.reduce((acc, h) => ({
+    newDomains: acc.newDomains + (h.newDomains || 0),
+    lostDomains: acc.lostDomains + (h.lostDomains || 0),
+    newBacklinks: acc.newBacklinks + (h.newBacklinks || 0),
+    lostBacklinks: acc.lostBacklinks + (h.lostBacklinks || 0),
+  }), { newDomains: 0, lostDomains: 0, newBacklinks: 0, lostBacklinks: 0 });
+
+  const partial = requestedStart < minStored || end > maxStored;
+  return { ...totals, months: slice.length, partial };
 }
 
 function daysAgo(date) {
@@ -31,6 +100,9 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
   const { status, isLoading } = useBacklinksStatus(siteId);
   const refresh = useBacklinksRefresh(siteId);
   const isViewer = useIsViewer();
+  const [period, setPeriod] = useState('1m');
+  const [customFrom, setCustomFrom] = useState(null);
+  const [customTo, setCustomTo] = useState(null);
 
   const Title = showTitle ? (
     <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Domain Authority</h3>
@@ -66,6 +138,29 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
     if (quotaExhausted || providerNotConfigured || refresh.isPending) return;
     refresh.mutate();
   };
+
+  // Period-aware totals. `1m` continues to use the summary fields because DataForSEO
+  // reports those as a rolling 30-day window (more current than the latest monthly bucket).
+  const hasHistory = Array.isArray(data.history) && data.history.length > 0;
+  const historyMonths = hasHistory
+    ? [...new Set(data.history.map((h) => h.monthKey).filter(Boolean))].sort()
+    : [];
+  const customFromKey = dateToMonthKey(customFrom);
+  const customToKey = dateToMonthKey(customTo);
+  const periodTotals = hasHistory && period !== '1m'
+    ? sumPeriod(data.history, period, customFromKey, customToKey)
+    : null;
+  const displayedNew = period === '1m'
+    ? (data.newLinksLast30d ?? 0)
+    : (periodTotals?.newDomains ?? null);
+  const displayedLost = period === '1m'
+    ? (data.lostLinksLast30d ?? 0)
+    : (periodTotals?.lostDomains ?? null);
+  const periodLabel = period === '1m'
+    ? 'Last 30 days'
+    : period === 'custom'
+      ? (customFrom && customTo ? `${formatDayDate(customFrom)} → ${formatDayDate(customTo)}` : 'Pick a range')
+      : (PERIODS.find((p) => p.key === period)?.label || '');
 
   // Empty state — never fetched
   if (!hasData) {
@@ -156,7 +251,54 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {hasHistory && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="flex gap-1.5">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => {
+                  if (p.key === 'custom' && !customFrom && historyMonths.length) {
+                    setCustomFrom(monthKeyToDate(historyMonths[0]));
+                    setCustomTo(monthKeyToDate(historyMonths[historyMonths.length - 1], true));
+                  }
+                  setPeriod(p.key);
+                }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  period === p.key
+                    ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {period === 'custom' && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <DateRangePicker
+                startDate={customFrom}
+                endDate={customTo}
+                onChange={([s, e]) => {
+                  setCustomFrom(s);
+                  setCustomTo(e);
+                }}
+                maxDate={new Date()}
+              />
+              {periodTotals?.partial && historyMonths.length > 0 && (
+                <span
+                  className="text-[10px] text-amber-500"
+                  title={`Stored history covers ${formatMonthKey(historyMonths[0])} – ${formatMonthKey(historyMonths[historyMonths.length - 1])}. Months outside this window contribute 0.`}
+                >
+                  Partial — history stored from {formatMonthKey(historyMonths[0])}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
           <span className="text-[10px] font-semibold text-gray-500 uppercase">{scoreLabel}</span>
           <p className="text-2xl font-bold my-1 tabular-nums" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
@@ -174,8 +316,17 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
         </div>
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
           <span className="text-[10px] font-semibold text-gray-500 uppercase">New Links</span>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 my-1 tabular-nums">+{fmt(data.newLinksLast30d)}</p>
-          <span className="text-[9px] text-gray-400">Last 30 days</span>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 my-1 tabular-nums">
+            {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
+          </p>
+          <span className="text-[9px] text-gray-400">{periodLabel}</span>
+        </div>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase">Lost Links</span>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400 my-1 tabular-nums">
+            {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
+          </p>
+          <span className="text-[9px] text-gray-400">{periodLabel}</span>
         </div>
       </div>
 

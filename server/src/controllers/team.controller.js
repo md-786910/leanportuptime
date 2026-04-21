@@ -43,7 +43,17 @@ exports.update = async (req, res, next) => {
     }
 
     const { role, sharedSites } = req.body;
-    if (role) member.role = role;
+    if (role && role !== member.role) {
+      // Promoting to admin is owner-only. Invited admins can demote or edit
+      // viewers, but cannot mint new admins.
+      if (role === 'admin' && req.user.invitedBy) {
+        return res.status(403).json({
+          success: false,
+          error: { code: 'OWNER_ONLY', message: 'Only the workspace owner can promote members to admin' },
+        });
+      }
+      member.role = role;
+    }
     if (sharedSites) {
       const siteCount = await Site.countDocuments({
         _id: { $in: sharedSites },
@@ -74,16 +84,24 @@ exports.remove = async (req, res, next) => {
       });
     }
     const ownerId = ownerIdOf(req.user);
-    const member = await User.findOneAndDelete({
+    const target = await User.findOne({
       _id: req.params.userId,
       invitedBy: ownerId,
     });
-    if (!member) {
+    if (!target) {
       return res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Team member not found' },
       });
     }
+    // Removing another admin is owner-only.
+    if (target.role === 'admin' && req.user.invitedBy) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'OWNER_ONLY', message: 'Only the workspace owner can remove admins' },
+      });
+    }
+    await target.deleteOne();
 
     res.json({ success: true, data: { message: 'Team member removed' } });
   } catch (error) {

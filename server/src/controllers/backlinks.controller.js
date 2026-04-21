@@ -39,6 +39,9 @@ exports.getStatus = async (req, res, next) => {
           items: bl.items || [],
           listFetchedAt: bl.listFetchedAt || null,
           listFetchError: bl.listFetchError || null,
+          history: bl.history || [],
+          historyFetchedAt: bl.historyFetchedAt || null,
+          historyFetchError: bl.historyFetchError || null,
         },
         isStale: backlinksService.isStale(lastFetchedAt),
         hasData: !!lastFetchedAt,
@@ -121,6 +124,17 @@ exports.refresh = async (req, res, next) => {
       listFetchError = err.message;
     }
 
+    // Also fetch monthly history (24 months). Same partial-failure semantics.
+    let historyItems = null;
+    let historyFetchError = null;
+    try {
+      const hist = await backlinksService.fetchHistory(site.url, { months: 24 });
+      historyItems = hist.history;
+    } catch (err) {
+      console.warn('[Backlinks] History fetch failed (summary committed):', err.message);
+      historyFetchError = err.message;
+    }
+
     // Save data + increment counter
     const now = new Date();
     const newCount = currentCount + 1;
@@ -144,12 +158,21 @@ exports.refresh = async (req, res, next) => {
     } else {
       update['backlinks.listFetchError'] = listFetchError;
     }
+    if (historyItems) {
+      update['backlinks.history'] = historyItems;
+      update['backlinks.historyFetchedAt'] = now;
+      update['backlinks.historyFetchError'] = null;
+    } else {
+      update['backlinks.historyFetchError'] = historyFetchError;
+    }
 
     await Site.findByIdAndUpdate(site._id, update);
 
-    // Read existing items if list fetch failed (so response is consistent with DB)
+    // Read existing items if list/history fetch failed (so response is consistent with DB)
     const existingItems = site.backlinks?.items || [];
     const existingListFetchedAt = site.backlinks?.listFetchedAt || null;
+    const existingHistory = site.backlinks?.history || [];
+    const existingHistoryFetchedAt = site.backlinks?.historyFetchedAt || null;
 
     res.json({
       success: true,
@@ -167,6 +190,9 @@ exports.refresh = async (req, res, next) => {
           items: listItems || existingItems,
           listFetchedAt: listItems ? now : existingListFetchedAt,
           listFetchError,
+          history: historyItems || existingHistory,
+          historyFetchedAt: historyItems ? now : existingHistoryFetchedAt,
+          historyFetchError,
         },
         isStale: false,
         hasData: true,

@@ -2,6 +2,12 @@ const config = require('../config');
 const searchConsoleService = require('../services/searchConsole.service');
 const resolveGoogleUser = require('../utils/resolveGoogleUser');
 
+// Invited admins share the workspace owner's Google connection. Writes must
+// always target the owner's User record so every admin sees the same tokens.
+function ownerIdOf(user) {
+  return user.invitedBy || user._id;
+}
+
 exports.connect = async (req, res, next) => {
   try {
     if (!config.google.clientId || !config.google.clientSecret) {
@@ -11,7 +17,7 @@ exports.connect = async (req, res, next) => {
       });
     }
 
-    const authUrl = searchConsoleService.getAuthUrl(req.user._id);
+    const authUrl = searchConsoleService.getAuthUrl(ownerIdOf(req.user));
     res.json({ success: true, data: { authUrl } });
   } catch (error) {
     next(error);
@@ -42,7 +48,7 @@ exports.callback = async (req, res, next) => {
 
 exports.disconnect = async (req, res, next) => {
   try {
-    await searchConsoleService.disconnect(req.user._id);
+    await searchConsoleService.disconnect(ownerIdOf(req.user));
     res.json({ success: true, data: { message: 'Google account disconnected' } });
   } catch (error) {
     next(error);

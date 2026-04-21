@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const config = require("../config");
 const logger = require("../utils/logger");
+const notificationService = require("../services/notification.service");
 
 const generateAccessToken = (userId) => {
   return jwt.sign({ userId }, config.jwt.secret, {
@@ -201,8 +202,16 @@ exports.forgotPassword = async (req, res, next) => {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
-    // TODO: Send email with reset link
-    logger.info(`Password reset token generated for ${email}`);
+    const resetUrl = `${config.clientUrl}/reset-password/${resetToken}`;
+
+    try {
+      await notificationService.sendPasswordResetEmail(email, resetUrl);
+      logger.info(`Password reset email sent to ${email}`);
+    } catch (emailError) {
+      logger.error(
+        `Failed to send password reset email to ${email}: ${emailError.message}`,
+      );
+    }
 
     res.json({
       success: true,
