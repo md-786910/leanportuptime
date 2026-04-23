@@ -54,7 +54,7 @@ export default function Header() {
         <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-brand-on-surface-variant hover:bg-brand-surface-container-lowest dark:hover:bg-brand-on-surface transition-all duration-200"
+            className="p-2.5 rounded-xl text-brand-on-surface-variant hover:bg-[#f8f9f9] dark:hover:bg-brand-on-surface transition-all duration-200"
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
             {theme === 'light' ? (
