@@ -21,7 +21,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 bg-brand-surface-container-lowest/80 dark:bg-brand-on-surface/80 backdrop-blur-md border-b border-brand-outline-variant dark:border-brand-outline px-6 py-3.5">
+    <header className="w-full h-18 sticky top-0 z-40 bg-[#f2f4f6] p-4">
       <div className="flex items-center justify-between gap-6">
         {/* Left: Hamburger & Search */}
         <div className="flex items-center gap-4 flex-1">
@@ -69,7 +69,7 @@ export default function Header() {
           </button>
 
           <button
-            className="p-2.5 rounded-xl text-brand-on-surface-variant hover:bg-brand-surface-container-lowest dark:hover:bg-brand-on-surface transition-all duration-200 relative group"
+            className="p-2.5 rounded-xl text-brand-on-surface-variant hover:bg-[#f8f9f9] dark:hover:bg-brand-on-surface transition-all duration-200 relative group"
             title="Notifications"
           >
             <svg className="h-5 w-5 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,9 +84,9 @@ export default function Header() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-3 p-1 pr-3 rounded-xl hover:bg-brand-surface-container-lowest dark:hover:bg-brand-on-surface transition-all duration-200"
+              className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#f8f9f9] dark:hover:bg-brand-on-surface transition-all duration-200"
             >
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-500 to-brand-600 flex items-center justify-center shadow-md ring-2 ring-white dark:ring-slate-900">
+              <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-brand-primary to-brand-primary-container flex items-center justify-center shadow-md ring-2 ring-white dark:ring-slate-900">
                 <span className="text-sm font-bold font-label text-white uppercase">
                   {user?.name?.charAt(0) || 'U'}
                 </span>
