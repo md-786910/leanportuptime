@@ -225,7 +225,7 @@ export default function TeamPage() {
 
           <div className="space-y-4">
             {inviteRows.map((row, index) => (
-              <div key={index} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-all hover:border-brand-200 dark:hover:border-brand-800 overflow-visible">
+              <div key={index} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-all hover:border-brand-200 dark:hover:border-brand-800 overflow-visible">
                 <div className="flex flex-col lg:flex-row items-start gap-6">
                   <div className="flex-1 w-full">
                     <Input
@@ -371,7 +371,7 @@ export default function TeamPage() {
       <section className="animate-in fade-in duration-700">
         <div className="flex items-center gap-2 mb-4 px-1">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-          <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400">
             Active Members ({membersLoading || invLoading ? '...' : filteredMembers.length})
           </h2>
         </div>
