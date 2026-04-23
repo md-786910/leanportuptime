@@ -24,22 +24,22 @@ function timeAgo(dateStr) {
 }
 
 export function positionClass(position) {
-  if (position == null) return 'text-gray-400 dark:text-gray-500';
+  if (position == null) return 'text-brand-outline dark:text-brand-on-surface-variant';
   if (position <= 10) return 'text-emerald-600 dark:text-emerald-400 font-semibold';
   if (position <= 30) return 'text-amber-600 dark:text-amber-400';
-  return 'text-gray-500 dark:text-gray-400';
+  return 'text-brand-on-surface-variant dark:text-brand-outline';
 }
 
 export function DeltaCell({ position, previousPosition }) {
   if (position == null || previousPosition == null) {
-    return <span className="text-gray-300 dark:text-gray-600">—</span>;
+    return <span className="text-brand-outline dark:text-brand-on-surface-variant">—</span>;
   }
   const delta = position - previousPosition;
-  if (delta === 0) return <span className="text-gray-400 dark:text-gray-500">—</span>;
+  if (delta === 0) return <span className="text-brand-outline dark:text-brand-on-surface-variant">—</span>;
   if (delta < 0) {
     // Position improved (smaller number)
     return (
-      <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-medium">
+      <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-medium font-label">
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
         </svg>
@@ -48,7 +48,7 @@ export function DeltaCell({ position, previousPosition }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-0.5 text-red-600 dark:text-red-400 font-medium">
+    <span className="inline-flex items-center gap-0.5 text-red-600 dark:text-red-400 font-medium font-label">
       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
       </svg>
@@ -58,13 +58,13 @@ export function DeltaCell({ position, previousPosition }) {
 }
 
 function KdBadge({ value }) {
-  if (value == null) return <span className="text-gray-300 dark:text-gray-600">—</span>;
+  if (value == null) return <span className="text-brand-outline dark:text-brand-on-surface-variant">—</span>;
   const variant = value <= 30 ? 'success' : value <= 70 ? 'warning' : 'danger';
   return <Badge variant={variant}>{Math.round(value)}</Badge>;
 }
 
 function VolumeSparkline({ monthlySearches, themeKey }) {
-  if (!monthlySearches?.length) return <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>;
+  if (!monthlySearches?.length) return <span className="text-brand-outline dark:text-brand-on-surface-variant text-xs font-label">—</span>;
   const sorted = [...monthlySearches].sort((a, b) =>
     (a.year * 100 + a.month) - (b.year * 100 + b.month)
   );
@@ -108,12 +108,12 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
 
   if (!items || items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-gray-200 dark:border-gray-700">
-        <svg className="w-10 h-10 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-brand-outline-variant dark:border-brand-outline">
+        <svg className="w-10 h-10 text-brand-outline dark:text-brand-on-surface-variant mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <p className="text-xs font-semibold text-gray-500 mb-1">No keywords tracked yet</p>
-        <p className="text-[10px] text-gray-400 text-center max-w-[280px]">
+        <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">No keywords tracked yet</p>
+        <p className="text-[10px] text-brand-outline text-center max-w-[280px] font-label">
           {isViewer
             ? 'Contact the site owner to add keywords to track their SERP positions.'
             : 'Click Manage Keywords to add your first one — paste a list or enter keywords one by one.'}
@@ -125,9 +125,9 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="w-full text-xs">
+        <table className="w-full text-xs font-label">
           <thead>
-            <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+            <tr className="text-left text-brand-on-surface-variant dark:text-brand-outline border-b border-brand-outline-variant dark:border-brand-outline">
               <th className="py-2 px-2 font-medium">#</th>
               <th className="py-2 px-2 font-medium">Keyword</th>
               <th className="py-2 px-2 font-medium text-right">Position</th>
@@ -143,9 +143,9 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
           </thead>
           <tbody>
             {sortedItems.map((it, idx) => (
-              <tr key={it.keyword} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/40">
-                <td className="py-2 px-2 text-gray-400 tabular-nums">{idx + 1}</td>
-                <td className="py-2 px-2 font-medium text-gray-800 dark:text-gray-200">
+              <tr key={it.keyword} className="border-b border-brand-outline-variant dark:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/40">
+                <td className="py-2 px-2 text-brand-outline tabular-nums">{idx + 1}</td>
+                <td className="py-2 px-2 font-medium text-brand-on-surface dark:text-brand-outline-variant">
                   <div className="flex items-center gap-2">
                     <span>{it.keyword}</span>
                     {it.lastCheckError && (
@@ -168,34 +168,34 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
                 <td className="py-2 px-2 text-right tabular-nums">
                   <DeltaCell position={it.position} previousPosition={it.previousPosition} />
                 </td>
-                <td className="py-2 px-2 text-right text-gray-600 dark:text-gray-300 tabular-nums">
+                <td className="py-2 px-2 text-right text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
                   {fmt(it.searchVolume)}
                 </td>
                 <td className="py-2 px-2 text-center">
                   <KdBadge value={it.keywordDifficulty} />
                 </td>
-                <td className="py-2 px-2 text-right text-gray-600 dark:text-gray-300 tabular-nums">
+                <td className="py-2 px-2 text-right text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
                   {it.cpc == null ? '—' : `$${it.cpc.toFixed(2)}`}
                 </td>
                 <td className="py-2 px-2 text-center">
                   <VolumeSparkline monthlySearches={it.monthlySearches} themeKey={themeKey} />
                 </td>
-                <td className="py-2 px-2 text-gray-500 dark:text-gray-400 max-w-[200px]">
+                <td className="py-2 px-2 text-brand-on-surface-variant dark:text-brand-outline max-w-[200px]">
                   {it.url ? (
                     <a
                       href={it.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       title={it.url}
-                      className="block truncate text-brand-600 dark:text-brand-400 hover:underline"
+                      className="block truncate text-brand-primary dark:text-brand-400 hover:underline"
                     >
                       {it.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                     </a>
                   ) : (
-                    <span className="text-gray-300 dark:text-gray-600">—</span>
+                    <span className="text-brand-outline dark:text-brand-on-surface-variant">—</span>
                   )}
                 </td>
-                <td className="py-2 px-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                <td className="py-2 px-2 text-brand-on-surface-variant dark:text-brand-outline whitespace-nowrap">
                   {timeAgo(it.lastCheckedAt)}
                 </td>
                 {!isViewer && (
@@ -203,7 +203,7 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
                     <button
                       onClick={() => setPendingRemove(it.keyword)}
                       title="Remove keyword"
-                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      className="text-brand-outline hover:text-red-500 transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />

@@ -5,7 +5,7 @@ const severityVariant = { low: 'neutral', medium: 'info', high: 'warning', criti
 
 export default function SecurityCheckList({ checks }) {
   if (!checks?.length) {
-    return <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No security checks</p>;
+    return <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline text-center py-4">No security checks</p>;
   }
 
   return (
@@ -13,15 +13,13 @@ export default function SecurityCheckList({ checks }) {
       {checks.map((check, i) => (
         <div
           key={i}
-          className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+          className="flex items-center justify-between p-3 rounded-lg border border-brand-outline-variant dark:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/50"
         >
           <div className="flex items-center gap-3 min-w-0">
-            <span className={`h-2 w-2 rounded-full flex-shrink-0 ${
-              check.status === 'pass' ? 'bg-emerald-500' : check.status === 'fail' ? 'bg-red-500' : 'bg-amber-500'
-            }`} />
+            <span className={`h-2 w-2 rounded-full flex-shrink-0 ${ check.status === 'pass' ? 'bg-emerald-500' : check.status === 'fail' ? 'bg-red-500' : 'bg-amber-500' }`} />
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{check.check}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{check.message}</p>
+              <p className="text-sm font-medium text-brand-on-surface dark:text-brand-outline-variant">{check.check}</p>
+              <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline truncate font-label">{check.message}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 ml-3">

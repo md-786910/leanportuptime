@@ -37,7 +37,7 @@ function eventBadge(eventName) {
     return { label: 'Form', classes: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
   }
   if (ENGAGEMENT_EVENTS.has(eventName)) {
-    return { label: 'Engagement', classes: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' };
+    return { label: 'Engagement', classes: 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline' };
   }
   if (eventName.startsWith('purchase') || eventName === 'add_to_cart' || eventName === 'begin_checkout') {
     return { label: 'Ecommerce', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' };
@@ -63,39 +63,39 @@ export default function GA4EventsPanel({ events, themeKey }) {
     <div>
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant flex items-center gap-2">
+            <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             Event and clicks
           </h4>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline mt-0.5 font-label">
             Every event tracked during this period — use this to identify real event names in your GA4 setup.
           </p>
         </div>
         {sorted.length > 0 && (
           <div className="text-right flex-shrink-0">
-            <div className="text-[10px] uppercase tracking-wider text-gray-400">Total events</div>
-            <div className="text-lg font-bold tabular-nums text-gray-900 dark:text-white">{formatNumber(totalCount)}</div>
+            <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Total events</div>
+            <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{formatNumber(totalCount)}</div>
           </div>
         )}
       </div>
 
       {sorted.length === 0 ? (
-        <div className="text-center py-10 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">No events tracked in this period.</p>
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">Ensure GA4 tag is installed and firing on your site.</p>
+        <div className="text-center py-10 rounded-lg border border-dashed border-brand-outline-variant dark:border-brand-outline">
+          <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline">No events tracked in this period.</p>
+          <p className="text-[11px] text-brand-outline dark:text-brand-on-surface-variant mt-1 font-label">Ensure GA4 tag is installed and firing on your site.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
+        <div className="overflow-x-auto rounded-lg border border-brand-outline-variant dark:border-brand-outline">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 dark:bg-gray-800/50">
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider w-8">#</th>
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Event Name</th>
-                <th className="text-right py-2.5 px-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">Count</th>
-                <th className="text-right py-2.5 px-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider hidden sm:table-cell">Users</th>
-                <th className="text-left py-2.5 px-3 font-medium text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider hidden md:table-cell">Share</th>
+              <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50">
+                <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider w-8 font-label">#</th>
+                <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">Event Name</th>
+                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">Count</th>
+                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider hidden sm:table-cell font-label">Users</th>
+                <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider hidden md:table-cell font-label">Share</th>
               </tr>
             </thead>
             <tbody>
@@ -105,35 +105,35 @@ export default function GA4EventsPanel({ events, themeKey }) {
                 const sharePct = totalCount > 0 ? ((e.eventCount / totalCount) * 100).toFixed(1) : '0.0';
                 const barColor = themeColor(themeKey, i % 6);
                 return (
-                  <tr key={e.eventName} className="border-t border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                    <td className="py-2 px-3 text-gray-400 dark:text-gray-500 tabular-nums">{i + 1}</td>
+                  <tr key={e.eventName} className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/30 transition-colors">
+                    <td className="py-2 px-3 text-brand-outline dark:text-brand-on-surface-variant tabular-nums">{i + 1}</td>
                     <td className="py-2 px-3 max-w-[260px]">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-gray-800 dark:text-gray-200 truncate" title={e.eventName}>
+                        <span className="font-mono text-xs text-brand-on-surface dark:text-brand-outline-variant truncate font-label" title={e.eventName}>
                           {e.eventName}
                         </span>
                         {badge && (
-                          <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 ${badge.classes}`}>
+                          <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 ${badge.classes} font-label`}>
                             {badge.label}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums font-semibold text-gray-900 dark:text-white">
+                    <td className="py-2 px-3 text-right tabular-nums font-semibold text-brand-on-surface dark:text-white">
                       {formatNumber(e.eventCount)}
                     </td>
-                    <td className="py-2 px-3 text-right tabular-nums text-gray-600 dark:text-gray-300 hidden sm:table-cell">
+                    <td className="py-2 px-3 text-right tabular-nums text-brand-on-surface-variant dark:text-brand-outline hidden sm:table-cell">
                       {formatNumber(e.totalUsers)}
                     </td>
                     <td className="py-2 px-3 hidden md:table-cell">
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden min-w-[80px]">
+                        <div className="flex-1 h-1.5 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden min-w-[80px]">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: barColor }}
                           />
                         </div>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums w-10 text-right">
+                        <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant tabular-nums w-10 text-right font-label">
                           {sharePct}%
                         </span>
                       </div>
@@ -151,7 +151,7 @@ export default function GA4EventsPanel({ events, themeKey }) {
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
+            className="text-xs font-medium text-brand-primary dark:text-brand-400 hover:underline font-label"
           >
             {expanded ? `Show top 20 only` : `Show all ${sorted.length} events`}
           </button>

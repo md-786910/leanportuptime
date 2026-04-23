@@ -18,11 +18,7 @@ export default function ColorPalettePicker() {
             key={key}
             onClick={() => setColorTheme(key)}
             title={theme.name}
-            className={`flex items-center gap-0.5 px-1.5 py-1 rounded-md transition-all border ${
-              isActive
-                ? 'border-gray-900 dark:border-white bg-gray-50 dark:bg-gray-800 scale-105'
-                : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
+            className={`flex items-center gap-0.5 px-1.5 py-1 rounded-md transition-all border ${ isActive ? 'border-brand-outline dark:border-white bg-brand-surface-container-low dark:bg-brand-on-surface scale-105' : 'border-transparent hover:border-brand-outline-variant dark:hover:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface' }`}
           >
             {theme.preview.map((color, i) => (
               <span

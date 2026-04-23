@@ -12,11 +12,11 @@ export default function AppLayout() {
   }, [initTheme]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-screen overflow-hidden bg-brand-surface-container-low dark:bg-brand-on-surface">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 p-6 md:p-10">
+        <main className="flex-1 overflow-y-auto bg-brand-surface-container-low dark:bg-brand-on-surface p-6 md:p-10">
           <Outlet />
         </main>
       </div>

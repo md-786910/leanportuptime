@@ -105,14 +105,14 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
   const [customTo, setCustomTo] = useState(null);
 
   const Title = showTitle ? (
-    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Domain Authority</h3>
+    <h3 className="text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-wider font-label">Domain Authority</h3>
   ) : null;
 
   if (isLoading) {
     return (
       <div>
         {showTitle && (
-          <div className="mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">{Title}</div>
+          <div className="mb-3 pb-2 border-b border-brand-outline-variant dark:border-brand-outline">{Title}</div>
         )}
         <div className="flex justify-center py-8">
           <Spinner size="sm" />
@@ -166,43 +166,39 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
   if (!hasData) {
     return (
       <div>
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mb-3 pb-2 border-b border-brand-outline-variant dark:border-brand-outline">
           {Title}
           {!isViewer && (
-            <span className={`text-[10px] font-semibold px-2 py-1 rounded ${quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'} tabular-nums`}>
+            <span className={`text-[10px] font-semibold font-label px-2 py-1 rounded ${quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline'} tabular-nums`}>
               {quota.used} / {quota.limit} this month
             </span>
           )}
         </div>
-        <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-gray-200 dark:border-gray-700">
-          <svg className="w-10 h-10 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-brand-outline-variant dark:border-brand-outline">
+          <svg className="w-10 h-10 text-brand-outline dark:text-brand-on-surface-variant mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
           {isViewer ? (
             <>
-              <p className="text-xs font-semibold text-gray-500 mb-1">No backlinks data available</p>
-              <p className="text-[10px] text-gray-400 text-center max-w-[240px]">Contact the site owner to fetch backlinks data.</p>
+              <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">No backlinks data available</p>
+              <p className="text-[10px] text-brand-outline text-center max-w-[240px] font-label">Contact the site owner to fetch backlinks data.</p>
             </>
           ) : providerNotConfigured ? (
             <>
-              <p className="text-xs font-semibold text-gray-500 mb-1">Provider Not Configured</p>
-              <p className="text-[10px] text-gray-400 text-center max-w-[240px]">Set BACKLINKS_PROVIDER and credentials in server environment</p>
+              <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">Provider Not Configured</p>
+              <p className="text-[10px] text-brand-outline text-center max-w-[240px] font-label">Set BACKLINKS_PROVIDER and credentials in server environment</p>
             </>
           ) : (
             <>
               <button
                 onClick={handleRefresh}
                 disabled={quotaExhausted || refresh.isPending}
-                className={`text-xs font-medium px-4 py-2 rounded-lg transition-colors ${
-                  quotaExhausted
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800'
-                    : 'bg-brand-500 text-white hover:bg-brand-600'
-                }`}
+                className={`text-xs font-medium px-4 py-2 rounded-lg transition-colors ${ quotaExhausted ? 'bg-brand-surface-container-high text-brand-outline cursor-not-allowed dark:bg-brand-on-surface' : 'bg-brand-primary text-white hover:bg-brand-primary' } font-label`}
                 title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : undefined}
               >
                 {refresh.isPending ? 'Fetching...' : 'Fetch Backlinks Data'}
               </button>
-              <p className="text-[10px] text-gray-400 mt-2">Uses 1 of {quota.remaining} remaining refreshes this month</p>
+              <p className="text-[10px] text-brand-outline mt-2 font-label">Uses 1 of {quota.remaining} remaining refreshes this month</p>
             </>
           )}
         </div>
@@ -213,21 +209,17 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
   // Data present
   return (
     <div>
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-brand-outline-variant dark:border-brand-outline">
         <div className="flex items-center gap-2">
           {Title}
           {isStale && (
-            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
+            <span className="text-[9px] font-semibold font-label px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
           )}
         </div>
         {!isViewer && (
           <div className="flex items-center gap-2">
             <span
-              className={`text-[10px] font-semibold px-2 py-1 rounded tabular-nums ${
-                quotaExhausted
-                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-              }`}
+              className={`text-[10px] font-semibold px-2 py-1 rounded tabular-nums ${ quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline' } font-label`}
               title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : `${quota.remaining} refreshes remaining this month`}
             >
               {quota.used} / {quota.limit} this month
@@ -235,11 +227,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
             <button
               onClick={handleRefresh}
               disabled={quotaExhausted || refresh.isPending || providerNotConfigured}
-              className={`text-xs font-medium px-3 py-1 rounded transition-colors flex items-center gap-1 ${
-                quotaExhausted || providerNotConfigured
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800'
-                  : 'bg-brand-500 text-white hover:bg-brand-600'
-              }`}
+              className={`text-xs font-medium px-3 py-1 rounded transition-colors flex items-center gap-1 ${ quotaExhausted || providerNotConfigured ? 'bg-brand-surface-container-high text-brand-outline cursor-not-allowed dark:bg-brand-on-surface' : 'bg-brand-primary text-white hover:bg-brand-primary' } font-label`}
               title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : undefined}
             >
               <svg className={`w-3 h-3 ${refresh.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -264,11 +252,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
                   }
                   setPeriod(p.key);
                 }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  period === p.key
-                    ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
-                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
               >
                 {p.label}
               </button>
@@ -287,7 +271,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
               />
               {periodTotals?.partial && historyMonths.length > 0 && (
                 <span
-                  className="text-[10px] text-amber-500"
+                  className="text-[10px] text-amber-500 font-label"
                   title={`Stored history covers ${formatMonthKey(historyMonths[0])} – ${formatMonthKey(historyMonths[historyMonths.length - 1])}. Months outside this window contribute 0.`}
                 >
                   Partial — history stored from {formatMonthKey(historyMonths[0])}
@@ -299,34 +283,34 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase">{scoreLabel}</span>
-          <p className="text-2xl font-bold my-1 tabular-nums" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
-          <span className="text-[9px] text-gray-400">{providerDisplay}</span>
+        <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
+          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">{scoreLabel}</span>
+          <p className="text-2xl font-bold my-1 tabular-nums font-headline" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
+          <span className="text-[9px] text-brand-outline">{providerDisplay}</span>
         </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase">Backlinks</span>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white my-1 tabular-nums">{fmt(data.backlinksCount)}</p>
-          <span className="text-[9px] text-gray-400">Total links</span>
+        <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
+          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Backlinks</span>
+          <p className="text-2xl font-bold text-brand-on-surface dark:text-white my-1 tabular-nums font-headline">{fmt(data.backlinksCount)}</p>
+          <span className="text-[9px] text-brand-outline">Total links</span>
         </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase">Ref. Domains</span>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white my-1 tabular-nums">{fmt(data.referringDomains)}</p>
-          <span className="text-[9px] text-gray-400">Unique sources</span>
+        <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
+          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Ref. Domains</span>
+          <p className="text-2xl font-bold text-brand-on-surface dark:text-white my-1 tabular-nums font-headline">{fmt(data.referringDomains)}</p>
+          <span className="text-[9px] text-brand-outline">Unique sources</span>
         </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase">New Links</span>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 my-1 tabular-nums">
+        <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
+          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">New Links</span>
+          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 my-1 tabular-nums font-headline">
             {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
           </p>
-          <span className="text-[9px] text-gray-400">{periodLabel}</span>
+          <span className="text-[9px] text-brand-outline">{periodLabel}</span>
         </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
-          <span className="text-[10px] font-semibold text-gray-500 uppercase">Lost Links</span>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400 my-1 tabular-nums">
+        <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
+          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Lost Links</span>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400 my-1 tabular-nums font-headline">
             {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
           </p>
-          <span className="text-[9px] text-gray-400">{periodLabel}</span>
+          <span className="text-[9px] text-brand-outline">{periodLabel}</span>
         </div>
       </div>
 
@@ -338,8 +322,8 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div className="flex-1">
-              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">No backlinks data found for this domain</p>
-              <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-0.5">
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 font-label">No backlinks data found for this domain</p>
+              <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-0.5 font-label">
                 The domain may be new or not yet indexed by {providerDisplay}. Large established sites typically have richer data.
               </p>
             </div>
@@ -354,7 +338,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true })
       />
 
       {data.lastFetchedAt && (
-        <p className="text-[10px] text-gray-400 mt-2 text-center">
+        <p className="text-[10px] text-brand-outline mt-2 text-center font-label">
           Last updated {daysAgo(data.lastFetchedAt)} &middot; Provider: {providerDisplay}
         </p>
       )}

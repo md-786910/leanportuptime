@@ -10,7 +10,7 @@ export default function ScoreTrendChart({ history, themeKey, strategy }) {
   if (!history || history.length < 2) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-400 dark:text-gray-500">
+        <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant">
           Not enough data for trend chart. Run more scans to see score trends over time.
         </p>
       </div>
@@ -43,7 +43,7 @@ export default function ScoreTrendChart({ history, themeKey, strategy }) {
   if (chartData.length < 2) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-400 dark:text-gray-500">
+        <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant">
           Not enough PageSpeed history to display trends.
         </p>
       </div>
@@ -52,7 +52,7 @@ export default function ScoreTrendChart({ history, themeKey, strategy }) {
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Score Trends</h3>
+      <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">Score Trends</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>

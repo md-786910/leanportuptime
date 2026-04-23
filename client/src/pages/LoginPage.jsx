@@ -40,7 +40,7 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Sign in to your account</h2>
+      <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-6">Sign in to your account</h2>
       {inviteNotice === 'already_accepted' && (
         <div className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
           <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -71,7 +71,7 @@ export default function LoginPage() {
         </Button>
       </form>
       <div className="mt-4 text-center">
-        <Link to="/forgot-password" className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">
+        <Link to="/forgot-password" className="text-sm text-brand-primary hover:text-brand-700 dark:text-brand-400">
           Forgot your password?
         </Link>
       </div>

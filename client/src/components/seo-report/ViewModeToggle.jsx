@@ -6,14 +6,10 @@ export default function ViewModeToggle() {
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+      <div className="flex gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-0.5">
         <button
           onClick={() => setViewMode('charts')}
-          className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md transition-colors ${
-            viewMode === 'charts'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
+          className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md transition-colors ${ viewMode === 'charts' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13h4v8H3zM10 9h4v12h-4zM17 5h4v16h-4z" />
@@ -22,11 +18,7 @@ export default function ViewModeToggle() {
         </button>
         <button
           onClick={() => setViewMode('details')}
-          className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md transition-colors ${
-            viewMode === 'details'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
+          className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md transition-colors ${ viewMode === 'details' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h10M4 18h7" />

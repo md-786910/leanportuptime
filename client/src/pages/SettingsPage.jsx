@@ -28,14 +28,14 @@ function BacklinksLimitCard() {
 
   return (
     <Card>
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Backlinks Refresh Limit</h3>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-1">Backlinks Refresh Limit</h3>
+      <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline mb-4 font-label">
         Controls how many times per calendar month each site can refresh its backlinks data.
         Resets automatically on the 1st of each month. Raise this if you need more refreshes.
       </p>
       <div className="flex items-end gap-3">
         <div className="flex-1">
-          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Refreshes per site / month</label>
+          <label className="block text-xs text-brand-on-surface-variant dark:text-brand-outline mb-1 font-label">Refreshes per site / month</label>
           <input
             type="number"
             min={1}
@@ -43,7 +43,7 @@ function BacklinksLimitCard() {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             disabled={isLoading}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant focus:ring-2 focus:ring-brand-primary-container focus:border-brand-500"
           />
         </div>
         <Button
@@ -65,21 +65,21 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+      <h1 className="text-2xl font-bold text-brand-on-surface dark:text-white font-headline">Settings</h1>
 
       <Card>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Account</h3>
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">Account</h3>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">Name</span>
-            <span className="text-gray-900 dark:text-gray-100">{user?.name || '—'}</span>
+            <span className="text-brand-on-surface-variant dark:text-brand-outline">Name</span>
+            <span className="text-brand-on-surface dark:text-brand-outline-variant">{user?.name || '—'}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">Email</span>
-            <span className="text-gray-900 dark:text-gray-100">{user?.email || '—'}</span>
+            <span className="text-brand-on-surface-variant dark:text-brand-outline">Email</span>
+            <span className="text-brand-on-surface dark:text-brand-outline-variant">{user?.email || '—'}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500 dark:text-gray-400">Plan</span>
+            <span className="text-brand-on-surface-variant dark:text-brand-outline">Plan</span>
             <Badge variant="info">{user?.plan || 'free'}</Badge>
           </div>
         </div>
@@ -88,19 +88,19 @@ export default function SettingsPage() {
       {!isViewer && <BacklinksLimitCard />}
 
       <Card>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Plan Details</h3>
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">Plan Details</h3>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">Max Sites</span>
-            <span className="text-gray-900 dark:text-gray-100">{plan.maxSites === Infinity ? 'Unlimited' : plan.maxSites}</span>
+            <span className="text-brand-on-surface-variant dark:text-brand-outline">Max Sites</span>
+            <span className="text-brand-on-surface dark:text-brand-outline-variant">{plan.maxSites === Infinity ? 'Unlimited' : plan.maxSites}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">Min Check Interval</span>
-            <span className="text-gray-900 dark:text-gray-100">{plan.checkInterval / 1000}s</span>
+            <span className="text-brand-on-surface-variant dark:text-brand-outline">Min Check Interval</span>
+            <span className="text-brand-on-surface dark:text-brand-outline-variant">{plan.checkInterval / 1000}s</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">Data Retention</span>
-            <span className="text-gray-900 dark:text-gray-100">{plan.retention === Infinity ? 'Unlimited' : `${plan.retention} days`}</span>
+            <span className="text-brand-on-surface-variant dark:text-brand-outline">Data Retention</span>
+            <span className="text-brand-on-surface dark:text-brand-outline-variant">{plan.retention === Infinity ? 'Unlimited' : `${plan.retention} days`}</span>
           </div>
         </div>
       </Card>

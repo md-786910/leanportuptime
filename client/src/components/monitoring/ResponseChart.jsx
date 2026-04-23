@@ -14,14 +14,14 @@ export default function ResponseChart({ checks, height = 300 }) {
   if (!data.length) {
     return (
       <Card>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">No check data available</p>
+        <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline text-center py-8">No check data available</p>
       </Card>
     );
   }
 
   return (
     <Card>
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Response Time</h3>
+      <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">Response Time</h3>
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={data}>
           <defs>

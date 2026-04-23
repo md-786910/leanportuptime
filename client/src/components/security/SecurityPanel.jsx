@@ -16,7 +16,7 @@ export default function SecurityPanel({ siteId }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          {audit && <p className="text-xs text-gray-500 dark:text-gray-400">Last scan: {formatDate(audit.scannedAt)}</p>}
+          {audit && <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">Last scan: {formatDate(audit.scannedAt)}</p>}
         </div>
         <Button variant="secondary" size="sm" onClick={() => scanMutation.mutate()} isLoading={scanMutation.isPending}>
           Run Scan
@@ -26,7 +26,7 @@ export default function SecurityPanel({ siteId }) {
       {audit ? (
         <>
           <Card>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Security Score</h3>
+            <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Security Score</h3>
             <ScoreBar
               score={audit.score}
               totalChecks={audit.totalChecks}
@@ -36,13 +36,13 @@ export default function SecurityPanel({ siteId }) {
           </Card>
 
           <Card>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Security Checks</h3>
+            <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Security Checks</h3>
             <SecurityCheckList checks={audit.checks} />
           </Card>
         </>
       ) : (
         <Card>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+          <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline text-center py-8">
             No security audit data. Run a scan to get started.
           </p>
         </Card>

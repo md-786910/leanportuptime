@@ -39,13 +39,13 @@ function parseBulk(text, existing, maxKeywords) {
 function PillCount({ label, n, tone = 'gray' }) {
   if (!n) return null;
   const palette = {
-    gray: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    gray: 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline',
     emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     amber: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
     red: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium tabular-nums ${palette[tone]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium tabular-nums ${palette[tone]} font-label`}>
       {n} {label}
     </span>
   );
@@ -54,8 +54,8 @@ function PillCount({ label, n, tone = 'gray' }) {
 function TrackedRow({ keyword, onRemove, removing }) {
   const [confirming, setConfirming] = useState(false);
   return (
-    <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors">
-      <span className="text-sm text-gray-800 dark:text-gray-200 truncate">{keyword}</span>
+    <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-brand-outline-variant dark:border-brand-outline hover:border-brand-outline-variant dark:hover:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/40 transition-colors">
+      <span className="text-sm text-brand-on-surface dark:text-brand-outline-variant truncate">{keyword}</span>
       {confirming ? (
         <div className="flex items-center gap-1 flex-shrink-0 ml-3">
           <button
@@ -64,13 +64,13 @@ function TrackedRow({ keyword, onRemove, removing }) {
               setConfirming(false);
             }}
             disabled={removing}
-            className="text-[11px] font-medium px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
+            className="text-[11px] font-medium px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white disabled:opacity-50 font-label"
           >
             Remove
           </button>
           <button
             onClick={() => setConfirming(false)}
-            className="text-[11px] font-medium px-2 py-1 rounded text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            className="text-[11px] font-medium px-2 py-1 rounded text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline font-label"
           >
             Cancel
           </button>
@@ -79,7 +79,7 @@ function TrackedRow({ keyword, onRemove, removing }) {
         <button
           onClick={() => setConfirming(true)}
           title="Remove keyword"
-          className="flex-shrink-0 ml-3 text-gray-400 hover:text-red-500 transition-colors"
+          className="flex-shrink-0 ml-3 text-brand-outline hover:text-red-500 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
@@ -138,10 +138,10 @@ export default function ManageKeywordsModal({
         {/* Add section */}
         <section>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="bulk-keywords" className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+            <label htmlFor="bulk-keywords" className="text-sm font-semibold font-label text-brand-on-surface dark:text-brand-outline-variant">
               Add keywords
             </label>
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 tabular-nums">
+            <span className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline tabular-nums font-label">
               {existingKeywords.length} / {maxKeywords} used · {slotsRemaining} slot{slotsRemaining === 1 ? '' : 's'} left
             </span>
           </div>
@@ -157,11 +157,11 @@ export default function ManageKeywordsModal({
                 : 'hosting deutschland\nvps server germany\nwebhosting berlin, cloud provider berlin'
             }
             rows={6}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none font-mono resize-y disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-brand-primary-container focus:border-brand-500 focus:outline-none font-mono resize-y disabled:opacity-60 disabled:cursor-not-allowed"
           />
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label">
             <span>One per line, or separate with comma / tab / semicolon.</span>
-            <span className="text-gray-300 dark:text-gray-600">·</span>
+            <span className="text-brand-outline dark:text-brand-on-surface-variant">·</span>
             <PillCount label="valid" n={parsed.valid.length} tone="emerald" />
             <PillCount label="duplicate" n={parsed.duplicates.length} tone="gray" />
             <PillCount label="too long" n={parsed.tooLong.length} tone="amber" />
@@ -170,21 +170,21 @@ export default function ManageKeywordsModal({
 
           {/* Post-submit summary */}
           {lastResult?.summary && (
-            <div className="mt-3 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 p-3 text-xs">
-              <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">
+            <div className="mt-3 rounded-lg bg-brand-surface-container-low dark:bg-brand-on-surface/40 border border-brand-outline-variant dark:border-brand-outline p-3 text-xs font-label">
+              <div className="font-medium text-brand-on-surface dark:text-brand-outline-variant mb-1">
                 {lastResult.summary.addedCount > 0 ? `${lastResult.summary.addedCount} added` : 'Nothing added'}
                 {lastResult.summary.skippedCount > 0 && ` · ${lastResult.summary.skippedCount} skipped`}
               </div>
               {lastResult.skipped?.length > 0 && (
-                <ul className="space-y-0.5 text-gray-500 dark:text-gray-400">
+                <ul className="space-y-0.5 text-brand-on-surface-variant dark:text-brand-outline">
                   {lastResult.skipped.slice(0, 8).map((s, i) => (
                     <li key={`${s.keyword}-${i}`} className="flex items-center gap-2">
                       <span className="truncate">{s.keyword || '(empty)'}</span>
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider">{s.reason.replace('_', ' ')}</span>
+                      <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-wider font-label">{s.reason.replace('_', ' ')}</span>
                     </li>
                   ))}
                   {lastResult.skipped.length > 8 && (
-                    <li className="text-gray-400">…and {lastResult.skipped.length - 8} more</li>
+                    <li className="text-brand-outline">…and {lastResult.skipped.length - 8} more</li>
                   )}
                 </ul>
               )}
@@ -209,15 +209,15 @@ export default function ManageKeywordsModal({
         {/* Tracked list */}
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+            <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">
               Tracked keywords
             </h4>
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 tabular-nums">
+            <span className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline tabular-nums font-label">
               {existingKeywords.length}
             </span>
           </div>
           {existingKeywords.length === 0 ? (
-            <div className="text-xs text-gray-400 dark:text-gray-500 text-center py-6 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
+            <div className="text-xs text-brand-outline dark:text-brand-on-surface-variant text-center py-6 rounded-lg border border-dashed border-brand-outline-variant dark:border-brand-outline font-label">
               No keywords tracked yet. Add some above.
             </div>
           ) : (

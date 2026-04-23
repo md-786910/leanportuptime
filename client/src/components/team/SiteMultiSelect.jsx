@@ -12,31 +12,31 @@ export default function SiteMultiSelect({ selected = [], onChange }) {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-gray-500">Loading sites...</p>;
+    return <p className="text-sm text-brand-on-surface-variant">Loading sites...</p>;
   }
 
   if (sites.length === 0) {
-    return <p className="text-sm text-gray-500">No sites available</p>;
+    return <p className="text-sm text-brand-on-surface-variant">No sites available</p>;
   }
 
   return (
-    <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2">
+    <div className="space-y-1 max-h-48 overflow-y-auto border border-brand-outline-variant dark:border-brand-outline rounded-lg p-2">
       {sites.map((site) => (
         <label
           key={site._id}
-          className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+          className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface cursor-pointer"
         >
           <input
             type="checkbox"
             checked={selected.includes(site._id)}
             onChange={() => toggle(site._id)}
-            className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+            className="rounded border-brand-outline-variant text-brand-primary focus:ring-brand-primary-container"
           />
           <div className="min-w-0">
-            <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate block">
+            <span className="text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline-variant truncate block">
               {site.name}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400 truncate block">{site.url}</span>
+            <span className="text-xs text-brand-on-surface-variant dark:text-brand-outline truncate block font-label">{site.url}</span>
           </div>
         </label>
       ))}

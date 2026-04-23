@@ -1,12 +1,33 @@
 @import 'react-datepicker/dist/react-datepicker.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-brand-100 selection:text-brand-900;
+    @apply bg-brand-background text-brand-on-background font-body antialiased selection:bg-brand-primary-container selection:text-brand-on-primary-container;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
+  }
+}
+
+/* Material Icons (Google Symbols) */
+.material-symbols-outlined {
+  font-variation-settings: 
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  vertical-align: middle;
+}
+
+/* Optional: smooth UI feel */
+* {
+  @apply transition-colors duration-200;
 }
 
 /* Custom scrollbar */
@@ -18,39 +39,39 @@
   @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 dark:bg-slate-800 rounded-full hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors;
+  @apply bg-brand-surface-container-highest rounded-full hover:bg-brand-outline transition-colors;
 }
 
 /* react-datepicker theme — refined with new palette */
 .react-datepicker {
-  @apply font-sans border border-slate-200 dark:border-slate-800 rounded-xl shadow-soft bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 overflow-hidden;
+  @apply font-body border border-brand-outline-variant rounded-xl shadow-lg bg-brand-surface-container-lowest text-brand-on-surface overflow-hidden;
 }
 .react-datepicker__header {
-  @apply bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 rounded-t-xl py-2;
+  @apply bg-brand-surface-container-low border-b border-brand-outline-variant rounded-t-xl py-2;
 }
 .react-datepicker__current-month,
 .react-datepicker-year-header,
 .react-datepicker__day-name {
-  @apply text-slate-900 dark:text-slate-100 font-semibold text-sm;
+  @apply text-brand-on-surface font-semibold text-sm;
 }
 .react-datepicker__day {
-  @apply text-slate-600 dark:text-slate-400 rounded-lg transition-all duration-200 text-sm hover:scale-105;
+  @apply text-brand-on-surface-variant rounded-lg transition-all duration-200 text-sm hover:scale-105;
 }
 .react-datepicker__day:hover {
-  @apply bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100;
+  @apply bg-brand-surface-container-high text-brand-on-surface;
 }
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  @apply bg-brand-600 text-white font-medium hover:bg-brand-700 shadow-sm !important;
+  @apply bg-brand-primary text-brand-on-primary font-medium hover:bg-brand-on-primary-fixed-variant shadow-sm !important;
 }
 .react-datepicker__day--in-range {
-  @apply bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 !important;
+  @apply bg-brand-primary-container text-brand-on-primary-container !important;
 }
 .react-datepicker__day--today {
-  @apply text-brand-600 dark:text-brand-400 font-bold underline decoration-2 underline-offset-4;
+  @apply text-brand-primary font-bold underline decoration-2 underline-offset-4;
 }
 .react-datepicker__navigation-icon::before {
-  @apply border-slate-400 dark:border-slate-500 scale-75;
+  @apply border-brand-outline scale-75;
 }
 .react-datepicker__triangle {
   display: none;

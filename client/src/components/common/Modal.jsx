@@ -27,18 +27,18 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <div 
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
+        className="fixed inset-0 bg-brand-on-surface/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" 
         onClick={onClose} 
       />
       <div
-        className={`relative bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[60vh] flex flex-col animate-in fade-in zoom-in-95 duration-300`}
+        className={`relative bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[60vh] flex flex-col animate-in fade-in zoom-in-95 duration-300`}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800/60">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h3>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-brand-outline-variant dark:border-brand-outline/60">
+            <h3 className="text-xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">{title}</h3>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-all active:scale-90"
+              className="p-2 rounded-xl text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface hover:text-brand-on-surface-variant dark:hover:text-brand-outline-variant transition-all active:scale-90"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

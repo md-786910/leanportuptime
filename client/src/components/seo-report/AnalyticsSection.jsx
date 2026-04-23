@@ -55,14 +55,14 @@ function timeAgo(dateStr) {
 
 function KpiCard({ label, value, color }) {
   return (
-    <div className="rounded-xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-1">
+    <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-1">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
           {label}
         </span>
       </div>
-      <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{value}</span>
+      <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums">{value}</span>
     </div>
   );
 }
@@ -89,10 +89,10 @@ function ConnectState({ needsReconnect }) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
           </svg>
         </div>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <h3 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-1">
           {needsReconnect ? 'Reconnect Google for Analytics' : 'Connect Google Analytics'}
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-sm mx-auto">
+        <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-5 max-w-sm mx-auto">
           {needsReconnect
             ? 'Your Google account needs additional permissions for Analytics. Reconnect to grant access.'
             : 'Sign in with your Google account to view organic traffic, engagement, and conversion data from GA4.'}
@@ -130,7 +130,7 @@ function PropertySelector({ siteId }) {
   return (
     <Card>
       <div className="py-4">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">
           Select Google Analytics Property
         </h3>
 
@@ -139,17 +139,17 @@ function PropertySelector({ siteId }) {
             <Spinner size="sm" />
           </div>
         ) : properties.length === 0 ? (
-          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+          <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
             No GA4 properties found. Make sure you have Google Analytics 4 set up for your site.
           </p>
         ) : (
           <div className="flex items-end gap-3">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Property</label>
+              <label className="block text-xs text-brand-on-surface-variant dark:text-brand-outline mb-1 font-label">Property</label>
               <select
                 value={selected}
                 onChange={(e) => setSelected(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant focus:ring-2 focus:ring-brand-primary-container focus:border-brand-500"
               >
                 {properties.map((p) => (
                   <option key={p.propertyId} value={p.propertyId}>
@@ -239,11 +239,11 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium uppercase">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium font-label uppercase">
               Organic Search
             </span>
             {overviewData?.fetchedAt && (
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">
+              <span className="text-[11px] text-brand-outline dark:text-brand-on-surface-variant font-label">
                 Last update: {timeAgo(overviewData.fetchedAt)}
               </span>
             )}
@@ -253,7 +253,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
               <button
                 onClick={() => unlinkMutation.mutate()}
                 disabled={unlinkMutation.isPending}
-                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                className="text-xs text-brand-outline hover:text-red-500 transition-colors font-label"
                 title="Unlink property"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -270,11 +270,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
             <button
               key={p.key}
               onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                period === p.key
-                  ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
-                  : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
             >
               {p.label}
             </button>
@@ -358,13 +354,13 @@ function ViewerNotConfigured({ message }) {
   return (
     <Card>
       <div className="text-center py-8">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-brand-surface-container-high dark:bg-brand-on-surface flex items-center justify-center">
+          <svg className="w-6 h-6 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Google Analytics Not Configured</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">{message}</p>
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline mb-1">Google Analytics Not Configured</h3>
+        <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline max-w-sm mx-auto font-label">{message}</p>
       </div>
     </Card>
   );

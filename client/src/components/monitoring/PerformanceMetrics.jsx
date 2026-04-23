@@ -15,8 +15,8 @@ export default function PerformanceMetrics({ summary }) {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {metrics.map((m) => (
         <Card key={m.label} padding="sm">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{m.label}</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">{m.value}</p>
+          <p className="text-xs font-medium text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider font-label">{m.label}</p>
+          <p className="text-xl font-bold text-brand-on-surface dark:text-white mt-1 font-headline">{m.value}</p>
         </Card>
       ))}
     </div>

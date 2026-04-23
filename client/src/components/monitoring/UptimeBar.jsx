@@ -18,7 +18,7 @@ export default function UptimeBar({ checks, days = 30 }) {
     const key = format(date, 'yyyy-MM-dd');
     const bucket = buckets[key];
 
-    let color = 'bg-gray-200 dark:bg-gray-700'; // no data
+    let color = 'bg-brand-surface-container-high dark:bg-brand-on-surface'; // no data
     if (bucket) {
       if (bucket.down > 0) color = 'bg-red-500';
       else if (bucket.degraded > 0) color = 'bg-amber-500';
@@ -31,8 +31,8 @@ export default function UptimeBar({ checks, days = 30 }) {
   return (
     <Card>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Uptime ({days} days)</h3>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">Uptime ({days} days)</h3>
+        <div className="flex items-center gap-3 text-xs text-brand-on-surface-variant font-label">
           <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />Up</span>
           <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" />Degraded</span>
           <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Down</span>

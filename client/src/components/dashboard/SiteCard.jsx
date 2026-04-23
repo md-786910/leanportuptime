@@ -31,15 +31,15 @@ export default function SiteCard({ site }) {
       onClick={() => navigate(`/sites/${site._id}`)}
     >
       {/* Subtle Background Glow */}
-      <div className="absolute -right-10 -top-10 w-24 h-24 bg-brand-500/5 rounded-full blur-2xl group-hover:bg-brand-500/10 transition-colors duration-500" />
+      <div className="absolute -right-10 -top-10 w-24 h-24 bg-brand-primary/5 rounded-full blur-2xl group-hover:bg-brand-primary/10 transition-colors duration-500" />
 
       {/* Header */}
       <div className="flex items-start justify-between mb-5 gap-4 relative z-10">
         <div className="min-w-0 flex-1">
-          <h3 className="text-[15px] font-bold text-slate-900 dark:text-white truncate tracking-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+          <h3 className="text-[15px] font-bold text-brand-on-surface dark:text-white truncate tracking-tight group-hover:text-brand-primary dark:group-hover:text-brand-400 transition-colors">
             {site.name}
           </h3>
-          <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5 font-mono">
+          <p className="text-[11px] font-medium text-brand-outline dark:text-brand-on-surface-variant truncate mt-0.5 font-mono">
             {site.url.replace(/^https?:\/\//, '')}
           </p>
         </div>
@@ -47,11 +47,7 @@ export default function SiteCard({ site }) {
           type="button"
           onClick={toggleFavorite}
           aria-label={site.isFavorite ? 'Unmark favorite' : 'Mark as favorite'}
-          className={`p-2 rounded-xl transition-all duration-200 ${
-            site.isFavorite 
-              ? 'bg-amber-50 dark:bg-amber-400/10 text-amber-500 shadow-sm' 
-              : 'text-slate-300 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800'
-          }`}
+          className={`p-2 rounded-xl transition-all duration-200 ${ site.isFavorite ? 'bg-amber-50 dark:bg-amber-400/10 text-amber-500 shadow-sm' : 'text-brand-outline dark:text-brand-on-surface-variant hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface' }`}
         >
           <svg
             className={`w-4.5 h-4.5 ${site.isFavorite ? 'fill-current' : ''}`}
@@ -75,12 +71,12 @@ export default function SiteCard({ site }) {
         {site.tags?.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
             {site.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="neutral" className="bg-slate-100/50 dark:bg-slate-800/50">
+              <Badge key={tag} variant="neutral" className="bg-brand-surface-container-lowest/50 dark:bg-brand-on-surface/50">
                 {tag}
               </Badge>
             ))}
             {site.tags.length > 2 && (
-              <Badge variant="neutral" className="bg-slate-100/50 dark:bg-slate-800/50">
+              <Badge variant="neutral" className="bg-brand-surface-container-lowest/50 dark:bg-brand-on-surface/50">
                 +{site.tags.length - 2} more
               </Badge>
             )}
@@ -89,14 +85,14 @@ export default function SiteCard({ site }) {
       </div>
 
       {/* Footer */}
-      <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between relative z-10">
+      <div className="pt-4 border-t border-brand-outline-variant dark:border-brand-outline/60 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-1.5">
           <div className={`w-1.5 h-1.5 rounded-full ${site.currentStatus === 'up' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
-          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+          <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest font-label">
             {site.lastCheckedAt ? formatRelative(site.lastCheckedAt) : 'Awaiting check'}
           </p>
         </div>
-        <svg className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-4 h-4 text-brand-outline dark:text-brand-on-surface-variant group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
         </svg>
       </div>

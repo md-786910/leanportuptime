@@ -18,8 +18,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Forgot password</h2>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-2">Forgot password</h2>
+      <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-6">
         Enter your email and we'll send you a reset link.
       </p>
       {sent ? (
@@ -27,7 +27,7 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-4">
             If that email exists, a password reset link was sent. Check your inbox.
           </p>
-          <Link to="/login" className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium">
+          <Link to="/login" className="text-sm text-brand-primary hover:text-brand-700 dark:text-brand-400 font-medium">
             Back to sign in
           </Link>
         </div>
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
             Send reset link
           </Button>
           <p className="text-center">
-            <Link to="/login" className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400">
+            <Link to="/login" className="text-sm text-brand-on-surface-variant hover:text-brand-on-surface dark:text-brand-outline">
               Back to sign in
             </Link>
           </p>

@@ -34,20 +34,20 @@ export default function SSLPanel({ siteId }) {
 
       {ssl && ssl.issuer && (
         <Card>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Certificate Details</h3>
+          <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Certificate Details</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div><span className="text-gray-500 dark:text-gray-400">Issuer:</span> <span className="text-gray-900 dark:text-gray-100">{ssl.issuer}</span></div>
-            <div><span className="text-gray-500 dark:text-gray-400">Protocol:</span> <span className="text-gray-900 dark:text-gray-100">{ssl.protocol || '—'}</span></div>
-            <div><span className="text-gray-500 dark:text-gray-400">Valid From:</span> <span className="text-gray-900 dark:text-gray-100">{formatDate(ssl.validFrom)}</span></div>
-            <div><span className="text-gray-500 dark:text-gray-400">Valid To:</span> <span className="text-gray-900 dark:text-gray-100">{formatDate(ssl.validTo)}</span></div>
-            <div><span className="text-gray-500 dark:text-gray-400">Cipher:</span> <span className="text-gray-900 dark:text-gray-100">{ssl.cipher || '—'}</span></div>
-            <div><span className="text-gray-500 dark:text-gray-400">Fingerprint:</span> <span className="text-gray-900 dark:text-gray-100 text-xs break-all">{ssl.fingerprint || '—'}</span></div>
+            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Issuer:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{ssl.issuer}</span></div>
+            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Protocol:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{ssl.protocol || '—'}</span></div>
+            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Valid From:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{formatDate(ssl.validFrom)}</span></div>
+            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Valid To:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{formatDate(ssl.validTo)}</span></div>
+            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Cipher:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{ssl.cipher || '—'}</span></div>
+            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Fingerprint:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant text-xs break-all font-label">{ssl.fingerprint || '—'}</span></div>
           </div>
         </Card>
       )}
 
       <Card>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Certificate History</h3>
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Certificate History</h3>
         {histLoading ? <Spinner /> : <SSLHistoryList history={history} />}
       </Card>
     </div>

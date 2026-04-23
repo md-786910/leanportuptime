@@ -41,7 +41,7 @@ export default function App() {
 
   if (isHydrating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-brand-surface-container-low dark:bg-brand-on-surface">
         <Spinner size="lg" />
       </div>
     );

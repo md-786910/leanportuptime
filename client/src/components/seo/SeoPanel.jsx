@@ -74,19 +74,19 @@ function ScanningOverlay() {
     <Card>
       <div className="flex flex-col items-center py-8 gap-4">
         <div className="relative">
-          <div className="w-16 h-16 rounded-full border-4 border-gray-200 dark:border-gray-700" />
+          <div className="w-16 h-16 rounded-full border-4 border-brand-outline-variant dark:border-brand-outline" />
           <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-t-brand-500 animate-spin" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <svg className="w-6 h-6 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-6 h-6 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+          <p className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-1">
             Analyzing your site...
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 transition-opacity duration-300">
+          <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline transition-opacity duration-300 font-label">
             {scanningMessages[msgIndex]}
           </p>
         </div>
@@ -94,7 +94,7 @@ function ScanningOverlay() {
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="h-2 w-2 rounded-full bg-brand-500 animate-bounce"
+              className="h-2 w-2 rounded-full bg-brand-primary animate-bounce"
               style={{ animationDelay: `${i * 150}ms` }}
             />
           ))}
@@ -111,20 +111,20 @@ function CategoryScoreCard({ label, icon, score, passed, total }) {
     <Card>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-lg">{icon}</span>
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{label}</h4>
+        <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">{label}</h4>
       </div>
       {noData ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500 py-2">No data</p>
+        <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant py-2">No data</p>
       ) : (
         <>
           <div className="flex items-end gap-2 mb-2">
-            <span className={`text-2xl font-bold ${scoreColor(score)}`}>{score}</span>
-            <span className="text-xs text-gray-400 mb-0.5">/ 100</span>
+            <span className={`text-2xl font-bold ${scoreColor(score)} font-headline`}>{score}</span>
+            <span className="text-xs text-brand-outline mb-0.5 font-label">/ 100</span>
           </div>
-          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-1.5">
+          <div className="w-full h-2 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden mb-1.5">
             <div className={`h-full ${barColor(score)} rounded-full transition-all duration-500`} style={{ width: `${score}%` }} />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{passed}/{total} checks passed</p>
+          <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">{passed}/{total} checks passed</p>
         </>
       )}
     </Card>
@@ -146,7 +146,7 @@ function LighthouseGauge({ label, score, size = 'sm' }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
       <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`}>
-        <circle cx={center} cy={center} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeW} className="text-gray-200 dark:text-gray-700" />
+        <circle cx={center} cy={center} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeW} className="text-brand-outline-variant dark:text-brand-on-surface" />
         <circle
           cx={center} cy={center} r={radius} fill="none"
           stroke={color} strokeWidth={strokeW} strokeLinecap="round"
@@ -160,7 +160,7 @@ function LighthouseGauge({ label, score, size = 'sm' }) {
           {score}
         </text>
       </svg>
-      <span className={`font-medium text-gray-600 dark:text-gray-400 text-center ${isBig ? 'text-sm' : 'text-xs'}`}>{label}</span>
+      <span className={`font-medium font-label text-brand-on-surface-variant dark:text-brand-outline text-center ${isBig ? 'text-sm' : 'text-xs'}`}>{label}</span>
     </div>
   );
 }
@@ -175,10 +175,10 @@ function MetricRow({ label, value, unit, good, poor }) {
   const colorCls = cwvColor(value, good, poor);
 
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-gray-100 dark:border-gray-800 last:border-0">
+    <div className="flex items-center justify-between py-2.5 border-b border-brand-outline-variant dark:border-brand-outline last:border-0">
       <div className="flex items-center gap-2.5">
         <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dotColor}`} />
-        <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
+        <span className="text-sm text-brand-on-surface dark:text-brand-outline">{label}</span>
       </div>
       <span className={`text-sm font-semibold tabular-nums ${colorCls}`}>{displayValue}</span>
     </div>
@@ -187,7 +187,7 @@ function MetricRow({ label, value, unit, good, poor }) {
 
 function ScoreLegend() {
   return (
-    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+    <div className="flex items-center gap-4 text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">
       <div className="flex items-center gap-1.5">
         <span className="inline-block w-0 h-0 border-l-[5px] border-r-[5px] border-b-[8px] border-transparent border-b-red-500" />
         <span>0–49</span>
@@ -209,20 +209,20 @@ function MiniTable({ rows }) {
   const keys = Object.keys(rows[0]);
 
   return (
-    <div className="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700">
-      <table className="w-full text-xs">
+    <div className="overflow-x-auto rounded-md border border-brand-outline-variant dark:border-brand-outline">
+      <table className="w-full text-xs font-label">
         <thead>
-          <tr className="bg-gray-100 dark:bg-gray-800">
+          <tr className="bg-brand-surface-container-high dark:bg-brand-on-surface">
             {keys.map((k) => (
-              <th key={k} className="px-2.5 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400 capitalize">{k}</th>
+              <th key={k} className="px-2.5 py-1.5 text-left font-medium text-brand-on-surface-variant dark:text-brand-outline capitalize">{k}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-t border-gray-100 dark:border-gray-800">
+            <tr key={i} className="border-t border-brand-outline-variant dark:border-brand-outline">
               {keys.map((k) => (
-                <td key={k} className="px-2.5 py-1.5 text-gray-700 dark:text-gray-300 font-mono">
+                <td key={k} className="px-2.5 py-1.5 text-brand-on-surface dark:text-brand-outline font-mono">
                   {typeof row[k] === 'number' && String(row[k]).includes('.')
                     ? `${(row[k] * 1).toFixed(2)}%`
                     : row[k]}
@@ -238,9 +238,9 @@ function MiniTable({ rows }) {
 
 function ValuePill({ label, value }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400">
-      <span className="font-medium text-gray-500 dark:text-gray-500">{label}:</span>
-      <span className="font-mono text-gray-700 dark:text-gray-300">{value}</span>
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-surface-container-high dark:bg-brand-on-surface text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">
+      <span className="font-medium font-label text-brand-on-surface-variant dark:text-brand-on-surface-variant">{label}:</span>
+      <span className="font-mono text-brand-on-surface dark:text-brand-outline">{value}</span>
     </span>
   );
 }
@@ -249,14 +249,14 @@ function TagList({ items, variant }) {
   const colorMap = {
     danger: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
     success: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
-    neutral: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
+    neutral: 'bg-brand-surface-container-high dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline',
   };
   const cls = colorMap[variant] || colorMap.neutral;
 
   return (
     <div className="flex flex-wrap gap-1">
       {items.map((item, i) => (
-        <span key={i} className={`inline-block px-2 py-0.5 rounded text-xs font-mono ${cls}`}>{item}</span>
+        <span key={i} className={`inline-block px-2 py-0.5 rounded text-xs font-mono ${cls} font-label`}>{item}</span>
       ))}
     </div>
   );
@@ -314,7 +314,7 @@ function ValueDisplay({ value }) {
         if (Array.isArray(v) && v.length > 0 && typeof v[0] === 'object') {
           return (
             <div key={k}>
-              <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">{k}</p>
+              <p className="text-[11px] font-medium text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wide mb-1 font-label">{k}</p>
               <MiniTable rows={v} />
             </div>
           );
@@ -328,7 +328,7 @@ function ValueDisplay({ value }) {
             : 'neutral';
           return (
             <div key={k}>
-              <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">{k}</p>
+              <p className="text-[11px] font-medium text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wide mb-1 font-label">{k}</p>
               <TagList items={v.map(String)} variant={variant} />
             </div>
           );
@@ -338,7 +338,7 @@ function ValueDisplay({ value }) {
         if (typeof v === 'object' && v !== null) {
           return (
             <div key={k}>
-              <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">{k}</p>
+              <p className="text-[11px] font-medium text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wide mb-1 font-label">{k}</p>
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(v).map(([nk, nv]) => (
                   <ValuePill key={nk} label={nk} value={String(nv)} />
@@ -368,26 +368,24 @@ function CheckRow({ check }) {
       : 'border-l-emerald-500';
 
   return (
-    <div className={`rounded-lg border border-gray-100 dark:border-gray-700 border-l-[3px] ${borderAccent}`}>
+    <div className={`rounded-lg border border-brand-outline-variant dark:border-brand-outline border-l-[3px] ${borderAccent}`}>
       <button
         type="button"
         onClick={() => hasExpandable && setExpanded(!expanded)}
-        className={`w-full flex items-center justify-between p-3 text-left ${hasExpandable ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
+        className={`w-full flex items-center justify-between p-3 text-left ${hasExpandable ? 'cursor-pointer hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/50' : ''}`}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className={`h-2 w-2 rounded-full flex-shrink-0 ${
-            isPass ? 'bg-emerald-500' : isFail ? 'bg-red-500' : 'bg-amber-500'
-          }`} />
+          <span className={`h-2 w-2 rounded-full flex-shrink-0 ${ isPass ? 'bg-emerald-500' : isFail ? 'bg-red-500' : 'bg-amber-500' }`} />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{check.check}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{check.message}</p>
+            <p className="text-sm font-medium text-brand-on-surface dark:text-brand-outline-variant">{check.check}</p>
+            <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline truncate font-label">{check.message}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-3">
           {check.severity && <Badge variant={severityVariant[check.severity]}>{check.severity}</Badge>}
           <Badge variant={statusVariant[check.status]}>{check.status}</Badge>
           {hasExpandable && (
-            <svg className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 text-brand-outline transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           )}
@@ -400,20 +398,16 @@ function CheckRow({ check }) {
           {(check.impact || check.fix) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
               {check.impact && (
-                <div className={`rounded-lg p-3 ${
-                  isFail
-                    ? 'bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30'
-                    : 'bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30'
-                }`}>
+                <div className={`rounded-lg p-3 ${ isFail ? 'bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30' : 'bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30' }`}>
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <svg className={`w-3.5 h-3.5 flex-shrink-0 ${isFail ? 'text-red-500' : 'text-amber-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <span className={`text-[11px] font-semibold uppercase tracking-wide ${isFail ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                    <span className={`text-[11px] font-semibold font-label uppercase tracking-wide ${isFail ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`}>
                       Impact
                     </span>
                   </div>
-                  <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{check.impact}</p>
+                  <p className="text-xs text-brand-on-surface dark:text-brand-outline leading-relaxed font-label">{check.impact}</p>
                 </div>
               )}
               {check.fix && (
@@ -422,11 +416,11 @@ function CheckRow({ check }) {
                     <svg className="w-3.5 h-3.5 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[11px] font-semibold font-label uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
                       How to Fix
                     </span>
                   </div>
-                  <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{check.fix}</p>
+                  <p className="text-xs text-brand-on-surface dark:text-brand-outline leading-relaxed font-label">{check.fix}</p>
                 </div>
               )}
             </div>
@@ -434,7 +428,7 @@ function CheckRow({ check }) {
 
           {/* Fallback: legacy detail field */}
           {!check.impact && !check.fix && check.detail && (
-            <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">{check.detail}</p>
+            <p className="text-xs text-brand-on-surface dark:text-brand-outline mt-1 font-label">{check.detail}</p>
           )}
 
           {/* Value display */}
@@ -457,10 +451,10 @@ function CheckListByCategory({ checks, category }) {
   return (
     <Card>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">
           {config.icon} {config.label}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-2 text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">
           {passed > 0 && <span className="text-emerald-600 dark:text-emerald-400">{passed} passed</span>}
           {failed > 0 && <span className="text-red-600 dark:text-red-400">{failed} failed</span>}
           {warned > 0 && <span className="text-amber-600 dark:text-amber-400">{warned} warning</span>}
@@ -491,7 +485,7 @@ export default function SeoPanel({ siteId }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          {audit && <p className="text-xs text-gray-500 dark:text-gray-400">Last scan: {formatDate(audit.scannedAt)}</p>}
+          {audit && <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">Last scan: {formatDate(audit.scannedAt)}</p>}
         </div>
         <div className="flex items-center gap-2">
           {audit && (
@@ -501,7 +495,7 @@ export default function SeoPanel({ siteId }) {
                 try { await downloadSeoReport(siteId); } catch {} finally { setDownloading(false); }
               }}
               disabled={downloading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface disabled:opacity-50 transition-colors font-label"
             >
               {downloading ? (
                 <Spinner size="xs" />
@@ -532,7 +526,7 @@ export default function SeoPanel({ siteId }) {
         <>
           {/* Overall Score */}
           <Card>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Overall SEO Score</h3>
+            <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Overall SEO Score</h3>
             <ScoreBar
               score={audit.score}
               totalChecks={audit.totalChecks}
@@ -540,7 +534,7 @@ export default function SeoPanel({ siteId }) {
               failedChecks={audit.failedChecks}
             />
             {audit.warnChecks > 0 && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">{audit.warnChecks} warning(s)</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-label">{audit.warnChecks} warning(s)</p>
             )}
           </Card>
 
@@ -585,27 +579,23 @@ export default function SeoPanel({ siteId }) {
               <Card>
                 {/* Header with Mobile/Desktop toggle */}
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Diagnose performance issues</h3>
+                  <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">Diagnose performance issues</h3>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => pageSpeedMutation.mutate()}
                       disabled={pageSpeedMutation.isPending}
                       title="Re-fetch PageSpeed data"
-                      className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+                      className="p-1.5 rounded-md text-brand-outline hover:text-brand-on-surface-variant dark:hover:text-brand-outline hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface transition-colors disabled:opacity-50"
                     >
                       <svg className={`w-4 h-4 ${pageSpeedMutation.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     </button>
-                  <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+                  <div className="flex gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-0.5">
                     {audit.pageSpeed.mobile && (
                       <button
                         onClick={() => setActiveStrategy('mobile')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                          activeStrategy === 'mobile'
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                        }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ activeStrategy === 'mobile' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="7" y="2" width="10" height="20" rx="2" strokeWidth="2" /><line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="3" strokeLinecap="round" /></svg>
                         Mobile
@@ -614,11 +604,7 @@ export default function SeoPanel({ siteId }) {
                     {audit.pageSpeed.desktop && (
                       <button
                         onClick={() => setActiveStrategy('desktop')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                          activeStrategy === 'desktop'
-                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                        }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ activeStrategy === 'desktop' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2" strokeWidth="2" /><line x1="8" y1="21" x2="16" y2="21" strokeWidth="2" strokeLinecap="round" /><line x1="12" y1="17" x2="12" y2="21" strokeWidth="2" /></svg>
                         Desktop
@@ -629,7 +615,7 @@ export default function SeoPanel({ siteId }) {
                 </div>
 
                 {/* Lighthouse Score Gauges */}
-                <div className="flex justify-around flex-wrap gap-4 pb-5 border-b border-gray-100 dark:border-gray-800">
+                <div className="flex justify-around flex-wrap gap-4 pb-5 border-b border-brand-outline-variant dark:border-brand-outline">
                   <LighthouseGauge label="Performance" score={scores.performance} size="sm" />
                   <LighthouseGauge label="Accessibility" score={scores.accessibility} size="sm" />
                   <LighthouseGauge label="Best Practices" score={scores.bestPractices} size="sm" />
@@ -641,7 +627,7 @@ export default function SeoPanel({ siteId }) {
                   {/* Left: big performance gauge + legend */}
                   <div className="flex flex-col items-center justify-center gap-3">
                     <LighthouseGauge label="Performance" score={scores.performance} size="lg" />
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 text-center max-w-[220px]">
+                    <p className="text-[11px] text-brand-outline dark:text-brand-on-surface-variant text-center max-w-[220px] font-label">
                       Values are estimated and may vary. The performance score is calculated directly from these metrics.
                     </p>
                     <ScoreLegend />
@@ -649,8 +635,8 @@ export default function SeoPanel({ siteId }) {
 
                   {/* Right: metrics list */}
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Metrics</h4>
-                    <div className="rounded-lg border border-gray-100 dark:border-gray-800 px-3">
+                    <h4 className="text-xs font-semibold text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider mb-2 font-label">Metrics</h4>
+                    <div className="rounded-lg border border-brand-outline-variant dark:border-brand-outline px-3">
                       <MetricRow label="First Contentful Paint" value={scores.fcp} unit="ms" good={1800} poor={3000} />
                       <MetricRow label="Largest Contentful Paint" value={scores.lcp} unit="ms" good={2500} poor={4000} />
                       <MetricRow label="Total Blocking Time" value={scores.tbt} unit="ms" good={200} poor={600} />
@@ -662,9 +648,9 @@ export default function SeoPanel({ siteId }) {
 
                 {/* Additional Web Vitals */}
                 {(scores.inp != null || scores.ttfb != null || scores.fid != null) && (
-                  <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800">
-                    <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Additional Vitals</h4>
-                    <div className="rounded-lg border border-gray-100 dark:border-gray-800 px-3">
+                  <div className="mt-5 pt-5 border-t border-brand-outline-variant dark:border-brand-outline">
+                    <h4 className="text-xs font-semibold text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider mb-2 font-label">Additional Vitals</h4>
+                    <div className="rounded-lg border border-brand-outline-variant dark:border-brand-outline px-3">
                       <MetricRow label="Interaction to Next Paint (INP)" value={scores.inp} unit="ms" good={200} poor={500} />
                       <MetricRow label="Time to First Byte (TTFB)" value={scores.ttfb} unit="ms" good={800} poor={1800} />
                       <MetricRow label="Max Potential FID" value={scores.fid} unit="ms" good={100} poor={300} />
@@ -677,7 +663,7 @@ export default function SeoPanel({ siteId }) {
             <Card>
               <div className="flex items-center justify-center gap-2 py-6">
                 <Spinner size="sm" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline">
                   Fetching PageSpeed Insights...
                 </p>
               </div>
@@ -685,18 +671,18 @@ export default function SeoPanel({ siteId }) {
           ) : (
             <Card>
               <div className="text-center py-6">
-                <p className="text-sm text-gray-400 dark:text-gray-500">
+                <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant">
                   PageSpeed Insights not available.
                 </p>
                 {audit?.pageSpeedError && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-mono max-w-lg mx-auto">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-mono max-w-lg mx-auto font-label">
                     {audit.pageSpeedError}
                   </p>
                 )}
                 <button
                   onClick={() => pageSpeedMutation.mutate()}
                   disabled={pageSpeedMutation.isPending}
-                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-label"
                 >
                   {pageSpeedMutation.isPending ? (
                     <>
@@ -719,7 +705,7 @@ export default function SeoPanel({ siteId }) {
         </>
       ) : (
         <Card>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+          <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline text-center py-8">
             No SEO audit data. Run an audit to get started.
           </p>
         </Card>

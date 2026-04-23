@@ -83,27 +83,27 @@ export default function DateRangePicker({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-brand-400 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface hover:border-brand-400 focus:ring-2 focus:ring-brand-primary-container focus:outline-none font-label"
       >
-        <span className={startDate ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400'}>{startLabel}</span>
-        <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <span className={startDate ? 'text-brand-on-surface dark:text-brand-outline-variant' : 'text-brand-outline'}>{startLabel}</span>
+        <svg className="w-3 h-3 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
         </svg>
-        <span className={endDate ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400'}>{endLabel}</span>
-        <svg className={`w-3.5 h-3.5 ml-1 ${filled ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <span className={endDate ? 'text-brand-on-surface dark:text-brand-outline-variant' : 'text-brand-outline'}>{endLabel}</span>
+        <svg className={`w-3.5 h-3.5 ml-1 ${filled ? 'text-brand-on-surface-variant dark:text-brand-outline' : 'text-brand-outline'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </button>
 
       {open && (
-        <div className={`absolute z-40 mt-1 ${align === 'right' ? 'right-0' : 'left-0'} flex rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl`}>
-          <div className="flex flex-col w-28 border-r border-gray-200 dark:border-gray-700 py-2">
+        <div className={`absolute z-40 mt-1 ${align === 'right' ? 'right-0' : 'left-0'} flex rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface shadow-xl`}>
+          <div className="flex flex-col w-28 border-r border-brand-outline-variant dark:border-brand-outline py-2">
             {presets.map((p) => (
               <button
                 key={p.key}
                 type="button"
                 onClick={() => handlePreset(p)}
-                className="text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                className="text-left px-3 py-1.5 text-xs text-brand-on-surface dark:text-brand-outline-variant hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-700 dark:hover:text-brand-300 transition-colors font-label"
               >
                 {p.label}
               </button>

@@ -12,13 +12,13 @@ export default function ScoreBar({ score, totalChecks, passedChecks, failedCheck
   return (
     <div className="space-y-3">
       <div className="flex items-end gap-2">
-        <span className={`text-4xl font-bold ${color}`}>{score}</span>
-        <span className="text-sm text-gray-500 dark:text-gray-400 mb-1">/ 100</span>
+        <span className={`text-4xl font-bold ${color} font-headline`}>{score}</span>
+        <span className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-1">/ 100</span>
       </div>
-      <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div className="w-full h-3 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">
         <div className={`h-full ${barColor} rounded-full transition-all duration-500`} style={{ width: `${score}%` }} />
       </div>
-      <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex gap-4 text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">
         <span>{passedChecks} passed</span>
         <span>{failedChecks} failed</span>
         <span>{totalChecks} total</span>

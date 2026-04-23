@@ -16,10 +16,10 @@ function sortByPosition(items) {
 function Header() {
   return (
     <div className="flex items-baseline justify-between mb-3">
-      <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+      <h4 className="text-xs font-semibold text-brand-on-surface dark:text-brand-outline uppercase tracking-wider font-label">
         Top 3 Keywords
       </h4>
-      <span className="text-[10px] text-gray-400">Best SERP positions</span>
+      <span className="text-[10px] text-brand-outline font-label">Best SERP positions</span>
     </div>
   );
 }
@@ -45,7 +45,7 @@ export default function TopKeywordsPanel({ siteId }) {
     return (
       <div>
         <Header />
-        <p className="text-[11px] text-gray-400 text-center py-4">
+        <p className="text-[11px] text-brand-outline text-center py-4 font-label">
           No keywords tracked yet. Add them in the details tab to track SERP positions.
         </p>
       </div>
@@ -56,7 +56,7 @@ export default function TopKeywordsPanel({ siteId }) {
     return (
       <div>
         <Header />
-        <p className="text-[11px] text-gray-400 text-center py-4">
+        <p className="text-[11px] text-brand-outline text-center py-4 font-label">
           No ranked keywords yet. Run a refresh in the details tab.
         </p>
       </div>
@@ -66,9 +66,9 @@ export default function TopKeywordsPanel({ siteId }) {
   return (
     <div>
       <Header />
-      <table className="w-full text-xs">
+      <table className="w-full text-xs font-label">
         <thead>
-          <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+          <tr className="text-left text-brand-on-surface-variant dark:text-brand-outline border-b border-brand-outline-variant dark:border-brand-outline">
             <th className="py-2 px-2 font-medium">#</th>
             <th className="py-2 px-2 font-medium">Keyword</th>
             <th className="py-2 px-2 font-medium text-right">Position</th>
@@ -80,10 +80,10 @@ export default function TopKeywordsPanel({ siteId }) {
           {sorted.map((it, idx) => (
             <tr
               key={it.keyword}
-              className="border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-900/40"
+              className="border-b border-brand-outline-variant dark:border-brand-outline last:border-b-0 hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/40"
             >
-              <td className="py-2 px-2 text-gray-400 tabular-nums">{idx + 1}</td>
-              <td className="py-2 px-2 font-medium text-gray-800 dark:text-gray-200">
+              <td className="py-2 px-2 text-brand-outline tabular-nums">{idx + 1}</td>
+              <td className="py-2 px-2 font-medium text-brand-on-surface dark:text-brand-outline-variant">
                 {it.keyword}
               </td>
               <td className="py-2 px-2 text-right tabular-nums">
@@ -94,7 +94,7 @@ export default function TopKeywordsPanel({ siteId }) {
               <td className="py-2 px-2 text-right tabular-nums">
                 <DeltaCell position={it.position} previousPosition={it.previousPosition} />
               </td>
-              <td className="py-2 px-2 text-right text-gray-600 dark:text-gray-300 tabular-nums">
+              <td className="py-2 px-2 text-right text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
                 {fmt(it.searchVolume)}
               </td>
             </tr>

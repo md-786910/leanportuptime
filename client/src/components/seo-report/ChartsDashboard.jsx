@@ -62,17 +62,17 @@ function computeDelta(data, key) {
 function DeltaChip({ delta }) {
   if (!delta) return null;
   if (delta.direction === 'new') {
-    return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">NEW</span>;
+    return <span className="text-[10px] font-semibold font-label px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">NEW</span>;
   }
   if (delta.direction === 'flat') {
-    return <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">—</span>;
+    return <span className="text-[10px] font-semibold font-label px-1.5 py-0.5 rounded bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline">—</span>;
   }
   const isUp = delta.direction === 'up';
   const cls = isUp
     ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
     : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400';
   return (
-    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded tabular-nums ${cls}`}>
+    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded tabular-nums ${cls} font-label`}>
       {isUp ? '↑' : '↓'}{delta.pct.toFixed(1)}%
     </span>
   );
@@ -100,19 +100,19 @@ function MiniSparkline({ data, dataKey, color, height = 36 }) {
 
 function StatCard({ label, value, delta, sparkline, hint }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 p-3 flex flex-col gap-1.5 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+    <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-3 flex flex-col gap-1.5 hover:border-brand-outline-variant dark:hover:border-brand-outline transition-colors">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
+        <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider truncate">
           {label}
         </span>
         <DeltaChip delta={delta} />
       </div>
-      <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums leading-tight">
+      <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums leading-tight">
         {value}
       </span>
       {sparkline && <MiniSparkline data={sparkline.data} dataKey={sparkline.dataKey} color={sparkline.color} />}
       {hint && (
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">{hint}</span>
+        <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant leading-tight font-label">{hint}</span>
       )}
     </div>
   );
@@ -120,10 +120,10 @@ function StatCard({ label, value, delta, sparkline, hint }) {
 
 function PanelCard({ title, action, children, className = '' }) {
   return (
-    <div className={`rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 p-4 ${className}`}>
+    <div className={`rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4 ${className}`}>
       {(title || action) && (
         <div className="flex items-center justify-between mb-3">
-          {title && <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">{title}</h4>}
+          {title && <h4 className="text-xs font-semibold text-brand-on-surface dark:text-brand-outline uppercase tracking-wider font-label">{title}</h4>}
           {action && <div>{action}</div>}
         </div>
       )}
@@ -142,7 +142,7 @@ function Gauge({ score, label }) {
   const color = scoreColor(score);
   const data = [{ value: score, fill: color }];
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 p-3 flex flex-col items-center">
+    <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-3 flex flex-col items-center">
       <div className="w-28 h-28 relative">
         <ResponsiveContainer width="100%" height="100%">
           <RadialBarChart cx="50%" cy="50%" innerRadius="70%" outerRadius="100%" startAngle={90} endAngle={-270} data={data}>
@@ -150,12 +150,12 @@ function Gauge({ score, label }) {
           </RadialBarChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums" style={{ color }}>
+          <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums" style={{ color }}>
             {score}
           </span>
         </div>
       </div>
-      <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-300 mt-1 text-center">{label}</span>
+      <span className="text-[11px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline mt-1 text-center">{label}</span>
     </div>
   );
 }
@@ -212,13 +212,13 @@ function CoreVitalsSection({ scores }) {
             val <= m.poor ? 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400' :
             'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400';
           return (
-            <div key={m.key} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 p-3 flex flex-col gap-2">
+            <div key={m.key} className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-3 flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300" title={m.full}>{m.label}</span>
-                <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${chipCls}`}>{status}</span>
+                <span className="text-xs font-bold font-label text-brand-on-surface dark:text-brand-outline" title={m.full}>{m.label}</span>
+                <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${chipCls} font-label`}>{status}</span>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums leading-tight">{fmtVal(val, m.unit)}</p>
-              <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+              <p className="text-2xl font-bold text-brand-on-surface dark:text-white tabular-nums leading-tight font-headline">{fmtVal(val, m.unit)}</p>
+              <div className="h-1.5 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: barColor }} />
               </div>
             </div>
@@ -238,9 +238,9 @@ function DomainAuthoritySection({ siteId, themeKey }) {
       accent="amber"
       icon={LinkIcon}
     >
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 p-4">
+      <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4">
         <BacklinksSection siteId={siteId} themeKey={themeKey} showTitle={false} />
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-6 pt-6 border-t border-brand-outline-variant dark:border-brand-outline">
           <TopKeywordsPanel siteId={siteId} />
         </div>
       </div>
@@ -285,8 +285,8 @@ function GSCSection({ siteId, themeKey }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <PanelCard title="Clicks" className="md:col-span-2" action={<DeltaChip delta={clicksDelta} />}>
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{fmt(totals.clicks)}</span>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">Last 28 days</span>
+            <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums">{fmt(totals.clicks)}</span>
+            <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-label">Last 28 days</span>
           </div>
           {daily.length > 1 && (
             <div className="h-36">
@@ -327,11 +327,11 @@ function GSCSection({ siteId, themeKey }) {
               <div className="space-y-2">
                 {topPages.map((p, i) => (
                   <div key={i}>
-                    <div className="flex justify-between text-[11px] mb-0.5">
-                      <span className="text-gray-700 dark:text-gray-300 truncate max-w-[220px] font-mono">{p.page.replace(/^https?:\/\/[^/]+/, '')}</span>
-                      <span className="text-gray-500 tabular-nums">{fmt(p.impressions)}</span>
+                    <div className="flex justify-between text-[11px] mb-0.5 font-label">
+                      <span className="text-brand-on-surface dark:text-brand-outline truncate max-w-[220px] font-mono">{p.page.replace(/^https?:\/\/[^/]+/, '')}</span>
+                      <span className="text-brand-on-surface-variant tabular-nums">{fmt(p.impressions)}</span>
                     </div>
-                    <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${(p.impressions / maxPageImp) * 100}%`, backgroundColor: themeColor(themeKey, 0) }} />
                     </div>
                   </div>
@@ -344,11 +344,11 @@ function GSCSection({ siteId, themeKey }) {
               <div className="space-y-2">
                 {topKw.map((q, i) => (
                   <div key={i}>
-                    <div className="flex justify-between text-[11px] mb-0.5">
-                      <span className="text-gray-700 dark:text-gray-300 truncate max-w-[220px]">{q.query}</span>
-                      <span className="text-gray-500 tabular-nums">{fmt(q.impressions)}</span>
+                    <div className="flex justify-between text-[11px] mb-0.5 font-label">
+                      <span className="text-brand-on-surface dark:text-brand-outline truncate max-w-[220px]">{q.query}</span>
+                      <span className="text-brand-on-surface-variant tabular-nums">{fmt(q.impressions)}</span>
                     </div>
-                    <div className="h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${(q.impressions / maxKwImp) * 100}%`, backgroundColor: themeColor(themeKey, 2) }} />
                     </div>
                   </div>
@@ -542,10 +542,10 @@ function OrganicSection({ siteId, themeKey }) {
                 </div>
                 <div className="space-y-1 flex-1 min-w-0">
                   {userDonut.map((d) => (
-                    <div key={d.name} className="flex items-center gap-1.5 text-[11px]">
+                    <div key={d.name} className="flex items-center gap-1.5 text-[11px] font-label">
                       <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
-                      <span className="text-gray-600 dark:text-gray-400">{d.name}</span>
-                      <span className="font-semibold text-gray-900 dark:text-white tabular-nums ml-auto">{fmt(d.value)}</span>
+                      <span className="text-brand-on-surface-variant dark:text-brand-outline">{d.name}</span>
+                      <span className="font-semibold font-label text-brand-on-surface dark:text-white tabular-nums ml-auto">{fmt(d.value)}</span>
                     </div>
                   ))}
                 </div>
@@ -565,10 +565,10 @@ function OrganicSection({ siteId, themeKey }) {
                 </div>
                 <div className="space-y-1 flex-1 min-w-0">
                   {deviceDonut.map((d) => (
-                    <div key={d.name} className="flex items-center gap-1.5 text-[11px]">
+                    <div key={d.name} className="flex items-center gap-1.5 text-[11px] font-label">
                       <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
-                      <span className="text-gray-600 dark:text-gray-400 capitalize">{d.name.toLowerCase()}</span>
-                      <span className="font-semibold text-gray-900 dark:text-white tabular-nums ml-auto">{fmt(d.value)}</span>
+                      <span className="text-brand-on-surface-variant dark:text-brand-outline capitalize">{d.name.toLowerCase()}</span>
+                      <span className="font-semibold font-label text-brand-on-surface dark:text-white tabular-nums ml-auto">{fmt(d.value)}</span>
                     </div>
                   ))}
                 </div>
@@ -580,12 +580,12 @@ function OrganicSection({ siteId, themeKey }) {
             <PanelCard title="Top Countries">
               <div className="space-y-1.5">
                 {countries.slice(0, 5).map((c, i) => (
-                  <div key={c.country} className="flex items-center gap-2 text-[11px]">
-                    <span className="text-gray-500 w-16 truncate">{c.country}</span>
-                    <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                  <div key={c.country} className="flex items-center gap-2 text-[11px] font-label">
+                    <span className="text-brand-on-surface-variant w-16 truncate">{c.country}</span>
+                    <div className="flex-1 h-1.5 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${(c.sessions / (countries[0]?.sessions || 1)) * 100}%`, backgroundColor: themeColor(themeKey, i % 6) }} />
                     </div>
-                    <span className="text-gray-700 dark:text-gray-300 font-semibold tabular-nums">{fmt(c.sessions)}</span>
+                    <span className="text-brand-on-surface dark:text-brand-outline font-semibold font-label tabular-nums">{fmt(c.sessions)}</span>
                   </div>
                 ))}
               </div>

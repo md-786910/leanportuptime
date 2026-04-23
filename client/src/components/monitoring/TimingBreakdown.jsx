@@ -18,7 +18,7 @@ export default function TimingBreakdown({ checks }) {
 
   return (
     <Card>
-      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Timing Breakdown</h3>
+      <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">Timing Breakdown</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />

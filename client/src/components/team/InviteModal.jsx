@@ -56,7 +56,7 @@ export default function InviteModal({ isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Invite Users" size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         {rows.map((row, index) => (
-          <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+          <div key={index} className="border border-brand-outline-variant dark:border-brand-outline rounded-lg p-4 space-y-3">
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <Input
@@ -70,11 +70,11 @@ export default function InviteModal({ isOpen, onClose }) {
                 />
               </div>
               <div className="w-32">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
+                <label className="block text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline mb-1">Role</label>
                 <select
                   value={row.role}
                   onChange={(e) => updateRow(index, 'role', e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="block w-full rounded-lg border border-brand-outline-variant dark:border-brand-outline px-3 py-2 text-sm dark:bg-brand-on-surface dark:text-brand-outline-variant focus:outline-none focus:ring-2 focus:ring-brand-primary-container"
                 >
                   <option value="viewer">Viewer</option>
                   <option value="admin">Admin</option>
@@ -84,7 +84,7 @@ export default function InviteModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => removeRow(index)}
-                  className="mt-7 text-gray-400 hover:text-red-500"
+                  className="mt-7 text-brand-outline hover:text-red-500"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -94,7 +94,7 @@ export default function InviteModal({ isOpen, onClose }) {
             </div>
             {row.role === 'viewer' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline mb-1">
                   Share Projects
                 </label>
                 <SiteMultiSelect
@@ -109,7 +109,7 @@ export default function InviteModal({ isOpen, onClose }) {
         <button
           type="button"
           onClick={addRow}
-          className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium"
+          className="text-sm text-brand-primary hover:text-brand-700 dark:text-brand-400 font-medium"
         >
           + Add another user
         </button>

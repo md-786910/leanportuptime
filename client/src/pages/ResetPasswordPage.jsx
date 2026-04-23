@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Set new password</h2>
+      <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-6">Set new password</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <PasswordInput label="New Password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} placeholder="Min 8 characters" />
         <PasswordInput label="Confirm Password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={errors.confirmPassword} placeholder="Repeat password" />

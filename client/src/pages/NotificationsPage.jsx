@@ -47,9 +47,9 @@ function NotificationIcon({ type }) {
   };
 
   return (
-    <div className="flex-shrink-0 p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl">
+    <div className="flex-shrink-0 p-2.5 bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl">
       {icons[type] || (
-        <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="h-5 w-5 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
       )}
@@ -65,8 +65,8 @@ export default function NotificationsPage() {
     <div className="space-y-8 max-w-8xl mx-auto">
       {/* Header Section */}
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">System Alerts</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1.5 font-medium max-w-2xl">
+        <h1 className="text-3xl font-extrabold text-brand-on-surface dark:text-white tracking-tight">System Alerts</h1>
+        <p className="text-brand-on-surface-variant dark:text-brand-outline mt-1.5 font-medium max-w-2xl">
           Keep track of important updates, site outages, and security alerts for your monitored services.
         </p>
       </div>
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <Spinner size="lg" />
-          <p className="text-sm font-bold text-slate-500 animate-pulse uppercase tracking-widest">Fetching activity log...</p>
+          <p className="text-sm font-bold text-brand-on-surface-variant animate-pulse uppercase tracking-widest font-label">Fetching activity log...</p>
         </div>
       ) : !notifications.length ? (
         <div className="animate-in fade-in duration-500">
@@ -86,34 +86,34 @@ export default function NotificationsPage() {
       ) : (
         <div className="animate-in fade-in duration-700">
           <div className="flex items-center gap-2 mb-4 px-1">
-            <span className="h-2 w-2 rounded-full bg-brand-500"></span>
-            <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400">
+            <span className="h-2 w-2 rounded-full bg-brand-primary"></span>
+            <h2 className="text-xs font-bold text-brand-on-surface-variant dark:text-brand-outline font-label">
               Recent Activity ({meta.total || 0})
             </h2>
           </div>
 
-          <Card noPadding className="overflow-hidden shadow-sm border-slate-200 dark:border-slate-800">
+          <Card noPadding className="overflow-hidden shadow-sm border-brand-outline-variant dark:border-brand-outline">
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {notifications.map((n) => (
                 <div 
                   key={n._id} 
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 sm:py-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all group"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 sm:py-5 hover:bg-brand-surface-container-low/50 dark:hover:bg-brand-on-surface/30 transition-all group"
                 >
                   <div className="flex items-start gap-4 min-w-0">
                     <NotificationIcon type={n.type} />
                     
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        <Badge variant={typeVariant[n.type] || 'neutral'} className="text-[10px] font-extrabold px-2">
+                        <Badge variant={typeVariant[n.type] || 'neutral'} className="text-[10px] font-extrabold px-2 font-label">
                           {n.type?.replace('_', ' ')}
                         </Badge>
-                        <Badge variant="neutral" className="text-[10px] px-2">
+                        <Badge variant="neutral" className="text-[10px] px-2 font-label">
                           {n.channel}
                         </Badge>
                         {n.siteId && (
                           <Link 
                             to={`/sites/${n.siteId._id || n.siteId}`} 
-                            className="text-[13px] font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 transition-colors flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                            className="text-[13px] font-bold text-brand-primary hover:text-brand-700 dark:text-brand-400 transition-colors flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
                           >
                             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -122,7 +122,7 @@ export default function NotificationsPage() {
                           </Link>
                         )}
                       </div>
-                      <p className="text-[14px] leading-relaxed text-slate-700 dark:text-slate-300 font-medium break-words">
+                      <p className="text-[14px] leading-relaxed text-brand-on-surface dark:text-brand-outline font-medium break-words">
                         {n.message}
                       </p>
                     </div>
@@ -130,12 +130,12 @@ export default function NotificationsPage() {
 
                   <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 mt-4 sm:mt-0 sm:ml-8 pl-12 sm:pl-0">
                     <div className="flex items-center gap-1.5">
-                      <div className={`h-1.5 w-1.5 rounded-full ${n.status === 'sent' ? 'bg-emerald-500' : n.status === 'failed' ? 'bg-rose-500' : 'bg-slate-400'}`}></div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+                      <div className={`h-1.5 w-1.5 rounded-full ${n.status === 'sent' ? 'bg-emerald-500' : n.status === 'failed' ? 'bg-rose-500' : 'bg-brand-surface-container-highest'}`}></div>
+                      <span className="text-[10px] font-bold font-label text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest leading-none">
                         {n.status}
                       </span>
                     </div>
-                    <p className="text-[11px] font-bold text-slate-400 dark:text-slate-600 whitespace-nowrap bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-800">
+                    <p className="text-[11px] font-bold text-brand-outline dark:text-brand-on-surface-variant whitespace-nowrap bg-brand-surface-container-low dark:bg-brand-on-surface px-2 py-1 rounded-md border border-brand-outline-variant dark:border-brand-outline font-label">
                       {formatDate(n.createdAt)}
                     </p>
                   </div>
@@ -147,7 +147,7 @@ export default function NotificationsPage() {
       )}
 
       {/* Footer / Pagination Section */}
-      <div className="flex items-center justify-center pt-4 border-t border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-center pt-4 border-t border-brand-outline-variant dark:border-brand-outline">
         <Pagination 
           page={page} 
           total={meta.total || 0} 

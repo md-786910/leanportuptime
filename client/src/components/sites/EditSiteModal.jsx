@@ -52,19 +52,19 @@ export default function EditSiteModal({ isOpen, onClose, site }) {
         <Input label="Site Name" id="editName" value={form.name} onChange={update('name')} error={errors.name} />
         <Input label="URL" id="editUrl" value={form.url} onChange={update('url')} error={errors.url} />
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Check Interval</label>
-          <select value={form.interval} onChange={(e) => setForm({ ...form, interval: e.target.value })} className="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <label className="block text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline">Check Interval</label>
+          <select value={form.interval} onChange={(e) => setForm({ ...form, interval: e.target.value })} className="block w-full rounded-lg border border-brand-outline-variant dark:border-brand-outline px-3 py-2 text-sm bg-brand-surface-container-lowest dark:bg-brand-on-surface dark:text-brand-outline-variant focus:outline-none focus:ring-2 focus:ring-brand-primary-container">
             {CHECK_INTERVALS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm text-brand-on-surface dark:text-brand-outline cursor-pointer">
           <input
             type="checkbox"
             checked={form.isFavorite}
             onChange={(e) => setForm({ ...form, isFavorite: e.target.checked })}
-            className="rounded border-gray-300 dark:border-gray-600 text-brand-500 focus:ring-brand-500"
+            className="rounded border-brand-outline-variant dark:border-brand-outline text-brand-primary focus:ring-brand-primary-container"
           />
           Mark as favorite
         </label>

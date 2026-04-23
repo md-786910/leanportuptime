@@ -9,8 +9,8 @@ export default function Pagination({ page, total, limit, onPageChange }) {
 
   return (
     <div className="flex items-center justify-between py-6 px-1">
-      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        Showing <span className="font-semibold">{startItem}</span> to <span className="font-semibold">{endItem}</span> of <span className="font-semibold">{total}</span> results
+      <p className="text-sm font-medium text-brand-on-surface dark:text-brand-outline">
+        Showing <span className="font-semibold font-label">{startItem}</span> to <span className="font-semibold font-label">{endItem}</span> of <span className="font-semibold font-label">{total}</span> results
       </p>
       <div className="flex gap-2">
         <Button
@@ -25,7 +25,7 @@ export default function Pagination({ page, total, limit, onPageChange }) {
           Previous
         </Button>
         <div className="flex items-center gap-1 px-3 py-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline">
             Page {page} of {totalPages}
           </span>
         </div>

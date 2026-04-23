@@ -12,17 +12,13 @@ const tabs = [
 
 export default function SiteDetailTabs({ activeTab, onTabChange }) {
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700">
+    <div className="border-b border-brand-outline-variant dark:border-brand-outline">
       <nav className="flex gap-0 -mb-px overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => onTabChange(tab.key)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === tab.key
-                ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${ activeTab === tab.key ? 'border-brand-600 text-brand-primary dark:text-brand-400 dark:border-brand-400' : 'border-transparent text-brand-on-surface-variant hover:text-brand-on-surface dark:text-brand-outline dark:hover:text-brand-outline' }`}
           >
             {tab.label}
           </button>

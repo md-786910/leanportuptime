@@ -87,7 +87,7 @@ export default function AcceptInvitationPage() {
   // While we check invitation status
   if (checkingStatus) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-brand-surface-container-low dark:bg-brand-on-surface">
         <Spinner size="lg" />
       </div>
     );
@@ -107,17 +107,17 @@ export default function AcceptInvitationPage() {
       'Something went wrong checking this invitation.';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-        <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-brand-surface-container-low dark:bg-brand-on-surface p-4">
+        <div className="w-full max-w-md bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-lg border border-brand-outline-variant dark:border-brand-outline p-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">WP</span>
+            <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
+              <span className="text-white font-bold font-label text-sm">WP</span>
             </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white">Sentinel</span>
+            <span className="text-lg font-bold font-label text-brand-on-surface dark:text-white">Sentinel</span>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{message}</p>
-          <Link to="/login" className="inline-block text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline">
+          <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-2">{title}</h2>
+          <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-6">{message}</p>
+          <Link to="/login" className="inline-block text-sm font-medium text-brand-primary dark:text-brand-400 hover:underline">
             Go to login
           </Link>
         </div>
@@ -127,26 +127,26 @@ export default function AcceptInvitationPage() {
 
   // Pending — render accept form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-brand-surface-container-low dark:bg-brand-on-surface p-4">
+      <div className="w-full max-w-md bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-lg border border-brand-outline-variant dark:border-brand-outline p-8">
         <div className="flex items-center gap-2 mb-6">
-          <div className="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">WP</span>
+          <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
+            <span className="text-white font-bold font-label text-sm">WP</span>
           </div>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">Sentinel</span>
+          <span className="text-lg font-bold font-label text-brand-on-surface dark:text-white">Sentinel</span>
         </div>
 
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Accept Invitation</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-2">Accept Invitation</h2>
+        <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-6">
           {invitationInfo?.email
-            ? <>Set up your account for <span className="font-medium text-gray-700 dark:text-gray-300">{invitationInfo.email}</span></>
+            ? <>Set up your account for <span className="font-medium font-label text-brand-on-surface dark:text-brand-outline">{invitationInfo.email}</span></>
             : 'Set up your account to start monitoring'}
         </p>
 
         {apiError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-sm text-red-600 dark:text-red-400">{apiError}</p>
-            <Link to="/login" className="text-sm text-brand-600 dark:text-brand-400 hover:underline mt-1 inline-block">
+            <Link to="/login" className="text-sm text-brand-primary dark:text-brand-400 hover:underline mt-1 inline-block">
               Go to login
             </Link>
           </div>

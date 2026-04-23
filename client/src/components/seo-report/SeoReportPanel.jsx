@@ -60,19 +60,19 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
       <div className="space-y-8">
         <Card>
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand-surface-container-high dark:bg-brand-on-surface flex items-center justify-center">
+              <svg className="w-8 h-8 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+            <h3 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-1">
               No PageSpeed Data Yet
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-sm mx-auto">
+            <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-5 max-w-sm mx-auto">
               Fetch Google PageSpeed Insights to see performance scores, core web vitals, and optimization recommendations.
             </p>
             {audit?.pageSpeedError && (
-              <p className="text-xs text-red-500 dark:text-red-400 mb-4 font-mono max-w-lg mx-auto">
+              <p className="text-xs text-red-500 dark:text-red-400 mb-4 font-mono max-w-lg mx-auto font-label">
                 {audit.pageSpeedError}
               </p>
             )}
@@ -128,16 +128,16 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100">SEO Report</h1>
+            <h1 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant">SEO Report</h1>
             {audit?.scannedAt && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-0.5 font-label">
                 Last scan: {formatDate(audit.scannedAt)}
               </p>
             )}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <ColorPalettePicker />
-            <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
+            <div className="w-px h-6 bg-brand-surface-container-high dark:bg-brand-on-surface hidden sm:block" />
             <StrategyToggle
               strategy={activeStrategy}
               onChange={setActiveStrategy}
@@ -148,7 +148,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
               onClick={() => pageSpeedMutation.mutate()}
               disabled={pageSpeedMutation.isPending}
               title="Refresh PageSpeed data"
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="p-2 rounded-lg text-brand-outline hover:text-brand-on-surface-variant dark:hover:text-brand-outline hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface transition-colors disabled:opacity-50"
             >
               <svg className={`w-4 h-4 ${pageSpeedMutation.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -218,18 +218,18 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
           >
             <Card>
               <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} />
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-6 pt-6 border-t border-brand-outline-variant dark:border-brand-outline">
                 <button
                   type="button"
                   onClick={() => setKeywordsExpanded((v) => !v)}
-                  className={`w-full flex items-center justify-between text-left ${keywordsExpanded ? 'mb-3 pb-2 border-b border-gray-200 dark:border-gray-700' : ''}`}
+                  className={`w-full flex items-center justify-between text-left ${keywordsExpanded ? 'mb-3 pb-2 border-b border-brand-outline-variant dark:border-brand-outline' : ''}`}
                   aria-expanded={keywordsExpanded}
                 >
-                  <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
+                  <h3 className="text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-wider font-label">
                     Keyword Rankings
                   </h3>
                   <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${keywordsExpanded ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 text-brand-outline transition-transform ${keywordsExpanded ? 'rotate-180' : ''}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"

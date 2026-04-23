@@ -9,7 +9,7 @@ function formatNumber(n) {
 export default function ChannelBreakdownChart({ channels, themeKey }) {
   if (!channels || channels.length === 0) {
     return (
-      <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+      <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
         No channel data available.
       </p>
     );
@@ -25,8 +25,8 @@ export default function ChannelBreakdownChart({ channels, themeKey }) {
 
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4 flex items-center gap-2">
+        <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M3 8h18M3 12h12M3 16h8M3 20h4" />
         </svg>
         Traffic by Channel
@@ -35,10 +35,10 @@ export default function ChannelBreakdownChart({ channels, themeKey }) {
       <div className="space-y-2.5">
         {chartData.map((c) => (
           <div key={c.name} className="flex items-center gap-3">
-            <span className="text-xs text-gray-600 dark:text-gray-400 w-28 flex-shrink-0 truncate" title={c.name}>
+            <span className="text-xs text-brand-on-surface-variant dark:text-brand-outline w-28 flex-shrink-0 truncate font-label" title={c.name}>
               {c.name}
             </span>
-            <div className="flex-1 h-6 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div className="flex-1 h-6 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2"
                 style={{
@@ -47,16 +47,16 @@ export default function ChannelBreakdownChart({ channels, themeKey }) {
                 }}
               >
                 {parseFloat(c.pct) > 15 && (
-                  <span className="text-[10px] font-semibold text-white">{c.pct}%</span>
+                  <span className="text-[10px] font-semibold font-label text-white">{c.pct}%</span>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums w-16 text-right">
+              <span className="text-sm font-semibold font-label text-brand-on-surface dark:text-white tabular-nums w-16 text-right">
                 {formatNumber(c.sessions)}
               </span>
               {parseFloat(c.pct) <= 15 && (
-                <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums w-12 text-right">
+                <span className="text-xs text-brand-outline dark:text-brand-on-surface-variant tabular-nums w-12 text-right font-label">
                   {c.pct}%
                 </span>
               )}
@@ -65,9 +65,9 @@ export default function ChannelBreakdownChart({ channels, themeKey }) {
         ))}
       </div>
 
-      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex justify-between text-xs text-gray-400 dark:text-gray-500">
+      <div className="mt-3 pt-3 border-t border-brand-outline-variant dark:border-brand-outline flex justify-between text-xs text-brand-outline dark:text-brand-on-surface-variant font-label">
         <span>Total Sessions</span>
-        <span className="font-semibold text-gray-600 dark:text-gray-300">{formatNumber(totalSessions)}</span>
+        <span className="font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline">{formatNumber(totalSessions)}</span>
       </div>
     </div>
   );

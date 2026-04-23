@@ -18,8 +18,8 @@ export default function KPICards({ sites }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
       ),
-      color: 'text-brand-600 dark:text-brand-400',
-      bgColor: 'bg-brand-500',
+      color: 'text-brand-primary dark:text-brand-400',
+      bgColor: 'bg-brand-primary',
       accent: 'border-brand-500',
       iconBg: 'bg-brand-50 dark:bg-brand-400/10',
       percent: 100,
@@ -83,7 +83,7 @@ export default function KPICards({ sites }) {
               <div className={`h-8 w-8 rounded-xl ${card.iconBg} flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform duration-300`}>
                 {card.icon}
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              <h3 className="text-3xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
                 {card.value}
               </h3>
             </div>
@@ -91,17 +91,17 @@ export default function KPICards({ sites }) {
             <div className="space-y-1">
               
               <div>
-                <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200">
+                <p className="text-[13px] font-bold text-brand-on-surface dark:text-brand-outline-variant">
                   {card.label}
                 </p>
-                <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                <p className="text-[11px] font-medium text-brand-outline dark:text-brand-on-surface-variant font-label">
                   {card.sublabel}
                 </p>
               </div>
             </div>
 
             {/* Subtle Progress Bar */}
-            <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-1 w-full bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-full overflow-hidden">
               <div
                 className={`h-full ${card.bgColor} transition-all duration-1000 ease-out`}
                 style={{ width: `${card.percent}%` }}

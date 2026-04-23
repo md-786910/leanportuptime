@@ -48,17 +48,17 @@ function MetricBarRow({ metric, value, themeKey, index, expanded }) {
   const data = [{ name: label, value }];
 
   return (
-    <div className="border-b border-gray-100 dark:border-gray-800 last:border-0 py-3">
+    <div className="border-b border-brand-outline-variant dark:border-brand-outline last:border-0 py-3">
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dotColor(value, good, poor)}`} />
-          <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
+          <span className="text-sm text-brand-on-surface dark:text-brand-outline">{label}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-xs font-medium ${statusTextColor(value, good, poor)}`}>
+          <span className={`text-xs font-medium ${statusTextColor(value, good, poor)} font-label`}>
             {statusLabel(value, good, poor)}
           </span>
-          <span className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+          <span className="text-sm font-semibold font-label tabular-nums text-brand-on-surface dark:text-white">
             {formatValue(value, unit)}
           </span>
         </div>
@@ -78,14 +78,14 @@ function MetricBarRow({ metric, value, themeKey, index, expanded }) {
         </ResponsiveContainer>
       </div>
 
-      <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 px-0.5">
+      <div className="flex justify-between text-[10px] text-brand-outline dark:text-brand-on-surface-variant mt-0.5 px-0.5 font-label">
         <span>0</span>
         <span className="text-emerald-500">Good ≤ {unit === 'ms' ? formatValue(good, unit) : good}</span>
         <span className="text-red-500">Poor &gt; {unit === 'ms' ? formatValue(poor, unit) : poor}</span>
       </div>
 
       {expanded && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 pl-4.5">{desc}</p>
+        <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-2 pl-4.5 font-label">{desc}</p>
       )}
     </div>
   );
@@ -111,20 +111,20 @@ export default function MetricsSection({ scores, themeKey, viewMode }) {
           className="flex items-center gap-2 group"
         >
           <svg
-            className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
+            className={`w-4 h-4 text-brand-outline transition-transform ${expanded ? 'rotate-90' : ''}`}
             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+          <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant group-hover:text-brand-primary dark:group-hover:text-brand-400 transition-colors">
             Core Web Vitals
           </h3>
-          <span className="text-xs text-gray-400 dark:text-gray-500">{coreMetrics.length} metrics</span>
+          <span className="text-xs text-brand-outline dark:text-brand-on-surface-variant font-label">{coreMetrics.length} metrics</span>
         </button>
         {expanded && !viewMode && (
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="text-xs text-brand-600 dark:text-brand-400 hover:underline"
+            className="text-xs text-brand-primary dark:text-brand-400 hover:underline font-label"
           >
             {showDetails ? 'Hide details' : 'Show details'}
           </button>
@@ -132,7 +132,7 @@ export default function MetricsSection({ scores, themeKey, viewMode }) {
       </div>
 
       {expanded && (
-        <div className="rounded-lg border border-gray-100 dark:border-gray-800 px-4">
+        <div className="rounded-lg border border-brand-outline-variant dark:border-brand-outline px-4">
           {coreMetrics.map((m, i) => (
             <MetricBarRow
               key={m.key}
@@ -148,10 +148,10 @@ export default function MetricsSection({ scores, themeKey, viewMode }) {
 
       {expanded && additionalMetrics.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+          <h4 className="text-xs font-semibold text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider mb-2 font-label">
             Additional Vitals
           </h4>
-          <div className="rounded-lg border border-gray-100 dark:border-gray-800 px-4">
+          <div className="rounded-lg border border-brand-outline-variant dark:border-brand-outline px-4">
             {additionalMetrics.map((m, i) => (
               <MetricBarRow
                 key={m.key}

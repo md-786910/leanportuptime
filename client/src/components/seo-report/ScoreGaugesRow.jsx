@@ -31,10 +31,10 @@ function ScoreGauge({ label, score, themeKey, index }) {
           />
         </RadialBarChart>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold" style={{ color }}>{score}</span>
+          <span className="text-2xl font-bold font-label" style={{ color }}>{score}</span>
         </div>
       </div>
-      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 text-center">{label}</span>
+      <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline text-center">{label}</span>
     </div>
   );
 }
@@ -43,7 +43,7 @@ function ScoreLegend({ themeKey }) {
   if (themeKey !== 'default') return null;
 
   return (
-    <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-2">
+    <div className="flex items-center justify-center gap-4 text-xs text-brand-on-surface-variant dark:text-brand-outline mt-2 font-label">
       <div className="flex items-center gap-1.5">
         <span className="inline-block w-0 h-0 border-l-[5px] border-r-[5px] border-b-[8px] border-transparent border-b-red-500" />
         <span>0–49</span>

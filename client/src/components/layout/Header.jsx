@@ -21,13 +21,13 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-3.5">
+    <header className="sticky top-0 z-20 bg-brand-surface-container-lowest/80 dark:bg-brand-on-surface/80 backdrop-blur-md border-b border-brand-outline-variant dark:border-brand-outline px-6 py-3.5">
       <div className="flex items-center justify-between gap-6">
         {/* Left: Hamburger & Search */}
         <div className="flex items-center gap-4 flex-1">
           <button
             onClick={toggleSidebar}
-            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 md:hidden active:scale-95"
+            className="p-2.5 rounded-xl text-brand-on-surface-variant hover:bg-brand-surface-container-lowest dark:hover:bg-brand-on-surface transition-all duration-200 md:hidden active:scale-95"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -37,14 +37,14 @@ export default function Header() {
           <div className="hidden sm:block max-w-md w-full">
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <svg className="h-4.5 w-4.5 text-slate-400 group-focus-within:text-brand-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-4.5 w-4.5 text-brand-outline group-focus-within:text-brand-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
               <input
                 type="text"
                 placeholder="Search analytics..."
-                className="block w-full pl-11 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 border-transparent focus:border-transparent rounded-xl text-[13px] placeholder-slate-500 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:bg-white dark:focus:bg-slate-800 transition-all duration-200"
+                className="block w-full pl-11 pr-4 py-2 bg-brand-surface-container-lowest/50 dark:bg-brand-on-surface/50 border-transparent focus:border-transparent rounded-xl text-[13px] placeholder-slate-500 text-brand-on-surface dark:text-brand-outline-variant focus:outline-none focus:ring-2 ring-1 ring-brand-primary-container/50 focus:ring-brand-primary-container/20 focus:bg-brand-surface-container-lowest dark:focus:bg-brand-on-surface transition-all duration-200"
               />
             </div>
           </div>
@@ -54,7 +54,7 @@ export default function Header() {
         <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+            className="p-2.5 rounded-xl text-brand-on-surface-variant hover:bg-brand-surface-container-lowest dark:hover:bg-brand-on-surface transition-all duration-200"
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
             {theme === 'light' ? (
@@ -69,43 +69,43 @@ export default function Header() {
           </button>
 
           <button
-            className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 relative group"
+            className="p-2.5 rounded-xl text-brand-on-surface-variant hover:bg-brand-surface-container-lowest dark:hover:bg-brand-on-surface transition-all duration-200 relative group"
             title="Notifications"
           >
             <svg className="h-5 w-5 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+            <span className="absolute top-2.5 right-2.5 h-2 w-2 bg-rose-500 rounded-full border-2 border-white dark:border-brand-outline"></span>
           </button>
 
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+          <div className="w-px h-6 bg-brand-surface-container-high dark:bg-brand-on-surface hidden sm:block"></div>
 
           {/* User Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-3 p-1 pr-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200"
+              className="flex items-center gap-3 p-1 pr-3 rounded-xl hover:bg-brand-surface-container-lowest dark:hover:bg-brand-on-surface transition-all duration-200"
             >
               <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-500 to-brand-600 flex items-center justify-center shadow-md ring-2 ring-white dark:ring-slate-900">
-                <span className="text-sm font-bold text-white uppercase">
+                <span className="text-sm font-bold font-label text-white uppercase">
                   {user?.name?.charAt(0) || 'U'}
                 </span>
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-[13px] font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                <p className="text-[13px] font-bold text-brand-on-surface dark:text-white leading-none mb-0.5">
                   {user?.name?.split(' ')[0] || 'User'}
                 </p>
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none">
+                <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-wider leading-none font-label">
                   {user?.role || 'Member'}
                 </p>
               </div>
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/60 mb-1">
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{user?.name}</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{user?.email}</p>
+              <div className="absolute right-0 mt-3 w-64 bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-2xl border border-brand-outline-variant dark:border-brand-outline py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="px-5 py-4 border-b border-brand-outline-variant dark:border-brand-outline/60 mb-1">
+                  <p className="text-sm font-bold text-brand-on-surface dark:text-white">{user?.name}</p>
+                  <p className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-medium truncate mt-0.5 font-label">{user?.email}</p>
                 </div>
                 <div className="px-2 py-1">
                   <button

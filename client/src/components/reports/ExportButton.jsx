@@ -36,12 +36,12 @@ export default function ExportButton({ siteId }) {
         Export PDF
       </Button>
       {isOpen && (
-        <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+        <div className="absolute right-0 mt-1 w-40 bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-lg shadow-lg border border-brand-outline-variant dark:border-brand-outline py-1 z-50">
           {ranges.map((r) => (
             <button
               key={r.value}
               onClick={() => handleExport(r.value)}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="w-full text-left px-4 py-2 text-sm text-brand-on-surface dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface"
             >
               {r.label}
             </button>

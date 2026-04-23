@@ -10,7 +10,7 @@ export default function PasswordInput({ ...props }) {
       <button
         type="button"
         onClick={() => setVisible(!visible)}
-        className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        className="absolute right-3 top-[34px] text-brand-outline hover:text-brand-on-surface-variant dark:hover:text-brand-outline"
         tabIndex={-1}
       >
         {visible ? (

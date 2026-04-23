@@ -32,7 +32,7 @@ function formatNumber(n) {
 export default function OrganicDeviceBreakdown({ devices, themeKey }) {
   if (!devices || devices.length === 0) {
     return (
-      <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+      <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
         No device data available.
       </p>
     );
@@ -47,8 +47,8 @@ export default function OrganicDeviceBreakdown({ devices, themeKey }) {
 
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3 flex items-center gap-2">
+        <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
         Device Breakdown (Organic)
@@ -94,18 +94,18 @@ export default function OrganicDeviceBreakdown({ devices, themeKey }) {
               <div key={d.device} className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
-                  <span className="text-gray-500 dark:text-gray-400">
+                  <span className="text-brand-on-surface-variant dark:text-brand-outline">
                     {DEVICE_ICONS[deviceKey] || null}
                   </span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                  <span className="text-sm text-brand-on-surface dark:text-brand-outline capitalize">
                     {deviceKey}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white tabular-nums">
+                  <span className="text-sm font-semibold font-label text-brand-on-surface dark:text-white tabular-nums">
                     {formatNumber(d.sessions)}
                   </span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums w-12 text-right">
+                  <span className="text-xs text-brand-outline dark:text-brand-on-surface-variant tabular-nums w-12 text-right font-label">
                     {pct}%
                   </span>
                 </div>

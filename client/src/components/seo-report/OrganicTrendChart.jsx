@@ -13,7 +13,7 @@ function formatNumber(n) {
 export default function OrganicTrendChart({ trend, themeKey }) {
   if (!trend || trend.length < 2) {
     return (
-      <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+      <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
         Not enough data for trend chart.
       </p>
     );
@@ -21,7 +21,7 @@ export default function OrganicTrendChart({ trend, themeKey }) {
 
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">
         Organic Traffic Trend
       </h4>
       <div className="h-64">

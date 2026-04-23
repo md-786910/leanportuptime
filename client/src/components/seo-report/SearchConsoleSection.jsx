@@ -54,14 +54,14 @@ function formatNumber(n) {
 
 function KpiCard({ label, value, color, icon }) {
   return (
-    <div className="rounded-xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-1">
+    <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-1">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
           {label}
         </span>
       </div>
-      <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{value}</span>
+      <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums">{value}</span>
     </div>
   );
 }
@@ -91,10 +91,10 @@ function ConnectState({ siteId }) {
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
         </div>
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <h3 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-1">
           Connect Google Search Console
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-sm mx-auto">
+        <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-5 max-w-sm mx-auto">
           Sign in with your Google account to view clicks, impressions, CTR, and average position for your site.
         </p>
         <Button onClick={handleConnect} isLoading={loading} disabled={loading}>
@@ -122,13 +122,13 @@ function PropertySelector({ siteId }) {
     <Card>
       <div className="py-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">
             Select Search Console Property
           </h3>
           <button
             onClick={() => disconnectMutation.mutate()}
             disabled={disconnectMutation.isPending}
-            className="text-xs text-red-500 hover:text-red-600 hover:underline"
+            className="text-xs text-red-500 hover:text-red-600 hover:underline font-label"
           >
             Disconnect Google
           </button>
@@ -139,17 +139,17 @@ function PropertySelector({ siteId }) {
             <Spinner size="sm" />
           </div>
         ) : properties.length === 0 ? (
-          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
+          <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
             No properties found in your Google Search Console. Make sure your site is added to Search Console.
           </p>
         ) : (
           <div className="flex items-end gap-3">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Property</label>
+              <label className="block text-xs text-brand-on-surface-variant dark:text-brand-outline mb-1 font-label">Property</label>
               <select
                 value={selected}
                 onChange={(e) => setSelected(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant focus:ring-2 focus:ring-brand-primary-container focus:border-brand-500"
               >
                 {properties.map((p) => (
                   <option key={p.siteUrl} value={p.siteUrl}>
@@ -231,11 +231,11 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium uppercase">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium font-label uppercase">
               Search Console
             </span>
             {performance?.fetchedAt && (
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">
+              <span className="text-[11px] text-brand-outline dark:text-brand-on-surface-variant font-label">
                 Last update: {timeAgo(performance.fetchedAt)}
               </span>
             )}
@@ -245,7 +245,7 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
               <button
                 onClick={() => unlinkMutation.mutate()}
                 disabled={unlinkMutation.isPending}
-                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                className="text-xs text-brand-outline hover:text-red-500 transition-colors font-label"
                 title="Unlink property"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -262,11 +262,7 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
             <button
               key={p.key}
               onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                period === p.key
-                  ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
-                  : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
             >
               {p.label}
             </button>
@@ -301,7 +297,7 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
       {/* Daily trend chart */}
       {viewMode === 'charts' && daily.length > 1 && (
         <Card>
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">
             Daily Trends
           </h4>
           <div className="h-64">
@@ -425,13 +421,13 @@ function ViewerNotConfigured({ message }) {
   return (
     <Card>
       <div className="text-center py-8">
-        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-brand-surface-container-high dark:bg-brand-on-surface flex items-center justify-center">
+          <svg className="w-6 h-6 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Search Console Not Configured</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">{message}</p>
+        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline mb-1">Search Console Not Configured</h3>
+        <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline max-w-sm mx-auto font-label">{message}</p>
       </div>
     </Card>
   );

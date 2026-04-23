@@ -47,7 +47,7 @@ export default function SiteDetailPage() {
   }
 
   if (!site) {
-    return <p className="text-center py-16 text-gray-500">Site not found</p>;
+    return <p className="text-center py-16 text-brand-on-surface-variant">Site not found</p>;
   }
 
   const handleDelete = async () => {
@@ -78,11 +78,7 @@ export default function SiteDetailPage() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
-                period === p
-                  ? "bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400"
-                  : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
+              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${ period === p ? "bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400" : "text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface" } font-label`}
             >
               {p}
             </button>
@@ -126,23 +122,23 @@ export default function SiteDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">
+                <tr className="border-b border-brand-outline-variant dark:border-brand-outline">
+                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
                     Time
                   </th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">
+                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
                     Status
                   </th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">
+                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
                     HTTP
                   </th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">
+                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
                     Response
                   </th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">
+                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
                     TTFB
                   </th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">
+                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
                     Location
                   </th>
                 </tr>
@@ -151,31 +147,25 @@ export default function SiteDetailPage() {
                 {checks.map((c) => (
                   <tr
                     key={c._id}
-                    className="border-b border-gray-100 dark:border-gray-800"
+                    className="border-b border-brand-outline-variant dark:border-brand-outline"
                   >
-                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300 text-xs">
+                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline text-xs font-label">
                       {new Date(c.timestamp).toLocaleString()}
                     </td>
                     <td className="py-2 px-3">
                       <span
-                        className={`text-xs font-medium ${
-                          c.status === "up"
-                            ? "text-emerald-600"
-                            : c.status === "down"
-                              ? "text-red-600"
-                              : "text-amber-600"
-                        }`}
+                        className={`text-xs font-medium ${ c.status === "up" ? "text-emerald-600" : c.status === "down" ? "text-red-600" : "text-amber-600" } font-label`}
                       >
                         {c.status}
                       </span>
                     </td>
-                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
+                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline">
                       {c.httpStatus || "—"}
                     </td>
-                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
+                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline">
                       {c.responseTime ? `${c.responseTime}ms` : "—"}
                     </td>
-                    <td className="py-2 px-3 text-gray-700 dark:text-gray-300">
+                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline">
                       {c.ttfb ? `${c.ttfb}ms` : "—"}
                     </td>
                     <td className="py-2 px-3">

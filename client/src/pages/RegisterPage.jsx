@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Create your account</h2>
+      <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-6">Create your account</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Name" id="name" value={form.name} onChange={update('name')} error={errors.name} placeholder="John Doe" />
         <Input label="Email" id="email" type="email" value={form.email} onChange={update('email')} error={errors.email} placeholder="you@example.com" />
@@ -49,9 +49,9 @@ export default function RegisterPage() {
           Create account
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      <p className="mt-4 text-center text-sm text-brand-on-surface-variant dark:text-brand-outline">
         Already have an account?{' '}
-        <Link to="/login" className="text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium">
+        <Link to="/login" className="text-brand-primary hover:text-brand-700 dark:text-brand-400 font-medium">
           Sign in
         </Link>
       </p>

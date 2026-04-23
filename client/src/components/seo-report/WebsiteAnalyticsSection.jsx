@@ -30,16 +30,16 @@ function formatDuration(seconds) {
 
 function KpiCard({ label, value, subtitle, color }) {
   return (
-    <div className="rounded-xl border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-1 hover:border-gray-200 dark:hover:border-gray-700 transition-colors">
+    <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-1 hover:border-brand-outline-variant dark:hover:border-brand-outline transition-colors">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
           {label}
         </span>
       </div>
-      <span className="text-xl font-bold text-gray-900 dark:text-white tabular-nums">{value}</span>
+      <span className="text-xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums">{value}</span>
       {subtitle && (
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">{subtitle}</span>
+        <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant leading-tight font-label">{subtitle}</span>
       )}
     </div>
   );
@@ -81,7 +81,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-medium uppercase">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-medium font-label uppercase">
               All Traffic
             </span>
           </div>
@@ -93,11 +93,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
             <button
               key={p.key}
               onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                period === p.key
-                  ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400'
-                  : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
             >
               {p.label}
             </button>
