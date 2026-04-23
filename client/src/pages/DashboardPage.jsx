@@ -35,33 +35,52 @@ export default function DashboardPage() {
   const visibleSites = statusFilter === 'favorites' ? sites.filter((s) => s.isFavorite) : sites;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitor all your WordPress sites</p>
+    <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header Section */}
+      <div className="space-y-1">
+        <h1 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+          Performance Overview
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+          Real-time optimization insights for senupilse.io
+        </p>
       </div>
 
+      {/* KPI Cards */}
       <KPICards sites={sites} />
 
-      <SiteListToolbar
-        onAddSite={isAdmin ? () => setShowAddModal(true) : null}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-      />
+      {/* Main Content Area */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Sites</h2>
+          <SiteListToolbar
+            onAddSite={isAdmin ? () => setShowAddModal(true) : null}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
+        </div>
 
-      <SiteGrid
-        sites={visibleSites}
-        isLoading={isLoading}
-        onAddSite={() => setShowAddModal(true)}
-      />
+        {/* Site Grid */}
+        <div className="min-h-[400px]">
+          <SiteGrid
+            sites={visibleSites}
+            isLoading={isLoading}
+            onAddSite={() => setShowAddModal(true)}
+          />
+        </div>
 
-      <Pagination
-        page={page}
-        total={meta.total || 0}
-        limit={12}
-        onPageChange={setPage}
-      />
+        {/* Pagination */}
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60">
+          <Pagination
+            page={page}
+            total={meta.total || 0}
+            limit={12}
+            onPageChange={setPage}
+          />
+        </div>
+      </div>
 
+      {/* Add Site Modal */}
       <AddSiteModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
     </div>
   );

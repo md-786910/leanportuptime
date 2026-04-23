@@ -6,7 +6,7 @@ import Button from '../common/Button';
 export default function SiteGrid({ sites, isLoading, onAddSite }) {
   if (isLoading) {
     return (
-      <div className="flex justify-center py-16">
+      <div className="flex justify-center py-20">
         <Spinner size="lg" />
       </div>
     );
@@ -21,8 +21,8 @@ export default function SiteGrid({ sites, isLoading, onAddSite }) {
           </svg>
         }
         title="No sites yet"
-        description="Add your first WordPress site to start monitoring."
-        action={<Button onClick={onAddSite}>Add Site</Button>}
+        description="Add your first WordPress site to start monitoring performance and uptime."
+        action={<Button onClick={onAddSite}>Add Your First Site</Button>}
       />
     );
   }
@@ -32,7 +32,7 @@ export default function SiteGrid({ sites, isLoading, onAddSite }) {
   );
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {sorted.map((site) => (
         <SiteCard key={site._id} site={site} />
       ))}
