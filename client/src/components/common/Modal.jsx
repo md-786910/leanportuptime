@@ -31,7 +31,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         onClick={onClose} 
       />
       <div
-        className={`relative bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300`}
+        className={`relative bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[60vh] flex flex-col animate-in fade-in zoom-in-95 duration-300`}
       >
         {title && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800/60">

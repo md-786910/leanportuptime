@@ -123,12 +123,7 @@ export default function AddSiteModal({ isOpen, onClose }) {
 
               {isDropdownOpen && (
                 <div className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200 z-50">
-                  <div className="px-4 pb-2 mb-1 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                      Refresh Interval
-                    </span>
-                  </div>
-                  <div className="max-h-60 overflow-y-auto scrollbar-hide px-2">
+                  <div className="max-h-40 overflow-y-auto scrollbar-hide px-2">
                     {CHECK_INTERVALS.map((opt) => (
                       <button
                         key={opt.value}
