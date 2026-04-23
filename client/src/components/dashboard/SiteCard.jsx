@@ -39,7 +39,7 @@ export default function SiteCard({ site }) {
           <h3 className="text-[15px] font-bold text-brand-on-surface dark:text-white truncate tracking-tight group-hover:text-brand-primary dark:group-hover:text-brand-400 transition-colors">
             {site.name}
           </h3>
-          <p className="text-[11px] font-medium text-brand-outline dark:text-brand-on-surface-variant truncate mt-0.5 font-mono">
+          <p className="text-[11px] font-medium text-brand-outline dark:text-brand-on-surface-variant truncate mt-0.5 ">
             {site.url.replace(/^https?:\/\//, '')}
           </p>
         </div>

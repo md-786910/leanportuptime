@@ -222,7 +222,7 @@ function MiniTable({ rows }) {
           {rows.map((row, i) => (
             <tr key={i} className="border-t border-brand-outline-variant dark:border-brand-outline">
               {keys.map((k) => (
-                <td key={k} className="px-2.5 py-1.5 text-brand-on-surface dark:text-brand-outline font-mono">
+                <td key={k} className="px-2.5 py-1.5 text-brand-on-surface dark:text-brand-outline ">
                   {typeof row[k] === 'number' && String(row[k]).includes('.')
                     ? `${(row[k] * 1).toFixed(2)}%`
                     : row[k]}
@@ -240,7 +240,7 @@ function ValuePill({ label, value }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-surface-container-high dark:bg-brand-on-surface text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">
       <span className="font-medium font-label text-brand-on-surface-variant dark:text-brand-on-surface-variant">{label}:</span>
-      <span className="font-mono text-brand-on-surface dark:text-brand-outline">{value}</span>
+      <span className=" text-brand-on-surface dark:text-brand-outline">{value}</span>
     </span>
   );
 }
@@ -256,7 +256,7 @@ function TagList({ items, variant }) {
   return (
     <div className="flex flex-wrap gap-1">
       {items.map((item, i) => (
-        <span key={i} className={`inline-block px-2 py-0.5 rounded text-xs font-mono ${cls} font-label`}>{item}</span>
+        <span key={i} className={`inline-block px-2 py-0.5 rounded text-xs  ${cls} font-label`}>{item}</span>
       ))}
     </div>
   );
@@ -675,7 +675,7 @@ export default function SeoPanel({ siteId }) {
                   PageSpeed Insights not available.
                 </p>
                 {audit?.pageSpeedError && (
-                  <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-mono max-w-lg mx-auto font-label">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-2  max-w-lg mx-auto font-label">
                     {audit.pageSpeedError}
                   </p>
                 )}

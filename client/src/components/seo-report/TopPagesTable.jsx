@@ -119,7 +119,7 @@ export default function TopPagesTable({ pages, themeKey }) {
                       className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: themeColor(themeKey, i % 4) }}
                     />
-                    <span className="text-brand-on-surface dark:text-brand-outline-variant font-mono text-xs truncate font-label" title={row.page}>
+                    <span className="text-brand-on-surface dark:text-brand-outline-variant  text-xs truncate font-label" title={row.page}>
                       {shortenUrl(row.page)}
                     </span>
                   </div>

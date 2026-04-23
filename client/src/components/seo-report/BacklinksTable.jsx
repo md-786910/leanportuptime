@@ -182,7 +182,7 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
                     </span>
                   </td>
                   <td className="py-2 px-3 max-w-[180px] hidden lg:table-cell">
-                    <span className="font-mono text-[11px] text-brand-on-surface-variant dark:text-brand-outline truncate block font-label" title={r.targetUrl}>
+                    <span className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline truncate block font-label" title={r.targetUrl}>
                       {pathOf(r.targetUrl)}
                     </span>
                   </td>

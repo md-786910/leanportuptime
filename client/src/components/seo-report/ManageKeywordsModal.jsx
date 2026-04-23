@@ -157,7 +157,7 @@ export default function ManageKeywordsModal({
                 : 'hosting deutschland\nvps server germany\nwebhosting berlin, cloud provider berlin'
             }
             rows={6}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-brand-primary-container focus:border-brand-500 focus:outline-none font-mono resize-y disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-brand-primary-container focus:border-brand-500 focus:outline-none  resize-y disabled:opacity-60 disabled:cursor-not-allowed"
           />
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label">
             <span>One per line, or separate with comma / tab / semicolon.</span>

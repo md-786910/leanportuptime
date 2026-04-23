@@ -109,7 +109,7 @@ export default function GA4EventsPanel({ events, themeKey }) {
                     <td className="py-2 px-3 text-brand-outline dark:text-brand-on-surface-variant tabular-nums">{i + 1}</td>
                     <td className="py-2 px-3 max-w-[260px]">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-brand-on-surface dark:text-brand-outline-variant truncate font-label" title={e.eventName}>
+                        <span className=" text-xs text-brand-on-surface dark:text-brand-outline-variant truncate font-label" title={e.eventName}>
                           {e.eventName}
                         </span>
                         {badge && (

@@ -72,7 +72,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
               Fetch Google PageSpeed Insights to see performance scores, core web vitals, and optimization recommendations.
             </p>
             {audit?.pageSpeedError && (
-              <p className="text-xs text-red-500 dark:text-red-400 mb-4 font-mono max-w-lg mx-auto font-label">
+              <p className="text-xs text-red-500 dark:text-red-400 mb-4  max-w-lg mx-auto font-label">
                 {audit.pageSpeedError}
               </p>
             )}

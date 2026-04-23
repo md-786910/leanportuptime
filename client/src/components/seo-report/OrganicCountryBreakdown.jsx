@@ -33,7 +33,7 @@ export default function OrganicCountryBreakdown({ countries, themeKey }) {
 
           return (
             <div key={c.country} className="flex items-center gap-3">
-              <span className="text-xs font-mono text-brand-on-surface-variant dark:text-brand-outline w-24 flex-shrink-0 truncate font-label">
+              <span className="text-xs  text-brand-on-surface-variant dark:text-brand-outline w-24 flex-shrink-0 truncate font-label">
                 {c.country}
               </span>
               <div className="flex-1 h-5 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">

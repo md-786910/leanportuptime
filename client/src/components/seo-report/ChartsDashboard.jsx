@@ -328,7 +328,7 @@ function GSCSection({ siteId, themeKey }) {
                 {topPages.map((p, i) => (
                   <div key={i}>
                     <div className="flex justify-between text-[11px] mb-0.5 font-label">
-                      <span className="text-brand-on-surface dark:text-brand-outline truncate max-w-[220px] font-mono">{p.page.replace(/^https?:\/\/[^/]+/, '')}</span>
+                      <span className="text-brand-on-surface dark:text-brand-outline truncate max-w-[220px] ">{p.page.replace(/^https?:\/\/[^/]+/, '')}</span>
                       <span className="text-brand-on-surface-variant tabular-nums">{fmt(p.impressions)}</span>
                     </div>
                     <div className="h-1.5 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-full overflow-hidden">
