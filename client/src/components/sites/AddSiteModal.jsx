@@ -57,16 +57,16 @@ export default function AddSiteModal({ isOpen, onClose }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Register New Node" size="md">
-      <div className="mb-4 p-4 bg-brand-50 dark:bg-brand-400/5 rounded-xl border border-brand-100/50 dark:border-brand-500/10">
+      <div className="mb-4 p-4 bg-green-100/50 dark:bg-brand-400/5 rounded-xl border border-brand-100/50 dark:border-brand-500/10">
         <div className="flex items-start gap-4">
-          <div className="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-600/20">
+          <div className="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-brand-600/20">
             <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
           <div>
-            <h4 className="text-[15px] font-black text-slate-900 dark:text-white tracking-tight">Setup Monitoring</h4>
-            <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+            <h4 className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight">Setup Monitoring</h4>
+            <p className="text-[12px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
               Register a new service endpoint for global real-time optimization and critical failure detection.
             </p>
           </div>
