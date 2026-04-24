@@ -17,7 +17,7 @@ function Header() {
   return (
     <div className="flex items-baseline justify-between mb-3">
       <h4 className="text-xs font-semibold text-brand-on-surface dark:text-brand-outline uppercase tracking-wider font-label">
-        Top 3 Keywords
+        Top 5 Keywords
       </h4>
       <span className="text-[10px] text-brand-outline font-label">Best SERP positions</span>
     </div>
@@ -27,7 +27,7 @@ function Header() {
 export default function TopKeywordsPanel({ siteId }) {
   const { status, isLoading } = useKeywordsStatus(siteId);
   const items = status?.items || [];
-  const sorted = sortByPosition(items).slice(0, 3);
+  const sorted = sortByPosition(items).slice(0, 5);
   const topHasRanked = sorted.some((it) => it.position != null);
 
   if (isLoading) {

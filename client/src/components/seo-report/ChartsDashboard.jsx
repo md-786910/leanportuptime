@@ -9,6 +9,7 @@ import { useGscStatus, useGscPerformance, useGscInsights } from '../../hooks/use
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnalyticsInsights } from '../../hooks/useAnalytics';
 import TopQueriesTable from './TopQueriesTable';
 import TopPagesTable from './TopPagesTable';
+import TopPagesVisitedTable from './TopPagesVisitedTable';
 import BacklinksSection from './BacklinksSection';
 import TopKeywordsPanel from './TopKeywordsPanel';
 import ReportSection from './ReportSection';
@@ -229,20 +230,49 @@ function CoreVitalsSection({ scores }) {
   );
 }
 
-// ======================== Section 3: Domain Authority ========================
+// ======================== Off-Page: Domain Authority ========================
 function DomainAuthoritySection({ siteId, themeKey }) {
   return (
     <ReportSection
       title="Domain Authority"
-      description="Off-page signals — backlinks, referring domains, and domain rank across the web."
+      description="Trust score, total backlinks, referring domains, and link gains or losses in the selected window."
       accent="amber"
       icon={LinkIcon}
     >
       <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4">
-        <BacklinksSection siteId={siteId} themeKey={themeKey} showTitle={false} />
-        <div className="mt-6 pt-6 border-t border-brand-outline-variant dark:border-brand-outline">
-          <TopKeywordsPanel siteId={siteId} />
-        </div>
+        <BacklinksSection siteId={siteId} themeKey={themeKey} showTitle={false} variant="domain-authority" />
+      </div>
+    </ReportSection>
+  );
+}
+
+// ======================== Off-Page: Backlinks list ========================
+function BacklinksListSection({ siteId, themeKey }) {
+  return (
+    <ReportSection
+      title="Backlinks"
+      description="The list of external sources currently pointing at your site."
+      accent="amber"
+      icon={LinkIcon}
+    >
+      <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4">
+        <BacklinksSection siteId={siteId} themeKey={themeKey} showTitle={false} variant="backlinks" />
+      </div>
+    </ReportSection>
+  );
+}
+
+// ======================== Off-Page: Keyword Rankings ========================
+function KeywordRankingsChartsSection({ siteId }) {
+  return (
+    <ReportSection
+      title="Keyword Rankings"
+      description="Positions, movement, and visibility for the keywords you're actively tracking."
+      accent="amber"
+      icon={LinkIcon}
+    >
+      <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4">
+        <TopKeywordsPanel siteId={siteId} />
       </div>
     </ReportSection>
   );
@@ -380,6 +410,7 @@ function GASection({ siteId, themeKey }) {
   const overview = data?.overview || {};
   const events = data?.details?.events || {};
   const channels = data?.details?.channels || [];
+  const topPages = (data?.details?.topPages || []).slice(0, 5);
 
   const fileDownloads = sumEventsByName(events.allEvents, (n) => n === 'file_download');
   const websiteRequests = sumEventsByName(events.allEvents, (n) => FORM_EVENT_NAMES.has(n));
@@ -419,6 +450,12 @@ function GASection({ siteId, themeKey }) {
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </PanelCard>
+      )}
+
+      {topPages.length > 0 && (
+        <PanelCard title="Top 5 Pages Visited">
+          <TopPagesVisitedTable pages={topPages} themeKey={themeKey} />
         </PanelCard>
       )}
     </ReportSection>
@@ -649,17 +686,37 @@ function ScoreTrendSection({ history, historyLoading, strategy }) {
 }
 
 // ======================== Main Export ========================
+// eslint-disable-next-line no-unused-vars
 export default function ChartsDashboard({ siteId, themeKey, scores, strategy, history, historyLoading }) {
   return (
     <div className="space-y-10">
+      {/* Website — GA4: unique visitors, bounce rate, avg time, file downloads,
+          form submissions, sessions by channel, top 5 pages visited. */}
+      <GASection siteId={siteId} themeKey={themeKey} />
+
+      {/* Website — GA4 organic-search acquisition and breakdown. */}
+      <OrganicSection siteId={siteId} themeKey={themeKey} />
+
+      {/* SEO (off-page) — DA score, backlinks count, new/lost links. */}
+      <DomainAuthoritySection siteId={siteId} themeKey={themeKey} />
+
+      {/* SEO — Top 3 keywords with SERP position. */}
+      <KeywordRankingsChartsSection siteId={siteId} />
+
+      {/* SEO (off-page) — detailed list of external sources pointing to the site. */}
+      <BacklinksListSection siteId={siteId} themeKey={themeKey} />
+
+      {/* ──────────────────────────────────────────────────────────────────────
+          The sections below are intentionally disabled per current client scope.
+          Uncomment any of them to re-enable without code changes.
+          ────────────────────────────────────────────────────────────────────── */}
+      {/*
       <SiteHealthSection scores={scores} />
       <CoreVitalsSection scores={scores} />
-      <DomainAuthoritySection siteId={siteId} themeKey={themeKey} />
-      <GSCSection siteId={siteId} themeKey={themeKey} />
-      <GASection siteId={siteId} themeKey={themeKey} />
-      <TablesSection siteId={siteId} themeKey={themeKey} />
-      <OrganicSection siteId={siteId} themeKey={themeKey} />
       <ScoreTrendSection history={history} historyLoading={historyLoading} strategy={strategy} />
+      <GSCSection siteId={siteId} themeKey={themeKey} />
+      <TablesSection siteId={siteId} themeKey={themeKey} />
+      */}
     </div>
   );
 }
