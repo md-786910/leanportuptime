@@ -28,26 +28,34 @@ function BacklinksLimitCard() {
   const unchanged = settings && String(settings.backlinksMonthlyLimit) === value;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h3 className="text-lg font-bold text-brand-on-surface dark:text-white font-headline tracking-tight uppercase">System Configuration</h3>
-        <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline font-label leading-relaxed">
-          Manage global application thresholds and resource allocation for the monitoring engine.
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-lg font-black text-brand-on-surface dark:text-white font-headline tracking-tight uppercase italic">Engine Core</h3>
+        <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label max-w-xl">
+          Global application orchestration parameters defining the operational boundaries.
         </p>
       </div>
       
-      <Card className="border-brand-outline-variant/20 shadow-xl shadow-brand-on-surface/5 bg-brand-surface-container-low/40">
-        <div className="p-2 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-            <div className="space-y-2 flex-1">
-              <label className="text-[10px] font-black text-brand-outline uppercase tracking-[0.2em] font-label ml-0.5">
-                Monthly Backlinks Refresh Limit
-              </label>
-              <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label leading-relaxed max-w-sm">
-                Limits the number of times sites can trigger manual backlink analysis per calendar month.
+      <Card className="border-brand-outline-variant/30 shadow-lg shadow-brand-on-surface/5 bg-white/50 backdrop-blur-sm overflow-hidden p-4 md:p-6">
+        <div className="space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <label className="text-[10px] font-black text-brand-on-surface uppercase tracking-[0.2em] font-label">
+                  Backlinks Threshold
+                </label>
+              </div>
+              <p className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label leading-relaxed max-w-sm">
+                Maximum permissible manual backlink audit triggers per site.
               </p>
             </div>
-            <div className="flex gap-3 w-full sm:w-auto">
+            
+            <div className="flex items-center gap-2 bg-brand-surface-container-low p-1 rounded-xl border border-brand-outline-variant/20">
               <Input
                 type="number"
                 min={1}
@@ -55,25 +63,30 @@ function BacklinksLimitCard() {
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 disabled={isLoading}
-                className="!py-2 font-bold text-center w-24"
+                className="!py-1 font-black text-center w-20 bg-transparent border-none focus:ring-0 text-base"
               />
               <Button
                 onClick={handleSave}
                 isLoading={update.isPending}
                 disabled={unchanged || update.isPending || isLoading || !value}
                 size="sm"
-                className="font-black px-8"
+                className="font-black px-6 py-2 rounded-lg shadow shadow-brand-primary/25"
               >
-                Save
+                Sync
               </Button>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-brand-primary/5 border border-brand-primary/10 text-brand-primary">
-            <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-xs font-bold font-label uppercase tracking-wider leading-none">Usage quotas automatically reset on the 1st of each month</p>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-inverse-surface text-white">
+            <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+              <svg className="h-4 w-4 text-brand-primary-fixed" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <p className="text-[9px] font-black uppercase tracking-[0.15em] opacity-50 mb-0.5">System Lifecycle</p>
+              <p className="text-[11px] font-bold font-label leading-tight opacity-90">Operational quotas reset on the 1st of every month at 00:00 UTC.</p>
+            </div>
           </div>
         </div>
       </Card>
@@ -92,7 +105,7 @@ export default function SettingsPage() {
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
     : user?.email?.substring(0, 2).toUpperCase() || '??';
 
-  const menuItems = [
+  const sections = [
     { id: 'profile', label: 'Identity', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /> },
     { id: 'subscription', label: 'Provisioning', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /> },
     { id: 'security', label: 'Security', icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /> },
@@ -100,186 +113,187 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-8xl mx-auto">
-      <div className="flex flex-col lg:flex-row gap-12">
-        {/* Navigation Sidebar */}
-        <aside className="w-full lg:w-64 flex-shrink-0 space-y-8">
-          <div>
-            <h1 className="text-3xl font-black text-brand-on-surface dark:text-white font-headline">Settings</h1>
-            <p className="text-brand-on-surface-variant dark:text-brand-outline font-label text-xs font-bold mt-1 opacity-60">Workspace Control</p>
+    <div className="max-w-8xl mx-auto px-4 py-4 space-y-8">
+      {/* Page Header - More compact */}
+      <div className="text-center space-y-1">
+        <h1 className="text-3xl font-black text-brand-on-surface dark:text-white font-headline tracking-tighter uppercase italic">Control Center</h1>
+        <p className="text-[10px] font-black text-brand-outline uppercase tracking-[0.4em] opacity-40">System & Identity</p>
+      </div>
+
+      {/* Tabs Navigation - Thinner pill */}
+      <div className="flex flex-wrap justify-center gap-1.5 p-1.5 bg-brand-surface-container-low rounded-2xl border border-brand-outline-variant/20 sticky top-4 z-20 backdrop-blur-md">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => setActiveSection(section.id)}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-[11px] font-black font-label transition-all duration-300 uppercase tracking-widest ${
+              activeSection === section.id
+                ? 'bg-brand-primary text-white shadow shadow-brand-primary/40'
+                : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high hover:text-brand-on-surface'
+            }`}
+          >
+            <svg className={`h-3.5 w-3.4 transition-transform duration-500 ${activeSection === section.id ? 'rotate-12 scale-110' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {section.icon}
+            </svg>
+            {section.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content Area */}
+      <main className="min-h-[400px]">
+        
+        {/* Identity Section */}
+        {activeSection === 'profile' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="relative group">
+              <Card className="relative p-6 md:p-8 border-brand-outline-variant/30 shadow-lg shadow-brand-on-surface/5 flex flex-col md:flex-row items-center gap-8 overflow-hidden bg-white/40 backdrop-blur-sm">
+                <div className="relative flex-shrink-0">
+                  <div className="h-28 w-28 rounded-2xl bg-brand-inverse-surface flex items-center justify-center text-white text-4xl font-black shadow-xl">
+                    {initials}
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-xl bg-brand-primary flex items-center justify-center text-white shadow-lg border-2 border-white">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="flex-1 space-y-6 text-center md:text-left">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                      <h2 className="text-2xl font-black text-brand-on-surface dark:text-white font-headline tracking-tight uppercase italic">{user?.name || 'Workspace Member'}</h2>
+                      <Badge variant={user?.role === 'admin' ? 'success' : 'neutral'} className="px-3 py-1 text-[8px] font-black tracking-[0.2em] bg-brand-primary text-white border-none">
+                        {user?.role || 'Operator'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm font-medium text-brand-on-surface-variant dark:text-brand-outline font-label opacity-60 tracking-tight">{user?.email}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 border-y border-brand-outline-variant/10">
+                    <div className="space-y-0.5">
+                      <p className="text-[9px] font-black text-brand-outline uppercase tracking-[0.2em] font-label">Legal Handle</p>
+                      <p className="text-base font-bold text-brand-on-surface dark:text-brand-outline-variant font-headline">{user?.name || '—'}</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[9px] font-black text-brand-outline uppercase tracking-[0.2em] font-label">Electronic Auth</p>
+                      <p className="text-base font-bold text-brand-on-surface dark:text-brand-outline-variant font-headline truncate">{user?.email || '—'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
+                    <Button size="sm" className="font-black px-8 py-2 rounded-xl shadow-md">Edit Identity</Button>
+                    <Button variant="outline" size="sm" className="font-black px-8 py-2 rounded-xl border-2">Export Data</Button>
+                  </div>
+                </div>
+              </Card>
+            </div>
           </div>
-          
-          <nav className="space-y-1">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-black font-label transition-all duration-300 ${
-                  activeSection === item.id
-                    ? 'bg-brand-primary text-white shadow-md'
-                    : 'text-brand-on-surface-variant hover:bg-brand-surface-container-low hover:text-brand-on-surface'
-                }`}
-              >
-                <svg className={`h-5 w-5 transition-transform duration-500 ${activeSection === item.id ? 'rotate-12' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {item.icon}
-                </svg>
-                <span className="tracking-wider">{item.label}</span>
-              </button>
-            ))}
-          </nav>
+        )}
 
-          <Card className="p-6 bg-brand-primary/5 border-brand-primary/10 hidden lg:block">
-            <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-2 leading-tight">Need Assistance?</p>
-            <p className="text-[11px] text-brand-on-surface-variant font-medium leading-relaxed mb-4 italic">Access our documentation or connect with support.</p>
-            <Button variant="outline" size="sm" className="w-full font-black text-[10px] border-2 uppercase">Help Center</Button>
-          </Card>
-        </aside>
+        {/* Provisioning Section */}
+        {activeSection === 'subscription' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div className="space-y-0.5 text-center md:text-left">
+                <h3 className="text-2xl font-black text-brand-on-surface dark:text-white font-headline tracking-tight uppercase italic">Active Tier</h3>
+                <p className="text-xs font-medium text-brand-on-surface-variant dark:text-brand-outline font-label max-w-lg">Entitlement and processing limits for the monitoring network.</p>
+              </div>
+              <div className="px-8 py-4 rounded-2xl bg-brand-inverse-surface text-white text-center shadow-lg transform hover:scale-105 transition-transform duration-500">
+                <p className="text-[8px] font-black uppercase tracking-[0.4em] opacity-40 mb-0.5">Provisioned</p>
+                <p className="text-2xl font-black font-headline uppercase italic tracking-tighter">{user?.plan || 'Free'}</p>
+              </div>
+            </div>
 
-        {/* Content Area */}
-        <main className="flex-1 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          
-          {/* Identity Section */}
-          {activeSection === 'profile' && (
-            <section className="space-y-8">
-              <div className="flex items-center gap-6 p-4 rounded-[2.5rem] bg-gradient-to-br from-brand-surface-container-low to-white dark:from-brand-inverse-surface border border-brand-outline-variant/10 shadow-2xl shadow-brand-on-surface/5">
-                <div className="h-20 w-20 rounded-2xl bg-brand-primary flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-brand-primary/30 relative group overflow-hidden">
-                  <div className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 skew-x-12" />
-                  {initials}
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-black text-brand-on-surface dark:text-white font-headline">{user?.name || 'User Profile'}</h2>
-                    <Badge variant={user?.role === 'admin' ? 'success' : 'neutral'} className="px-4 py-1 text-[9px] font-black tracking-[0.2em]">
-                      {user?.role || 'User'}
-                    </Badge>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { label: 'Network Nodes', val: plan.maxSites === Infinity ? '∞' : plan.maxSites, desc: 'Concurrent sites' },
+                { label: 'Sync Latency', val: plan.checkInterval / 1000 + 's', desc: 'Refresh frequency' },
+                { label: 'Persistence', val: plan.retention === Infinity ? '∞' : plan.retention + 'd', desc: 'History retention' }
+              ].map((item, i) => (
+                <Card key={i} className="group flex flex-col items-center justify-center text-center p-6 border-brand-outline-variant/20 hover:border-brand-primary/40 transition-all duration-700 shadow-md hover:shadow-lg bg-white/50 backdrop-blur-sm">
+                  <span className="text-4xl font-black text-brand-on-surface dark:text-white font-headline tracking-tighter mb-2 italic transition-transform duration-700 group-hover:scale-110">
+                    {item.val}
+                  </span>
+                  <p className="text-[10px] font-black text-brand-outline uppercase tracking-[0.2em] mb-1 font-label">
+                    {item.label}
+                  </p>
+                  <p className="text-[8px] font-bold text-brand-on-surface-variant dark:text-brand-outline opacity-40 font-label uppercase tracking-widest leading-tight">
+                    {item.desc}
+                  </p>
+                </Card>
+              ))}
+            </div>
+
+            <Card className="p-1 rounded-3xl bg-gradient-to-r from-brand-primary to-brand-primary-container shadow-xl overflow-hidden group">
+              <div className="bg-brand-inverse-surface rounded-[1.4rem] p-6 md:p-10 relative overflow-hidden">
+                <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+                  <div className="space-y-2 text-center lg:text-left">
+                    <h4 className="text-xl md:text-2xl font-black text-white font-headline uppercase italic tracking-tight leading-none">Scale Infrastructure</h4>
+                    <p className="text-white/60 text-xs font-medium font-label max-w-md">Industrial-grade nodes, sub-60s latency, and extended persistence.</p>
                   </div>
-                  <p className="text-sm font-medium text-brand-on-surface-variant dark:text-brand-outline font-label tracking-wide opacity-80">{user?.email}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-1.5 group">
-                  <p className="text-[10px] font-black text-brand-outline tracking-[0.2em] font-label ml-4">Full Legal Name</p>
-                  <div className="p-4 rounded-2xl bg-brand-surface-container-lowest border border-brand-outline-variant/20 group-hover:border-brand-primary/40 transition-colors shadow-sm">
-                    <p className="text-lg font-bold text-brand-on-surface dark:text-brand-outline-variant font-headline tracking-tight">{user?.name || '—'}</p>
-                  </div>
-                </div>
-                <div className="space-y-1.5 group">
-                  <p className="text-[10px] font-black text-brand-outline tracking-[0.2em] font-label ml-4">Electronic Identity</p>
-                  <div className="p-4 rounded-2xl bg-brand-surface-container-lowest border border-brand-outline-variant/20 group-hover:border-brand-primary/40 transition-colors shadow-sm">
-                    <p className="text-lg font-bold text-brand-on-surface dark:text-brand-outline-variant font-headline tracking-tight truncate">{user?.email || '—'}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="pt-2">
-                <Button className="font-black px-10 rounded-2xl shadow-xl shadow-brand-primary/20">Edit Workspace Identity</Button>
-              </div>
-            </section>
-          )}
-
-          {/* Provisioning Section */}
-          {activeSection === 'subscription' && (
-            <section className="space-y-10">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-brand-on-surface dark:text-white font-headline">Active Provisioning</h3>
-                  <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline font-label">Your current resource allocation and tier limits.</p>
-                </div>
-                <Badge variant="brand" className="px-4 py-3 text-sm font-black tracking-[0.3em] bg-brand-inverse-surface text-white border-none shadow-xl">
-                  {user?.plan || 'Free'}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { label: 'Max Sites', val: plan.maxSites === Infinity ? '∞' : plan.maxSites, desc: 'Concurrent monitoring nodes' },
-                  { label: 'Latency', val: plan.checkInterval / 1000 + 's', desc: 'Refresh frequency threshold' },
-                  { label: 'Retention', val: plan.retention === Infinity ? '∞' : plan.retention + 'd', desc: 'Historical data persistence' }
-                ].map((item, i) => (
-                  <Card key={i} className="flex flex-col items-center justify-center text-center p-4 border-brand-outline-variant/20 hover:border-brand-primary/40 transition-all duration-500 group shadow-lg shadow-brand-on-surface/5">
-                    <span className="text-3xl font-black text-brand-on-surface dark:text-white font-headline tracking-tighter mb-4 italic group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
-                      {item.val}
-                    </span>
-                    <p className="text-[11px] font-black text-brand-outline uppercase tracking-widest mb-2 font-label">
-                      {item.label}
-                    </p>
-                    <p className="text-[10px] font-medium text-brand-on-surface-variant dark:text-brand-outline opacity-60 font-label leading-tight max-w-[120px]">
-                      {item.desc}
-                    </p>
-                  </Card>
-                ))}
-              </div>
-
-              <Card className="p-6 bg-brand-inverse-surface border-none shadow-2xl shadow-brand-on-surface/10 overflow-hidden group">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-                  <div className="space-y-2 text-center md:text-left">
-                    <h4 className="text-2xl font-black text-black font-headline">Expand Your Infrastructure</h4>
-                    <p className="text-black/60 text-sm font-medium font-label max-w-md">Upgrade to a higher tier for increased monitoring nodes, lower latency, and extended retention.</p>
-                  </div>
-                  <Button className="bg-brand-primary hover:bg-brand-primarytext-white font-black px-10 py-4 rounded-2xl shadow-xl transition-all w-full md:w-auto">
-                    View Enterprise Tiers
+                  <Button className="bg-white text-brand-inverse-surface hover:bg-brand-primary hover:text-white font-black px-10 py-3 rounded-xl shadow-lg transition-all w-full lg:w-auto text-sm hover:scale-105">
+                    Upgrade Infrastructure
                   </Button>
                 </div>
-                <div className="absolute top-0 right-0 h-full w-1/3 bg-white/5 skew-x-12 transform translate-x-1/2 group-hover:translate-x-1/3 transition-transform duration-700" />
-              </Card>
-            </section>
-          )}
-
-          {/* Security Section */}
-          {activeSection === 'security' && (
-            <section className="space-y-8">
-              <div className="space-y-1">
-                <h3 className="text-2xl font-black text-brand-on-surface dark:text-white font-headline">Credential Security</h3>
-                <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline font-label">Maintain the integrity of your workspace access.</p>
+                <div className="absolute top-0 right-0 h-full w-1/3 bg-white/5 skew-x-12 transform translate-x-1/2" />
               </div>
+            </Card>
+          </div>
+        )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <button className="flex items-center justify-between p-4 rounded-xl bg-white border border-brand-primary/40 hover:shadow-brand-on-surface/5 transition-all group text-left shadow-sm">
-                    <div className="flex items-center gap-6">
-                      <div className="h-12 w-12 rounded-3xl bg-brand-surface-container-high flex items-center justify-center text-brand-outline group-hover:bg-brand-primary/10 group-hover:text-brand-primary transition-all duration-500">
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                        </svg>
-                      </div>
-                      <div className="space-y-1">
-                        <h5 className="text-lg font-black text-brand-on-surface dark:text-brand-outline-variant font-headline">Access Credentials</h5>
-                        <p className="text-xs font-medium text-brand-on-surface-variant font-label tracking-widest opacity-60">Update Password</p>
-                      </div>
-                    </div>
-                    <div className="h-10 w-10 rounded-full border border-brand-outline-variant/20 flex items-center justify-center text-brand-outline group-hover:text-brand-primary group-hover:border-brand-primary/40 transition-all">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+        {/* Security Section */}
+        {activeSection === 'security' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="flex flex-col gap-1 text-center md:text-left">
+              <h3 className="text-2xl font-black text-brand-on-surface dark:text-white font-headline tracking-tight uppercase italic">Security Protocol</h3>
+              <p className="text-xs font-medium text-brand-on-surface-variant dark:text-brand-outline font-label max-w-xl">Authentication layers and rotational credentials.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <button className="relative group overflow-hidden p-6 rounded-2xl bg-white border border-brand-outline-variant/30 hover:border-brand-primary/40 transition-all text-left shadow-lg">
+                  <div className="relative z-10 flex flex-col gap-6">
+                    <div className="h-12 w-12 rounded-xl bg-brand-surface-container-high flex items-center justify-center text-brand-outline group-hover:bg-brand-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                       </svg>
                     </div>
-                 </button>
-
-                 <div className="p-4 rounded-xl bg-brand-surface-container-low/50 border border-dashed border-brand-outline-variant/40 flex items-center justify-between group grayscale opacity-60 pointer-events-none">
-                    <div className="flex items-center gap-6">
-                      <div className="h-16 w-16 rounded-3xl bg-brand-surface-container-high flex items-center justify-center text-brand-outline">
-                        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                      </div>
-                      <div className="space-y-1">
-                        <h5 className="text-lg font-black text-brand-on-surface dark:text-brand-outline-variant font-headline uppercase tracking-tight italic">Multi-Factor</h5>
-                        <Badge variant="neutral" className="px-3 py-1 text-[8px] font-black uppercase tracking-widest">Available Soon</Badge>
-                      </div>
+                    <div className="space-y-0.5">
+                      <h5 className="text-xl font-black text-brand-on-surface dark:text-brand-outline-variant font-headline uppercase italic tracking-tight leading-tight">Update Password</h5>
+                      <p className="text-[9px] font-black text-brand-outline uppercase tracking-[0.2em] opacity-60">Authentication Rotation</p>
                     </div>
-                 </div>
-              </div>
-            </section>
-          )}
+                    <div className="flex items-center gap-2 text-brand-primary font-black text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      Configure Now
+                      <svg className="h-3 w-3 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
+                  </div>
+               </button>
 
-          {/* Engine Section */}
-          {activeSection === 'system' && isAdmin && (
-            <section className="animate-in fade-in slide-in-from-right-4 duration-500">
-              {!isViewer && <BacklinksLimitCard />}
-            </section>
-          )}
+               <div className="relative p-6 rounded-2xl bg-brand-surface-container-low/50 border border-dashed border-brand-outline-variant/50 flex flex-col gap-6 grayscale opacity-50 cursor-not-allowed group overflow-hidden">
+                  <div className="h-12 w-12 rounded-xl bg-brand-surface-container-high flex items-center justify-center text-brand-outline shadow-inner">
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="space-y-1">
+                    <h5 className="text-xl font-black text-brand-on-surface dark:text-brand-outline-variant font-headline uppercase italic tracking-tight leading-tight">Two-Factor Auth</h5>
+                    <Badge variant="neutral" className="px-3 py-0.5 text-[7px] font-black uppercase tracking-[0.2em] bg-brand-outline text-white border-none">Production Pipeline</Badge>
+                  </div>
+               </div>
+            </div>
+          </div>
+        )}
 
-        </main>
-      </div>
+        {/* Engine Section */}
+        {activeSection === 'system' && isAdmin && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {!isViewer && <BacklinksLimitCard />}
+          </div>
+        )}
+
+      </main>
     </div>
   );
 }
