@@ -67,7 +67,6 @@ function FollowBadge({ doFollow }) {
 export default function BacklinksTable({ items = [], listFetchedAt, listFetchError }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [expanded, setExpanded] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -79,7 +78,7 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
 
   if (items.length === 0 && !listFetchError) {
     return (
-      <div className="mt-5 p-4 rounded-lg border border-dashed border-brand-outline-variant dark:border-brand-outline text-center">
+      <div className="p-4 rounded-lg border border-dashed border-brand-outline-variant dark:border-brand-outline text-center">
         <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">No individual backlinks recorded yet.</p>
         <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant mt-1 font-label">Click Refresh to fetch the link list.</p>
       </div>
@@ -87,49 +86,16 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
   }
 
   return (
-    <div className="mt-5">
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-brand-outline-variant dark:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/40 transition-colors group"
-        aria-expanded={expanded}
-      >
+    <div>
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <svg
-            className={`w-4 h-4 text-brand-outline transition-transform ${expanded ? 'rotate-90' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
           <h4 className="text-xs font-semibold text-brand-on-surface dark:text-brand-outline uppercase tracking-wider font-label">Backlinks</h4>
           <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline tabular-nums px-1.5 py-0.5 rounded bg-brand-surface-container-high dark:bg-brand-on-surface">
             {items.length}
           </span>
         </div>
-        <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant group-hover:text-brand-on-surface-variant dark:group-hover:text-brand-outline font-label">
-          {expanded ? 'Hide' : 'Show'} list
-        </span>
-      </button>
+      </div>
 
-      {!expanded && listFetchError && (
-        <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-          <p className="text-[11px] text-amber-700 dark:text-amber-400 font-label">
-            Backlink list couldn&apos;t be refreshed — showing last known data.
-          </p>
-        </div>
-      )}
-
-      {!expanded && listFetchedAt && (
-        <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant mt-2 text-center font-label">
-          Links last updated {timeAgo(listFetchedAt)}
-        </p>
-      )}
-
-      {!expanded ? null : (
-      <div className="mt-3">
       {listFetchError && (
         <div className="mb-3 p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
           <p className="text-[11px] text-amber-700 dark:text-amber-400 font-label">
@@ -252,8 +218,6 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
         <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant mt-2 text-center font-label">
           Links last updated {timeAgo(listFetchedAt)} · up to 100 links tracked per refresh
         </p>
-      )}
-      </div>
       )}
     </div>
   );

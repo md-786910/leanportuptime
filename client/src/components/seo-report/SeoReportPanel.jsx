@@ -39,7 +39,6 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
   const viewMode = useSeoReportStore((s) => s.viewMode);
 
   const [activeStrategy, setActiveStrategy] = useState('mobile');
-  const [keywordsExpanded, setKeywordsExpanded] = useState(false);
 
   if (isLoading) {
     return (
@@ -97,15 +96,27 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
           <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
         </ReportSection>
 
-        {/* Off-page authority — Domain Authority + Backlinks */}
+        {/* Off-page authority — Domain Authority */}
         <ReportSection
-          title="Off-Page SEO"
-          description="Domain authority, backlinks, and referring domains — signals of your site's trust and reputation across the web."
+          title="Domain Authority"
+          description="A single trust score summarising your site's overall link authority — higher means stronger off-page reputation."
           accent="amber"
           icon={LinkIcon}
         >
           <Card>
-            <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} />
+            <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="domain-authority" />
+          </Card>
+        </ReportSection>
+
+        {/* Backlinks — volume, growth, and raw list */}
+        <ReportSection
+          title="Backlinks"
+          description="Total inbound links, unique referring domains, and links gained or lost in the selected window."
+          accent="amber"
+          icon={LinkIcon}
+        >
+          <Card>
+            <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="backlinks" />
           </Card>
         </ReportSection>
 
@@ -168,6 +179,63 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
         <ChartsDashboard siteId={siteId} themeKey={colorTheme} scores={scores} strategy={activeStrategy} history={history} historyLoading={historyLoading} />
       ) : (
         <>
+          {/* All-site traffic — GA4 all sources */}
+          <ReportSection
+            title="Website Traffic"
+            description="All-traffic analytics from GA4 — sessions, users, events, and channels across every source."
+            accent="emerald"
+            icon={AnalyticsIcon}
+          >
+            <WebsiteAnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          </ReportSection>
+
+          {/* Organic search performance — GSC + GA4 Organic */}
+          <ReportSection
+            title="Search Performance"
+            description="Organic search visibility — impressions, clicks, and queries from Google, combined with engagement and conversions from organic sessions."
+            accent="blue"
+            icon={SearchIcon}
+          >
+            <SearchConsoleSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+            <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          </ReportSection>
+
+          {/* Off-page authority — Domain Authority */}
+          <ReportSection
+            title="Domain Authority"
+            description="Trust score, total backlinks, referring domains, and link gains or losses in the selected window."
+            accent="amber"
+            icon={LinkIcon}
+          >
+            <Card>
+              <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="domain-authority" />
+            </Card>
+          </ReportSection>
+
+          {/* Backlinks — volume, growth, and raw list */}
+          <ReportSection
+            title="Backlinks"
+            description="The list of external sources currently pointing at your site."
+            accent="amber"
+            icon={LinkIcon}
+          >
+            <Card>
+              <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="backlinks" />
+            </Card>
+          </ReportSection>
+
+          {/* Keyword rankings — tracked queries */}
+          <ReportSection
+            title="Keyword Rankings"
+            description="Positions, movement, and visibility for the keywords you're actively tracking."
+            accent="amber"
+            icon={LinkIcon}
+          >
+            <Card>
+              <KeywordRankingsSection siteId={siteId} themeKey={colorTheme} />
+            </Card>
+          </ReportSection>
+
           {/* Site Performance — Lighthouse */}
           <ReportSection
             title="Site Performance"
@@ -196,63 +264,6 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
                 />
               )}
             </Card>
-          </ReportSection>
-
-          {/* Organic search performance — GSC + GA4 Organic */}
-          <ReportSection
-            title="Search Performance"
-            description="Organic search visibility — impressions, clicks, and queries from Google, combined with engagement and conversions from organic sessions."
-            accent="blue"
-            icon={SearchIcon}
-          >
-            <SearchConsoleSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
-            <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
-          </ReportSection>
-
-          {/* Off-page authority — Domain Authority + Backlinks + tracked keyword rankings */}
-          <ReportSection
-            title="Off-Page SEO"
-            description="Domain authority, backlinks, and tracked keyword rankings — signals of your site's trust and visibility across the web."
-            accent="amber"
-            icon={LinkIcon}
-          >
-            <Card>
-              <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} />
-              <div className="mt-6 pt-6 border-t border-brand-outline-variant dark:border-brand-outline">
-                <button
-                  type="button"
-                  onClick={() => setKeywordsExpanded((v) => !v)}
-                  className={`w-full flex items-center justify-between text-left ${keywordsExpanded ? 'mb-3 pb-2 border-b border-brand-outline-variant dark:border-brand-outline' : ''}`}
-                  aria-expanded={keywordsExpanded}
-                >
-                  <h3 className="text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-wider font-label">
-                    Keyword Rankings
-                  </h3>
-                  <svg
-                    className={`w-4 h-4 text-brand-outline transition-transform ${keywordsExpanded ? 'rotate-180' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {keywordsExpanded && (
-                  <KeywordRankingsSection siteId={siteId} themeKey={colorTheme} />
-                )}
-              </div>
-            </Card>
-          </ReportSection>
-
-          {/* All-site traffic — GA4 all sources */}
-          <ReportSection
-            title="Website Traffic"
-            description="All-traffic analytics from GA4 — sessions, users, events, and channels across every source."
-            accent="emerald"
-            icon={AnalyticsIcon}
-          >
-            <WebsiteAnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
           </ReportSection>
         </>
       )}
