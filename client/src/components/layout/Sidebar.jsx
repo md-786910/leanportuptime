@@ -137,16 +137,16 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Upgrade Card / Footer */}
-        <div className="p-4 mt-auto">
-          <div className="relative overflow-hidden px-5 py-5 rounded-xl bg-brand-inverse-surface shadow-lg border border-brand-outline">
+        {/* Premium Support Card / Footer */}
+        <div className="p-4 mt-auto border-t border-brand-outline-variant dark:border-brand-outline/20">
+          <div className="relative overflow-hidden px-4 py-4 rounded-lg bg-gradient-to-br from-brand-primary/10 to-brand-primary/5 dark:from-brand-primary/20 dark:to-brand-primary/10 border border-brand-primary/20 shadow-sm">
             {/* Background Decoration */}
-            <div className="absolute -right-4 -top-4 h-16 w-16 bg-brand-primary/20 rounded-full blur-2xl" />
+            <div className="absolute -right-3 -top-3 h-12 w-12 bg-brand-primary/10 dark:bg-brand-primary/20 rounded-full blur-xl" />
             
-            <div className="relative">
-              <p className="text-xs font-bold font-label text-brand-inverse-on-surface mb-1.5">Need assistance?</p>
-              <p className="text-[11px] font-label text-brand-outline-variant leading-relaxed mb-4">Our dedicated support team is available 24/7 for Enterprise partners.</p>
-              <button className="w-full py-2 bg-brand-primary hover:opacity-90 text-brand-on-primary text-[11px] font-bold font-label rounded-lg shadow-lg shadow-brand-primary/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+            <div className="relative z-10 space-y-2">
+              <p className="text-xs font-bold font-label text-brand-on-surface dark:text-white">Need assistance?</p>
+              <p className="text-[11px] font-label text-brand-outline dark:text-brand-on-surface-variant leading-relaxed">Our dedicated support team is available 24/7.</p>
+              <button className="w-full py-2 mt-3 bg-brand-primary hover:opacity-90 text-white text-xs font-bold font-label rounded-lg shadow-md shadow-brand-primary/20 transition-all duration-200 hover:scale-105 active:scale-95">
                 Contact Support
               </button>
             </div>

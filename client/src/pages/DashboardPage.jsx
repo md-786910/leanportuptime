@@ -34,25 +34,58 @@ export default function DashboardPage() {
   const { sites, meta, isLoading } = useSites(params);
   const visibleSites = statusFilter === 'favorites' ? sites.filter((s) => s.isFavorite) : sites;
 
+  const total = sites.length;
+  const up = sites.filter((s) => s.currentStatus === 'up').length;
+  const down = sites.filter((s) => s.currentStatus === 'down').length;
+  const critical = down > 0;
+
   return (
-    <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header Section */}
-      <div className="space-y-1">
-        <h1 className="text-4xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
-          Performance Overview
-        </h1>
-        <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline font-medium">
-          Real-time optimization insights for senupilse.io
-        </p>
+    <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Premium Header Section */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
+              Monitoring Dashboard
+            </h1>
+            <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant font-medium mt-2">
+              Real-time infrastructure health & performance insights
+            </p>
+          </div>
+          {critical && (
+            <div className="px-4 py-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              <span className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wide">Critical Alert</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* KPI Cards */}
-      <KPICards sites={sites} />
+      {/* KPI Cards Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-brand-on-surface dark:text-white uppercase tracking-wide">Key Performance Indicators</h2>
+          <div className="text-xs font-medium text-brand-outline dark:text-brand-on-surface-variant">
+            Last updated just now
+          </div>
+        </div>
+        <KPICards sites={sites} />
+      </div>
 
-      {/* Main Content Area */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-brand-outline-variant dark:border-brand-outline pb-6">
-          <h2 className="text-xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">Sites</h2>
+      {/* Main Sites Section */}
+      <div className="space-y-5">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
+              Monitored Sites
+            </h2>
+            <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant font-medium mt-1">
+              {visibleSites.length} of {total} site{total !== 1 ? 's' : ''} displayed
+            </p>
+          </div>
+
+          {/* Toolbar */}
           <SiteListToolbar
             onAddSite={isAdmin ? () => setShowAddModal(true) : null}
             statusFilter={statusFilter}
@@ -70,14 +103,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Pagination */}
-        <div className="pt-6 border-t border-brand-outline-variant dark:border-brand-outline/60">
-          <Pagination
-            page={page}
-            total={meta.total || 0}
-            limit={12}
-            onPageChange={setPage}
-          />
-        </div>
+        {meta.total > 12 && (
+          <div className="pt-8 border-t border-brand-outline-variant dark:border-brand-outline/30">
+            <Pagination
+              page={page}
+              total={meta.total || 0}
+              limit={12}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
       </div>
 
       {/* Add Site Modal */}

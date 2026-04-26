@@ -24,78 +24,113 @@ export default function SiteCard({ site }) {
     }
   };
 
+  const statusColors = {
+    up: { bg: 'bg-emerald-50 dark:bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-300' },
+    down: { bg: 'bg-rose-50 dark:bg-rose-500/10', text: 'text-rose-700 dark:text-rose-300' },
+    degraded: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-700 dark:text-amber-300' },
+    pending: { bg: 'bg-slate-50 dark:bg-slate-500/10', text: 'text-slate-700 dark:text-slate-300' },
+  };
+
+  const statusColor = statusColors[site.currentStatus] || statusColors.pending;
+
   return (
     <Card
-      padding="md"
-      className="group cursor-pointer hover:border-brand-500/50 hover:shadow-soft transition-all duration-300 flex flex-col relative overflow-hidden active:scale-[0.98]"
+      padding="lg"
+      className="group cursor-pointer hover:shadow-lg transition-all duration-300 flex flex-col relative overflow-hidden active:scale-[0.98] border-opacity-60 hover:border-opacity-100"
       onClick={() => navigate(`/sites/${site._id}`)}
     >
-      {/* Subtle Background Glow */}
-      <div className="absolute -right-10 -top-10 w-24 h-24 bg-brand-primary/5 rounded-full blur-2xl group-hover:bg-brand-primary/10 transition-colors duration-500" />
-
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5 gap-4 relative z-10">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[15px] font-bold text-brand-on-surface dark:text-white truncate tracking-tight group-hover:text-brand-primary dark:group-hover:text-brand-400 transition-colors">
-            {site.name}
-          </h3>
-          <p className="text-[11px] font-medium text-brand-outline dark:text-brand-on-surface-variant truncate mt-0.5 ">
-            {site.url.replace(/^https?:\/\//, '')}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={toggleFavorite}
-          aria-label={site.isFavorite ? 'Unmark favorite' : 'Mark as favorite'}
-          className={`p-2 rounded-xl transition-all duration-200 ${ site.isFavorite ? 'bg-amber-50 dark:bg-amber-400/10 text-amber-500 shadow-sm' : 'text-brand-outline dark:text-brand-on-surface-variant hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface' }`}
-        >
-          <svg
-            className={`w-4.5 h-4.5 ${site.isFavorite ? 'fill-current' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
+      {/* Premium Background Gradient */}
+      <div className={`absolute -right-16 -top-16 w-40 h-40 rounded-full blur-3xl opacity-5 group-hover:opacity-15 transition-opacity duration-500 ${statusColor.bg}`} />
+      
+      <div className="relative z-10">
+        {/* Header with Site Name and Favorite */}
+        <div className="flex items-start justify-between gap-3 mb-5">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-brand-on-surface dark:text-white truncate tracking-tight group-hover:text-brand-primary dark:group-hover:text-brand-300 transition-colors duration-200">
+              {site.name}
+            </h3>
+            <p className="text-xs font-medium text-brand-outline dark:text-brand-on-surface-variant truncate mt-1.5">
+              {site.url.replace(/^https?:\/\//, '')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={toggleFavorite}
+            aria-label={site.isFavorite ? 'Remove favorite' : 'Add to favorites'}
+            className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 ${
+              site.isFavorite
+                ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-500 shadow-sm'
+                : 'text-brand-outline-variant dark:text-brand-on-surface-variant hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/50'
+            }`}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.08 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.518-4.674z" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Status and Tags */}
-      <div className="flex-1 flex flex-col justify-between relative z-10">
-        <div className="flex items-center gap-2 mb-4">
-          <StatusBadge status={site.currentStatus} />
-          {site.paused && <Badge variant="warning">Monitoring Paused</Badge>}
+            <svg
+              className={`w-5 h-5 ${site.isFavorite ? 'fill-current' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.08 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.518-4.674z" />
+            </svg>
+          </button>
         </div>
 
+        {/* Status Section */}
+        <div className="mb-5">
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${statusColor.bg} mb-3`}>
+            <div className={`w-2 h-2 rounded-full ${site.currentStatus === 'up' ? 'bg-emerald-500 animate-pulse' : site.currentStatus === 'down' ? 'bg-rose-500 animate-pulse' : 'bg-amber-500 animate-pulse'}`} />
+            <StatusBadge status={site.currentStatus} />
+          </div>
+          {site.paused && (
+            <div className="mt-2">
+              <Badge variant="warning" className="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs">
+                Monitoring Paused
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Tags Section */}
         {site.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {site.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag} variant="neutral" className="bg-brand-surface-container-lowest/50 dark:bg-brand-on-surface/50">
-                {tag}
-              </Badge>
-            ))}
-            {site.tags.length > 2 && (
-              <Badge variant="neutral" className="bg-brand-surface-container-lowest/50 dark:bg-brand-on-surface/50">
-                +{site.tags.length - 2} more
-              </Badge>
-            )}
+          <div className="mb-5 pb-5 border-b border-brand-outline-variant dark:border-brand-outline/40">
+            <div className="flex flex-wrap gap-2">
+              {site.tags.slice(0, 2).map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="neutral"
+                  className="bg-brand-surface-container-low dark:bg-brand-on-surface/30 text-xs font-medium text-brand-on-surface dark:text-brand-outline-variant"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              {site.tags.length > 2 && (
+                <Badge
+                  variant="neutral"
+                  className="bg-brand-surface-container-low dark:bg-brand-on-surface/30 text-xs font-medium text-brand-on-surface-variant dark:text-brand-on-surface-variant"
+                >
+                  +{site.tags.length - 2}
+                </Badge>
+              )}
+            </div>
           </div>
         )}
+
+        {/* Footer Section with Last Check Time */}
+        <div className="flex items-center justify-between mt-auto pt-2">
+          <div className="flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${site.currentStatus === 'up' ? 'bg-emerald-500' : 'bg-rose-500'} ${site.currentStatus === 'up' ? 'animate-pulse' : ''}`} />
+            <p className="text-xs font-semibold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-wide">
+              {site.lastCheckedAt ? formatRelative(site.lastCheckedAt) : 'Awaiting first check'}
+            </p>
+          </div>
+          <svg className="w-4 h-4 text-brand-outline dark:text-brand-on-surface-variant group-hover:text-brand-primary group-hover:translate-x-1 transition-all duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="pt-4 border-t border-brand-outline-variant dark:border-brand-outline/60 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-1.5">
-          <div className={`w-1.5 h-1.5 rounded-full ${site.currentStatus === 'up' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
-          <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest font-label">
-            {site.lastCheckedAt ? formatRelative(site.lastCheckedAt) : 'Awaiting check'}
-          </p>
-        </div>
-        <svg className="w-4 h-4 text-brand-outline dark:text-brand-on-surface-variant group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
+      {/* Decorative element for depth */}
+      <div className={`absolute -left-8 -bottom-8 w-32 h-32 rounded-full blur-2xl opacity-3 group-hover:opacity-5 transition-opacity duration-500 ${statusColor.bg}`} />
     </Card>
   );
 }
