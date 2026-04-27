@@ -89,48 +89,48 @@ export default function KPICards({ sites }) {
       {cards.map((card) => (
         <Card
           key={card.label}
-          className={`group relative overflow-hidden transition-all duration-300 border ${card.accent} hover:border-opacity-100 ${card.lightBg}`}
+          className={`group relative overflow-hidden transition-all duration-300 border ${card.accent} hover:border-opacity-100 ${card.lightBg} hover:shadow-lg`}
           padding="lg"
         >
           {/* Animated background gradient */}
           <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full blur-3xl opacity-5 group-hover:opacity-10 transition-opacity duration-500" style={{ background: `linear-gradient(135deg, ${card.bgColor} 0%, transparent 100%)` }} />
           
-          <div className="flex flex-col gap-5 relative z-10">
-            {/* Header with Icon */}
+          <div className="flex flex-col gap-6 relative z-10">
+            {/* Header with Icon and Trend */}
             <div className="flex items-start justify-between">
-              <div className={`h-10 w-10 rounded-lg ${card.iconBg} flex items-center justify-center ${card.color} shadow-sm`}>
+              <div className={`h-12 w-12 rounded-lg ${card.iconBg} flex items-center justify-center ${card.color} shadow-sm`}>
                 {card.icon}
               </div>
-              <div className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-label flex items-center gap-1 ${card.trend === 'down' ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'}`}>
-                <svg className={`h-3 w-3 ${card.trend === 'down' ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className={`px-3 py-1.5 rounded-lg text-[11px] font-bold font-label flex items-center gap-1.5 ${card.trend === 'down' ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300' : card.trend === 'stable' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'}`}>
+                <svg className={`h-3.5 w-3.5 ${card.trend === 'down' ? '' : card.trend === 'stable' ? 'rotate-90' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5-5m5 5H6" />
                 </svg>
                 {card.change}
               </div>
             </div>
 
-            {/* Value and Label */}
-            <div className='flex justify-between items-center'>
+            {/* Main Value Section - Enhanced for Prominence */}
+            <div className="space-y-2">
               <div className="space-y-1">
-                <p className="text-[12px] font-bold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-wide">
+                <p className="text-xs md:text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-widest">
                   {card.label}
                 </p>
-                <p className="text-[11px] font-medium text-brand-outline dark:text-brand-on-surface-variant font-label">
+                <p className="text-xs font-medium text-brand-outline dark:text-brand-on-surface-variant font-label">
                   {card.sublabel}
                 </p>
               </div>
-              <h3 className="text-3xl md:text-4xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline mb-2">
+              <h3 className="text-5xl md:text-6xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline leading-tight">
                 {card.value}
               </h3>
             </div>
 
             {/* Enhanced Progress Indicator */}
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest">Capacity</span>
-                <span className="text-[10px] font-bold text-brand-on-surface dark:text-brand-outline-variant">{card.percent.toFixed(0)}%</span>
+                <span className="text-xs font-bold text-brand-on-surface dark:text-brand-outline-variant">{card.percent.toFixed(0)}%</span>
               </div>
-              <div className="h-1.5 w-full bg-brand-surface-container-low dark:bg-brand-surface-container-highest rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-brand-surface-container-low dark:bg-brand-surface-container-highest rounded-full overflow-hidden">
                 <div
                   className={`h-full ${card.bgColor} rounded-full transition-all duration-1000 ease-out shadow-sm`}
                   style={{ width: `${card.percent}%` }}
