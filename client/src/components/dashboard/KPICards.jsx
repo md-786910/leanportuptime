@@ -11,11 +11,11 @@ export default function KPICards({ sites }) {
 
   const cards = [
     {
-      label: 'Total Infrastructure',
+      label: 'Fleet Overview',
       value: total,
-      sublabel: 'Monitored Endpoints',
-      change: '+12%',
-      trend: 'up',
+      sublabel: 'Monitored Assets',
+      change: 'Active',
+      trend: 'stable',
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -23,17 +23,17 @@ export default function KPICards({ sites }) {
       ),
       color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-500',
-      accent: 'border-blue-500/30',
+      accent: 'border-blue-500/20 dark:border-blue-500/30',
       iconBg: 'bg-blue-50 dark:bg-blue-500/10',
-      lightBg: 'bg-blue-50/50 dark:bg-blue-500/5',
+      lightBg: 'bg-blue-50/30 dark:bg-blue-500/5',
       percent: 100,
     },
     {
-      label: 'System Uptime',
+      label: 'Availability',
       value: `${uptime}%`,
-      sublabel: 'Overall Availability',
-      change: '+2.3%',
-      trend: 'up',
+      sublabel: 'Aggregate Uptime',
+      change: uptime >= 99 ? 'Healthy' : 'Suboptimal',
+      trend: uptime >= 99 ? 'up' : 'down',
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -41,16 +41,16 @@ export default function KPICards({ sites }) {
       ),
       color: 'text-emerald-600 dark:text-emerald-400',
       bgColor: 'bg-emerald-500',
-      accent: 'border-emerald-500/30',
+      accent: 'border-emerald-500/20 dark:border-emerald-500/30',
       iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
-      lightBg: 'bg-emerald-50/50 dark:bg-emerald-500/5',
+      lightBg: 'bg-emerald-50/30 dark:bg-emerald-500/5',
       percent: getPercentage(up),
     },
     {
-      label: 'Critical Issues',
+      label: 'Critical Failures',
       value: down,
-      sublabel: 'Requiring Attention',
-      change: down > 0 ? '+1' : 'Resolved',
+      sublabel: 'Immediate Action',
+      change: down > 0 ? `${down} Down` : 'Zero',
       trend: down > 0 ? 'down' : 'stable',
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -59,17 +59,17 @@ export default function KPICards({ sites }) {
       ),
       color: 'text-rose-600 dark:text-rose-400',
       bgColor: 'bg-rose-500',
-      accent: 'border-rose-500/30',
+      accent: 'border-rose-500/20 dark:border-rose-500/30',
       iconBg: 'bg-rose-50 dark:bg-rose-500/10',
-      lightBg: 'bg-rose-50/50 dark:bg-rose-500/5',
+      lightBg: 'bg-rose-50/30 dark:bg-rose-500/5',
       percent: getPercentage(down),
     },
     {
-      label: 'Performance',
+      label: 'System Load',
       value: degraded,
-      sublabel: 'Degraded Status',
-      change: '-0.5%',
-      trend: 'up',
+      sublabel: 'Latency/Degraded',
+      change: degraded > 0 ? 'Warning' : 'Nominal',
+      trend: degraded > 0 ? 'down' : 'stable',
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -77,70 +77,69 @@ export default function KPICards({ sites }) {
       ),
       color: 'text-amber-600 dark:text-amber-400',
       bgColor: 'bg-amber-500',
-      accent: 'border-amber-500/30',
+      accent: 'border-amber-500/20 dark:border-amber-500/30',
       iconBg: 'bg-amber-50 dark:bg-amber-500/10',
-      lightBg: 'bg-amber-50/50 dark:bg-amber-500/5',
+      lightBg: 'bg-amber-50/30 dark:bg-amber-500/5',
       percent: getPercentage(degraded),
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card) => (
         <Card
           key={card.label}
-          className={`group relative overflow-hidden transition-all duration-300 border ${card.accent} hover:border-opacity-100 ${card.lightBg} hover:shadow-lg`}
+          className={`group relative overflow-hidden transition-all duration-300 border-2 ${card.accent} hover:shadow-xl dark:shadow-none hover:-translate-y-1 ${card.lightBg}`}
           padding="lg"
         >
-          {/* Animated background gradient */}
-          <div className="absolute -right-12 -top-12 w-32 h-32 rounded-full blur-3xl opacity-5 group-hover:opacity-10 transition-opacity duration-500" style={{ background: `linear-gradient(135deg, ${card.bgColor} 0%, transparent 100%)` }} />
+          {/* Subtle animated light effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
           <div className="flex flex-col gap-6 relative z-10">
-            {/* Header with Icon and Trend */}
+            {/* Header with Icon and Trend Badge */}
             <div className="flex items-start justify-between">
-              <div className={`h-12 w-12 rounded-lg ${card.iconBg} flex items-center justify-center ${card.color} shadow-sm`}>
+              <div className={`h-12 w-12 rounded-2xl ${card.iconBg} flex items-center justify-center ${card.color} shadow-sm border border-white/20 dark:border-white/5`}>
                 {card.icon}
               </div>
-              <div className={`px-3 py-1.5 rounded-lg text-[11px] font-bold font-label flex items-center gap-1.5 ${card.trend === 'down' ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300' : card.trend === 'stable' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'}`}>
-                <svg className={`h-3.5 w-3.5 ${card.trend === 'down' ? '' : card.trend === 'stable' ? 'rotate-90' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5-5m5 5H6" />
-                </svg>
+              <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
+                card.trend === 'down' 
+                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' 
+                  : card.trend === 'stable' 
+                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' 
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+              }`}>
                 {card.change}
               </div>
             </div>
 
-            {/* Main Value Section - Enhanced for Prominence */}
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <p className="text-xs md:text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-widest">
-                  {card.label}
-                </p>
-                <p className="text-xs font-medium text-brand-outline dark:text-brand-on-surface-variant font-label">
-                  {card.sublabel}
-                </p>
+            {/* Value Section */}
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.25em]">
+                {card.label}
+              </p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-4xl font-bold text-brand-on-surface dark:text-white tracking-tighter font-headline">
+                  {card.value}
+                </h3>
               </div>
-              <h3 className="text-5xl md:text-6xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline leading-tight">
-                {card.value}
-              </h3>
+              <p className="text-[11px] font-bold text-brand-outline/70 dark:text-brand-on-surface-variant/70 italic">
+                {card.sublabel}
+              </p>
             </div>
 
-            {/* Enhanced Progress Indicator */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest">Capacity</span>
-                <span className="text-xs font-bold text-brand-on-surface dark:text-brand-outline-variant">{card.percent.toFixed(0)}%</span>
-              </div>
-              <div className="h-2 w-full bg-brand-surface-container-low dark:bg-brand-surface-container-highest rounded-full overflow-hidden">
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="h-1.5 w-full bg-brand-surface-container-high dark:bg-white/5 rounded-full overflow-hidden border border-brand-outline-variant/10">
                 <div
-                  className={`h-full ${card.bgColor} rounded-full transition-all duration-1000 ease-out shadow-sm`}
+                  className={`h-full ${card.bgColor} rounded-full transition-all duration-1000 ease-out`}
                   style={{ width: `${card.percent}%` }}
                 />
               </div>
             </div>
           </div>
           
-          {/* Decorative corner element */}
-          <div className={`absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-2xl opacity-5 ${card.bgColor} group-hover:opacity-10 transition-opacity duration-500`} />
+          {/* Decorative background shape */}
+          <div className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-3xl opacity-10 ${card.bgColor} group-hover:scale-150 transition-transform duration-700`} />
         </Card>
       ))}
     </div>

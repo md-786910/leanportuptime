@@ -7,6 +7,7 @@ import SiteListToolbar from '../components/dashboard/SiteListToolbar';
 import SitesTable from '../components/dashboard/SitesTable';
 import Pagination from '../components/common/Pagination';
 import AddSiteModal from '../components/sites/AddSiteModal';
+import KPICards from '../components/dashboard/KPICards';
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
@@ -35,64 +36,76 @@ export default function DashboardPage() {
   const visibleSites = statusFilter === 'favorites' ? sites.filter((s) => s.isFavorite) : sites;
 
   const total = sites.length;
-  const up = sites.filter((s) => s.currentStatus === 'up').length;
   const down = sites.filter((s) => s.currentStatus === 'down').length;
   const critical = down > 0;
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Top Section: Header with Critical Alert */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
+      <div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+          <div className="space-y-2">
             <h1 className="text-4xl md:text-5xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
-              Monitoring Dashboard
+              Command Center
             </h1>
-            <p className="text-sm md:text-base text-brand-outline dark:text-brand-on-surface-variant font-medium mt-2">
+            <p className="text-sm md:text-base text-brand-outline dark:text-brand-on-surface-variant font-medium">
               Real-time infrastructure health & performance insights
             </p>
           </div>
-          {critical && (
-            <div className="px-4 py-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 flex items-center gap-2 whitespace-nowrap">
-              <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-              <span className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wide">Critical Alert</span>
+          
+          <div className="flex items-center gap-3">
+            {critical && (
+              <div className="px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 flex items-center gap-3 shadow-sm">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping absolute inset-0" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500 relative" />
+                </div>
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider">Critical Infrastructure Alert</span>
+              </div>
+            )}
+            <div className="px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-3 shadow-sm">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Systems Live</span>
             </div>
-          )}
+          </div>
         </div>
+
+        {/* KPI Cards Section */}
+        <KPICards sites={sites} />
       </div>
 
       {/* Section 1: Analytics & Performance Graphs */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
-              Analytics & Performance
+      <div className="space-y-6">
+        <div className="flex items-center justify-between border-b border-brand-outline-variant dark:border-brand-outline/20 pb-4">
+          <div className="space-y-1">
+            <h2 className="text-xl md:text-2xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline flex items-center gap-3">
+              Analytics Intelligence
+              <span className="text-[10px] bg-brand-primary/10 text-brand-primary px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Beta</span>
             </h2>
-            <p className="text-xs md:text-sm text-brand-outline dark:text-brand-on-surface-variant font-medium mt-1">
-              Real-time traffic, events, and engagement metrics
+            <p className="text-xs md:text-sm text-brand-outline dark:text-brand-on-surface-variant font-medium">
+              Aggregated traffic, events, and engagement metrics across your fleet
             </p>
           </div>
-          <div className="text-xs font-medium text-brand-outline dark:text-brand-on-surface-variant px-3 py-1.5 bg-brand-surface-container-low dark:bg-brand-surface-container rounded-lg">
-            Live
+          <div className="flex items-center gap-2 text-xs font-bold text-brand-outline dark:text-brand-on-surface-variant px-4 py-2 bg-brand-surface-container-low dark:bg-brand-surface-container rounded-xl border border-brand-outline-variant dark:border-brand-outline/20">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            LIVE FEED
           </div>
         </div>
         <DashboardAnalytics sites={sites} isLoading={isLoading} />
       </div>
 
       {/* Section 2: Sites Management Section */}
-      <div className="space-y-5 border-t border-brand-outline-variant dark:border-brand-outline/20 pt-10">
-        {/* Section Header with Toolbar */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
-              Monitored Sites
+      <div className="space-y-6 pt-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-brand-outline-variant dark:border-brand-outline/20 pb-6">
+          <div className="space-y-1">
+            <h2 className="text-xl md:text-2xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
+              Asset Inventory
             </h2>
-            <p className="text-xs md:text-sm text-brand-outline dark:text-brand-on-surface-variant font-medium mt-1">
-              <span className="font-semibold text-brand-on-surface dark:text-white">{visibleSites.length}</span> of {total} site{total !== 1 ? 's' : ''} displayed
+            <p className="text-xs md:text-sm text-brand-outline dark:text-brand-on-surface-variant font-medium">
+              Managing <span className="font-bold text-brand-on-surface dark:text-white">{visibleSites.length}</span> active endpoints
             </p>
           </div>
 
-          {/* Toolbar */}
           <SiteListToolbar
             onAddSite={isAdmin ? () => setShowAddModal(true) : null}
             statusFilter={statusFilter}
@@ -100,7 +113,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Site Table Container */}
         <div className="min-h-[400px]">
           <SitesTable
             sites={visibleSites}
@@ -109,9 +121,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Pagination */}
         {meta.total > 12 && (
-          <div className="pt-8 border-t border-brand-outline-variant dark:border-brand-outline/20">
+          <div className="pt-8 flex justify-center">
             <Pagination
               page={page}
               total={meta.total || 0}
@@ -122,7 +133,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Add Site Modal */}
       <AddSiteModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
     </div>
   );
