@@ -92,6 +92,10 @@ const siteSchema = new mongoose.Schema(
       propertyId: { type: String, default: null },
       propertyName: { type: String, default: null },
       connectedAt: { type: Date, default: null },
+      filters: {
+        excludedCountries: { type: [String], default: [] },
+        excludedTopPages: { type: [String], default: [] },
+      },
     },
     backlinks: {
       domainRank: { type: Number, default: 0 },

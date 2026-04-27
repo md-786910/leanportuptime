@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSeoAudit, usePageSpeedFetch, useSeoHistory } from '../../hooks/useSeo';
 import { useSeoReportStore } from '../../store/seoReportStore';
+import SectionDateFilter from '../common/SectionDateFilter';
 import Card from '../common/Card';
 import Spinner from '../common/Spinner';
 import Button from '../common/Button';
@@ -20,6 +21,14 @@ import BacklinksSection from './BacklinksSection';
 import KeywordRankingsSection from './KeywordRankingsSection';
 import { GaugeIcon, SearchIcon, AnalyticsIcon, LinkIcon } from './chartIcons';
 
+const GLOBAL_PERIODS = [
+  { key: '7d', label: '7 days' },
+  { key: '28d', label: '28 days' },
+  { key: 'thisMonth', label: 'This Month' },
+  { key: '2m', label: '2 months' },
+  { key: 'custom', label: 'Custom' },
+];
+
 function formatDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString('en-US', {
@@ -37,6 +46,12 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
   const pageSpeedMutation = usePageSpeedFetch(siteId);
   const colorTheme = useSeoReportStore((s) => s.colorTheme);
   const viewMode = useSeoReportStore((s) => s.viewMode);
+  const period = useSeoReportStore((s) => s.period);
+  const customFrom = useSeoReportStore((s) => s.customFrom);
+  const customTo = useSeoReportStore((s) => s.customTo);
+  const setPeriod = useSeoReportStore((s) => s.setPeriod);
+  const setCustomFrom = useSeoReportStore((s) => s.setCustomFrom);
+  const setCustomTo = useSeoReportStore((s) => s.setCustomTo);
 
   const [activeStrategy, setActiveStrategy] = useState('mobile');
 
@@ -82,6 +97,19 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
             >
               {pageSpeedMutation.isPending ? 'Fetching PageSpeed Data...' : 'Fetch PageSpeed Data'}
             </Button>
+          </div>
+        </Card>
+
+        {/* Global date filter */}
+        <Card>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span className="text-xs font-medium text-brand-on-surface-variant dark:text-brand-outline font-label">Date Range</span>
+            <SectionDateFilter
+              periods={GLOBAL_PERIODS}
+              period={period} setPeriod={setPeriod}
+              customFrom={customFrom} setCustomFrom={setCustomFrom}
+              customTo={customTo} setCustomTo={setCustomTo}
+            />
           </div>
         </Card>
 
@@ -135,44 +163,36 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <Card>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant">SEO Report</h1>
-            {audit?.scannedAt && (
-              <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-0.5 font-label">
-                Last scan: {formatDate(audit.scannedAt)}
-              </p>
-            )}
+      {/* Sticky band: header + view-mode controls */}
+      <div className="sticky top-0 z-20 -mx-6 md:-mx-10 px-6 md:px-10 -mt-6 md:-mt-10 pt-6 md:pt-10 pb-3 bg-[#f8f9f9] dark:bg-brand-on-surface space-y-3">
+        <Card className="shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant">SEO Report</h1>
+              {audit?.scannedAt && (
+                <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-0.5 font-label">
+                  Last scan: {formatDate(audit.scannedAt)}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
+              <ColorPalettePicker />
+              <div className="w-px h-5 bg-brand-outline-variant dark:bg-brand-outline hidden sm:block" />
+              <SectionDateFilter
+                periods={GLOBAL_PERIODS}
+                period={period} setPeriod={setPeriod}
+                customFrom={customFrom} setCustomFrom={setCustomFrom}
+                customTo={customTo} setCustomTo={setCustomTo}
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <ColorPalettePicker />
-            <div className="w-px h-6 bg-brand-surface-container-high dark:bg-brand-on-surface hidden sm:block" />
-            <StrategyToggle
-              strategy={activeStrategy}
-              onChange={setActiveStrategy}
-              hasMobile={!!audit.pageSpeed.mobile}
-              hasDesktop={!!audit.pageSpeed.desktop}
-            />
-            <button
-              onClick={() => pageSpeedMutation.mutate()}
-              disabled={pageSpeedMutation.isPending}
-              title="Refresh PageSpeed data"
-              className="p-2 rounded-lg text-brand-outline hover:text-brand-on-surface-variant dark:hover:text-brand-outline hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface transition-colors disabled:opacity-50"
-            >
-              <svg className={`w-4 h-4 ${pageSpeedMutation.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* View mode toggle + Generate Report */}
-      <div className="flex items-center justify-between">
-        <ViewModeToggle />
-        <GenerateReportButton siteId={siteId} siteName={siteName} siteUrl={siteUrl} scores={scores} strategy={activeStrategy} history={history} />
+        {/* View mode toggle + Generate Report */}
+        <div className="flex items-center justify-between">
+          <ViewModeToggle />
+          <GenerateReportButton siteId={siteId} siteName={siteName} siteUrl={siteUrl} scores={scores} strategy={activeStrategy} history={history} />
+        </div>
       </div>
 
       {viewMode === 'charts' ? (
@@ -189,7 +209,8 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
             <WebsiteAnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
           </ReportSection>
 
-          {/* Organic search performance — GSC + GA4 Organic */}
+          {/* Search Performance — disabled */}
+          {/*
           <ReportSection
             title="Search Performance"
             description="Organic search visibility — impressions, clicks, and queries from Google, combined with engagement and conversions from organic sessions."
@@ -197,6 +218,17 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
             icon={SearchIcon}
           >
             <SearchConsoleSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+            <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
+          </ReportSection>
+          */}
+
+          {/* Organic Traffic — GA4 organic sessions, trend, and engagement */}
+          <ReportSection
+            title="Organic Traffic"
+            description="GA4 organic-search acquisition — sessions, engagement, and audience breakdown."
+            accent="emerald"
+            icon={AnalyticsIcon}
+          >
             <AnalyticsSection siteId={siteId} themeKey={colorTheme} viewMode={viewMode} />
           </ReportSection>
 
@@ -242,6 +274,26 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
             description="Lighthouse audit results for speed, Core Web Vitals, and SEO health."
             accent="violet"
             icon={GaugeIcon}
+            actions={
+              <>
+                <StrategyToggle
+                  strategy={activeStrategy}
+                  onChange={setActiveStrategy}
+                  hasMobile={!!audit.pageSpeed.mobile}
+                  hasDesktop={!!audit.pageSpeed.desktop}
+                />
+                <button
+                  onClick={() => pageSpeedMutation.mutate()}
+                  disabled={pageSpeedMutation.isPending}
+                  title="Refresh PageSpeed data"
+                  className="p-2 rounded-lg text-brand-outline hover:text-brand-on-surface-variant dark:hover:text-brand-outline hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface transition-colors disabled:opacity-50"
+                >
+                  <svg className={`w-4 h-4 ${pageSpeedMutation.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </>
+            }
           >
             <Card>
               <ScoreGaugesRow scores={scores} themeKey={colorTheme} />

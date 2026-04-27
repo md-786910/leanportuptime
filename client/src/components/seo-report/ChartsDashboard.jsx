@@ -1,12 +1,17 @@
+import { useState, useEffect } from 'react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, RadialBarChart, RadialBar,
   AreaChart, Area, LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import Spinner from '../common/Spinner';
+import { Sk } from '../common/Skeleton';
+import { computeDateRange } from '../common/SectionDateFilter';
+import { useSeoReportStore } from '../../store/seoReportStore';
 import { themeColor } from './colorThemes';
 import { useGscStatus, useGscPerformance, useGscInsights } from '../../hooks/useSearchConsole';
-import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnalyticsInsights } from '../../hooks/useAnalytics';
+import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnalyticsInsights, useAnalyticsFilters } from '../../hooks/useAnalytics';
+import { CountryFilterDropdown } from './ChannelBreakdownChart';
 import TopQueriesTable from './TopQueriesTable';
 import TopPagesTable from './TopPagesTable';
 import TopPagesVisitedTable from './TopPagesVisitedTable';
@@ -32,15 +37,31 @@ function fmtDur(s) {
   return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 }
 
-const FORM_EVENT_NAMES = new Set([
-  'generate_lead', 'form_submit', 'form_start', 'contact_form',
-  'form_submission', 'contact_form_submit', 'wpforms_submit',
+// GA4 reports each form event separately. We roll up these completion-event
+// names (covering GA4 defaults + WPForms / Contact Form 7 / etc.) so the KPI
+// works across plugins. `form_start` is intentionally excluded — it's funnel
+// intent, not a submission.
+const FORM_SUBMIT_EVENTS = new Set([
+  'generate_lead',
+  'form_submit',
+  'form_submission',
+  'contact_form',
+  'contact_form_submit',
+  'wpforms_submit',
 ]);
 
 function sumEventsByName(allEvents, matcher) {
   if (!Array.isArray(allEvents)) return 0;
   return allEvents.reduce(
     (sum, e) => (matcher(e.eventName) ? sum + (e.eventCount || 0) : sum),
+    0
+  );
+}
+
+function sumEventUsersByName(allEvents, matcher) {
+  if (!Array.isArray(allEvents)) return 0;
+  return allEvents.reduce(
+    (sum, e) => (matcher(e.eventName) ? sum + (e.totalUsers || 0) : sum),
     0
   );
 }
@@ -395,14 +416,36 @@ function GSCSection({ siteId, themeKey }) {
 // ======================== Section 5: Google Analytics ========================
 function GASection({ siteId, themeKey }) {
   const { analyticsStatus } = useAnalyticsStatus(siteId);
-  const { data, isLoading } = useWebsiteAnalytics(siteId, '28d');
+  const period = useSeoReportStore((s) => s.period);
+  const customFrom = useSeoReportStore((s) => s.customFrom);
+  const customTo = useSeoReportStore((s) => s.customTo);
+  const dateRange = computeDateRange(period, customFrom, customTo);
+  const { data, isLoading, isFetching } = useWebsiteAnalytics(siteId, period, dateRange);
+  const filtersMutation = useAnalyticsFilters(siteId);
+  const [pendingScope, setPendingScope] = useState(null);
+  const refreshing = filtersMutation.isPending || (isFetching && !isLoading);
+  useEffect(() => { if (!refreshing) setPendingScope(null); }, [refreshing]);
+  const channelsRefreshing = pendingScope === 'channels' && refreshing;
+  const pagesRefreshing = pendingScope === 'pages' && refreshing;
 
   if (!analyticsStatus?.linked) return null;
 
   if (isLoading) {
     return (
       <ReportSection title="Google Analytics" description="GA4 engagement and conversion metrics." accent="emerald" icon={AnalyticsIcon}>
-        <div className="flex justify-center py-8"><Spinner size="sm" /></div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-3 flex flex-col gap-2">
+              <Sk className="h-2.5 w-16 rounded-full" />
+              <Sk className="h-7 w-16" />
+              <Sk className="h-2 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4">
+          <Sk className="h-3 w-32 mb-3 rounded-full" />
+          <Sk className="h-48 w-full rounded-xl" />
+        </div>
       </ReportSection>
     );
   }
@@ -412,8 +455,22 @@ function GASection({ siteId, themeKey }) {
   const channels = data?.details?.channels || [];
   const topPages = (data?.details?.topPages || []).slice(0, 5);
 
-  const fileDownloads = sumEventsByName(events.allEvents, (n) => n === 'file_download');
-  const websiteRequests = sumEventsByName(events.allEvents, (n) => FORM_EVENT_NAMES.has(n));
+  const filters = analyticsStatus?.filters || { excludedCountries: [], excludedTopPages: [] };
+  const setExcludedCountries = (excludedCountries) => {
+    setPendingScope('channels');
+    filtersMutation.mutate({ excludedCountries });
+  };
+  const excludePage = (page) => {
+    setPendingScope('pages');
+    filtersMutation.mutate({ excludedTopPages: [...(filters.excludedTopPages || []), page] });
+  };
+  const restorePage = (page) => {
+    setPendingScope('pages');
+    filtersMutation.mutate({ excludedTopPages: (filters.excludedTopPages || []).filter((p) => p !== page) });
+  };
+
+  const fileDownloads = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
+  const websiteRequests = sumEventUsersByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
   const uniqueVisitors = overview.uniqueVisitors || 0;
   const bounceRatePct = overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—';
   const avgTime = fmtDur(overview.avgTimeOnPage);
@@ -423,21 +480,36 @@ function GASection({ siteId, themeKey }) {
   return (
     <ReportSection
       title="Google Analytics"
-      description="GA4 engagement and conversion metrics — last 28 days."
+      description="GA4 engagement and conversion metrics."
       accent="emerald"
       icon={AnalyticsIcon}
     >
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="file_download events" />
-        <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Contact form submissions" />
+        <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" />
+        <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" />
         <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" />
         <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" />
         <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" />
       </div>
 
       {barData.length > 0 && (
-        <PanelCard title="Sessions by Channel">
-          <div className="h-48">
+        <PanelCard
+          title="Sessions by Channel"
+          action={
+            <CountryFilterDropdown
+              siteId={siteId}
+              dateRange={dateRange}
+              excluded={filters.excludedCountries || []}
+              onChange={setExcludedCountries}
+            />
+          }
+        >
+          <div className="h-48 relative">
+            {channelsRefreshing && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-brand-on-surface/60 backdrop-blur-[1px] rounded-lg z-10">
+                <Spinner size="sm" />
+              </div>
+            )}
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
@@ -453,9 +525,16 @@ function GASection({ siteId, themeKey }) {
         </PanelCard>
       )}
 
-      {topPages.length > 0 && (
+      {(topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
         <PanelCard title="Top 5 Pages Visited">
-          <TopPagesVisitedTable pages={topPages} themeKey={themeKey} />
+          <TopPagesVisitedTable
+            pages={topPages}
+            themeKey={themeKey}
+            excludedPages={filters.excludedTopPages || []}
+            onExclude={excludePage}
+            onRestore={restorePage}
+            isRefreshing={pagesRefreshing}
+          />
         </PanelCard>
       )}
     </ReportSection>
@@ -486,15 +565,31 @@ function TablesSection({ siteId, themeKey }) {
 // ======================== Section 7: Organic Traffic ========================
 function OrganicSection({ siteId, themeKey }) {
   const { analyticsStatus } = useAnalyticsStatus(siteId);
-  const { data: overviewData, isLoading } = useAnalyticsOverview(siteId, '28d');
-  const { insights, isLoading: insightsLoading } = useAnalyticsInsights(siteId, '28d');
+  const period = useSeoReportStore((s) => s.period);
+  const customFrom = useSeoReportStore((s) => s.customFrom);
+  const customTo = useSeoReportStore((s) => s.customTo);
+  const dateRange = computeDateRange(period, customFrom, customTo);
+  const { data: overviewData, isLoading } = useAnalyticsOverview(siteId, period, dateRange);
+  const { insights, isLoading: insightsLoading } = useAnalyticsInsights(siteId, period, dateRange);
 
   if (!analyticsStatus?.linked) return null;
 
   if (isLoading) {
     return (
       <ReportSection title="Organic Traffic" description="GA4 organic-search acquisition and breakdown." accent="emerald" icon={AnalyticsIcon}>
-        <div className="flex justify-center py-8"><Spinner size="sm" /></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-3 flex flex-col gap-2">
+              <Sk className="h-2.5 w-16 rounded-full" />
+              <Sk className="h-7 w-16" />
+              <Sk className="h-2 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4">
+          <Sk className="h-3 w-36 mb-3 rounded-full" />
+          <Sk className="h-44 w-full rounded-xl" />
+        </div>
       </ReportSection>
     );
   }
@@ -564,7 +659,8 @@ function OrganicSection({ siteId, themeKey }) {
         </PanelCard>
       )}
 
-      {/* Donuts + Country bars */}
+      {/* New vs Returning / Device Breakdown / Top Countries — disabled */}
+      {/*
       {!insightsLoading && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {totalU > 0 && (
@@ -630,6 +726,7 @@ function OrganicSection({ siteId, themeKey }) {
           )}
         </div>
       )}
+      */}
     </ReportSection>
   );
 }

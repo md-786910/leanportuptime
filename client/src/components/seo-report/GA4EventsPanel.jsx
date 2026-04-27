@@ -18,9 +18,10 @@ const ENGAGEMENT_EVENTS = new Set([
   'scroll',
   'click',
   'user_engagement',
-  'view_search_results',
   'view_item',
 ]);
+
+const HIDDEN_EVENTS = new Set(['view_search_results']);
 
 function formatNumber(n) {
   if (n == null) return '—';
@@ -37,7 +38,7 @@ function eventBadge(eventName) {
     return { label: 'Form', classes: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
   }
   if (ENGAGEMENT_EVENTS.has(eventName)) {
-    return { label: 'Engagement', classes: 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline' };
+    return null;
   }
   if (eventName.startsWith('purchase') || eventName === 'add_to_cart' || eventName === 'begin_checkout') {
     return { label: 'Ecommerce', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' };
@@ -50,9 +51,10 @@ export default function GA4EventsPanel({ events, themeKey }) {
   const list = Array.isArray(events) ? events : [];
 
   const { totalCount, maxCount, sorted } = useMemo(() => {
-    const total = list.reduce((sum, e) => sum + (e.eventCount || 0), 0);
-    const max = list.reduce((m, e) => Math.max(m, e.eventCount || 0), 0);
-    const s = [...list].sort((a, b) => (b.eventCount || 0) - (a.eventCount || 0));
+    const filtered = list.filter((e) => !HIDDEN_EVENTS.has(e.eventName));
+    const total = filtered.reduce((sum, e) => sum + (e.eventCount || 0), 0);
+    const max = filtered.reduce((m, e) => Math.max(m, e.eventCount || 0), 0);
+    const s = [...filtered].sort((a, b) => (b.eventCount || 0) - (a.eventCount || 0));
     return { totalCount: total, maxCount: max, sorted: s };
   }, [list]);
 

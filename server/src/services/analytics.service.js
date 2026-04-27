@@ -347,11 +347,13 @@ class AnalyticsService {
 
   /**
    * Fetch top pages by page views (all traffic).
+   * Over-fetches when `excludedPages` are provided so the caller still gets `rowLimit` rows after exclusion.
    */
-  async getWebsiteTopPages(user, propertyId, { startDate, endDate, rowLimit = 5 }) {
+  async getWebsiteTopPages(user, propertyId, { startDate, endDate, rowLimit = 5, excludedPages = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
+    const fetchLimit = rowLimit + (Array.isArray(excludedPages) ? excludedPages.length : 0);
     const { data } = await analyticsData.properties.runReport({
       property: propertyId,
       requestBody: {
@@ -359,20 +361,49 @@ class AnalyticsService {
         dimensions: [{ name: 'pagePathPlusQueryString' }],
         metrics: [{ name: 'screenPageViews' }],
         orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-        limit: rowLimit,
+        limit: fetchLimit,
+      },
+    });
+
+    const excludeSet = new Set(excludedPages || []);
+    const rows = (data.rows || [])
+      .map((row) => ({
+        page: row.dimensionValues[0].value,
+        pageViews: parseFloat(row.metricValues[0].value) || 0,
+      }))
+      .filter((r) => !excludeSet.has(r.page));
+
+    return rows.slice(0, rowLimit);
+  }
+
+  /**
+   * List countries that have traffic in the given window — used to populate the country filter dropdown.
+   */
+  async getCountryList(user, propertyId, { startDate, endDate }) {
+    const auth = await this._getAuthClient(user);
+    const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
+
+    const { data } = await analyticsData.properties.runReport({
+      property: propertyId,
+      requestBody: {
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: 'country' }],
+        metrics: [{ name: 'sessions' }],
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        limit: 50,
       },
     });
 
     return (data.rows || []).map((row) => ({
-      page: row.dimensionValues[0].value,
-      pageViews: parseFloat(row.metricValues[0].value) || 0,
+      country: row.dimensionValues[0].value,
+      sessions: parseFloat(row.metricValues[0].value) || 0,
     }));
   }
 
   /**
    * Fetch website details: events, channels, top pages in parallel.
    */
-  async getWebsiteDetails(user, propertyId, { startDate, endDate }) {
+  async getWebsiteDetails(user, propertyId, { startDate, endDate, excludedCountries = [], excludedTopPages = [] }) {
     const fetchEvents = async () => {
       const auth = await this._getAuthClient(user);
       const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
@@ -437,17 +468,30 @@ class AnalyticsService {
       const auth = await this._getAuthClient(user);
       const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
+      const requestBody = {
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+        metrics: [
+          { name: 'sessions' },
+          { name: 'totalUsers' },
+        ],
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      };
+
+      if (Array.isArray(excludedCountries) && excludedCountries.length > 0) {
+        requestBody.dimensionFilter = {
+          notExpression: {
+            filter: {
+              fieldName: 'country',
+              inListFilter: { values: excludedCountries },
+            },
+          },
+        };
+      }
+
       const { data } = await analyticsData.properties.runReport({
         property: propertyId,
-        requestBody: {
-          dateRanges: [{ startDate, endDate }],
-          dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-          metrics: [
-            { name: 'sessions' },
-            { name: 'totalUsers' },
-          ],
-          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        },
+        requestBody,
       });
 
       return (data.rows || []).map((row) => ({
@@ -460,7 +504,7 @@ class AnalyticsService {
     const [events, channels, topPages] = await Promise.allSettled([
       fetchEvents(),
       fetchChannels(),
-      this.getWebsiteTopPages(user, propertyId, { startDate, endDate }),
+      this.getWebsiteTopPages(user, propertyId, { startDate, endDate, excludedPages: excludedTopPages }),
     ]);
 
     return {

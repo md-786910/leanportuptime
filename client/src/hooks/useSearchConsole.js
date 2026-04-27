@@ -80,21 +80,21 @@ export const useGscUnlink = (siteId) => {
   });
 };
 
-export const useGscPerformance = (siteId, period = '28d') => {
+export const useGscPerformance = (siteId, period = '28d', dateRange = null) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['gscPerformance', siteId, period],
-    queryFn: () => getGscPerformance(siteId, period),
-    enabled: !!siteId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ['gscPerformance', siteId, period, dateRange],
+    queryFn: () => getGscPerformance(siteId, period, dateRange),
+    enabled: !!siteId && (period !== 'custom' || !!dateRange),
+    staleTime: 5 * 60 * 1000,
   });
   return { performance: data, isLoading, error };
 };
 
-export const useGscInsights = (siteId, period = '28d') => {
+export const useGscInsights = (siteId, period = '28d', dateRange = null) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['gscInsights', siteId, period],
-    queryFn: () => getGscInsights(siteId, period),
-    enabled: !!siteId,
+    queryKey: ['gscInsights', siteId, period, dateRange],
+    queryFn: () => getGscInsights(siteId, period, dateRange),
+    enabled: !!siteId && (period !== 'custom' || !!dateRange),
     staleTime: 5 * 60 * 1000,
   });
   return { insights: data, isLoading, error };

@@ -43,6 +43,10 @@ exports.getStatus = async (req, res, next) => {
         propertyId: site.analytics?.propertyId || null,
         propertyName: site.analytics?.propertyName || null,
         connectedAt: site.analytics?.connectedAt || null,
+        filters: {
+          excludedCountries: site.analytics?.filters?.excludedCountries || [],
+          excludedTopPages: site.analytics?.filters?.excludedTopPages || [],
+        },
       },
     });
   } catch (error) {
@@ -122,7 +126,11 @@ exports.getOverview = async (req, res, next) => {
     }
 
     const period = req.query.period || '28d';
-    const { startDate, endDate } = dateRange(period);
+    const customStart = req.query.startDate;
+    const customEnd = req.query.endDate;
+    const { startDate, endDate } = (customStart && customEnd)
+      ? { startDate: customStart, endDate: customEnd }
+      : dateRange(period);
 
     const effectiveUser = await resolveGoogleUser(req);
     const [overview, trend] = await Promise.all([
@@ -171,12 +179,19 @@ exports.getWebsite = async (req, res, next) => {
     }
 
     const period = req.query.period || '28d';
-    const { startDate, endDate } = dateRange(period);
+    const customStart = req.query.startDate;
+    const customEnd = req.query.endDate;
+    const { startDate, endDate } = (customStart && customEnd)
+      ? { startDate: customStart, endDate: customEnd }
+      : dateRange(period);
 
     const effectiveUser = await resolveGoogleUser(req);
+    const filters = site.analytics?.filters || {};
+    const excludedCountries = filters.excludedCountries || [];
+    const excludedTopPages = filters.excludedTopPages || [];
     const [overview, details] = await Promise.all([
       analyticsService.getWebsiteOverview(effectiveUser, propertyId, { startDate, endDate }),
-      analyticsService.getWebsiteDetails(effectiveUser, propertyId, { startDate, endDate }),
+      analyticsService.getWebsiteDetails(effectiveUser, propertyId, { startDate, endDate, excludedCountries, excludedTopPages }),
     ]);
 
     res.json({
@@ -213,7 +228,11 @@ exports.getInsights = async (req, res, next) => {
     }
 
     const period = req.query.period || '28d';
-    const { startDate, endDate } = dateRange(period);
+    const customStart = req.query.startDate;
+    const customEnd = req.query.endDate;
+    const { startDate, endDate } = (customStart && customEnd)
+      ? { startDate: customStart, endDate: customEnd }
+      : dateRange(period);
 
     const effectiveUser = await resolveGoogleUser(req);
     const insights = await analyticsService.getOrganicInsights(effectiveUser, propertyId, {
@@ -237,6 +256,65 @@ exports.getInsights = async (req, res, next) => {
           code: 'INSUFFICIENT_SCOPE',
           message: 'Analytics access not granted. Please reconnect your Google account.',
         },
+      });
+    }
+    next(error);
+  }
+};
+
+exports.updateFilters = async (req, res, next) => {
+  try {
+    const { excludedCountries, excludedTopPages } = req.body;
+    const update = {};
+    if (Array.isArray(excludedCountries)) update['analytics.filters.excludedCountries'] = excludedCountries;
+    if (Array.isArray(excludedTopPages)) update['analytics.filters.excludedTopPages'] = excludedTopPages;
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No filter fields provided' },
+      });
+    }
+
+    await Site.findByIdAndUpdate(req.site._id, update);
+    res.json({
+      success: true,
+      data: {
+        excludedCountries: update['analytics.filters.excludedCountries'] ?? req.site.analytics?.filters?.excludedCountries ?? [],
+        excludedTopPages: update['analytics.filters.excludedTopPages'] ?? req.site.analytics?.filters?.excludedTopPages ?? [],
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getCountries = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const propertyId = site.analytics?.propertyId;
+    if (!propertyId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No Analytics property linked to this site' },
+      });
+    }
+
+    const period = req.query.period || '28d';
+    const customStart = req.query.startDate;
+    const customEnd = req.query.endDate;
+    const { startDate, endDate } = (customStart && customEnd)
+      ? { startDate: customStart, endDate: customEnd }
+      : dateRange(period);
+
+    const effectiveUser = await resolveGoogleUser(req);
+    const countries = await analyticsService.getCountryList(effectiveUser, propertyId, { startDate, endDate });
+    res.json({ success: true, data: countries });
+  } catch (error) {
+    if (error.code === 403 || error.response?.status === 403) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'INSUFFICIENT_SCOPE', message: 'Analytics access not granted.' },
       });
     }
     next(error);

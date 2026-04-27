@@ -16,8 +16,10 @@ export default function AppLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-[#f8f9f9] dark:bg-brand-on-surface p-6 md:p-10">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto bg-[#f8f9f9] dark:bg-brand-on-surface">
+          <div className="p-6 md:p-10">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

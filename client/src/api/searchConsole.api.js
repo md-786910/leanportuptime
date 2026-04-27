@@ -37,16 +37,16 @@ export const unlinkGscProperty = async (siteId) => {
   return data.data;
 };
 
-export const getGscPerformance = async (siteId, period = '28d') => {
+export const getGscPerformance = async (siteId, period = '28d', dateRange = null) => {
   const { data } = await api.get(`/api/sites/${siteId}/search-console/performance`, {
-    params: { period },
+    params: dateRange ? { startDate: dateRange.from, endDate: dateRange.to } : { period },
   });
   return data.data;
 };
 
-export const getGscInsights = async (siteId, period = '28d') => {
+export const getGscInsights = async (siteId, period = '28d', dateRange = null) => {
   const { data } = await api.get(`/api/sites/${siteId}/search-console/insights`, {
-    params: { period },
+    params: dateRange ? { startDate: dateRange.from, endDate: dateRange.to } : { period },
   });
   return data.data;
 };

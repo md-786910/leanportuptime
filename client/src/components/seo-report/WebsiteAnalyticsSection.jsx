@@ -1,17 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { computeDateRange } from '../common/SectionDateFilter';
+import { useSeoReportStore } from '../../store/seoReportStore';
 import Card from '../common/Card';
-import Spinner from '../common/Spinner';
-import { useAnalyticsStatus, useWebsiteAnalytics } from '../../hooks/useAnalytics';
+import { Sk } from '../common/Skeleton';
+import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsFilters } from '../../hooks/useAnalytics';
 import { themeColor } from './colorThemes';
 import ChannelBreakdownChart from './ChannelBreakdownChart';
 import TopPagesVisitedTable from './TopPagesVisitedTable';
 import GA4EventsPanel from './GA4EventsPanel';
-
-const PERIODS = [
-  { key: '7d', label: '7 days' },
-  { key: '28d', label: '28 days' },
-  { key: '2m', label: '2 months' },
-];
 
 function formatNumber(n) {
   if (n == null) return '—';
@@ -26,6 +22,26 @@ function formatDuration(seconds) {
   const s = Math.round(seconds % 60);
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
+}
+
+// Form-completion events across GA4 default + WPForms / Contact Form 7. Mirrors
+// the Charts tab so both tabs show the same number. `form_start` is excluded
+// because it's funnel intent, not a submission.
+const FORM_SUBMIT_EVENTS = new Set([
+  'generate_lead',
+  'form_submit',
+  'form_submission',
+  'contact_form',
+  'contact_form_submit',
+  'wpforms_submit',
+]);
+
+function sumEventUsersByName(allEvents, matcher) {
+  if (!Array.isArray(allEvents)) return 0;
+  return allEvents.reduce(
+    (sum, e) => (matcher(e.eventName) ? sum + (e.totalUsers || 0) : sum),
+    0
+  );
 }
 
 function KpiCard({ label, value, subtitle, color }) {
@@ -45,17 +61,72 @@ function KpiCard({ label, value, subtitle, color }) {
   );
 }
 
-function WebsiteDashboard({ siteId, themeKey, viewMode }) {
-  const [period, setPeriod] = useState('28d');
-  const { data, isLoading, error } = useWebsiteAnalytics(siteId, period);
+function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
+  const period = useSeoReportStore((s) => s.period);
+  const customFrom = useSeoReportStore((s) => s.customFrom);
+  const customTo = useSeoReportStore((s) => s.customTo);
+  const dateRange = computeDateRange(period, customFrom, customTo);
+  const { data, isLoading, isFetching, error } = useWebsiteAnalytics(siteId, period, dateRange);
+
+  const filters = analyticsStatus?.filters || { excludedCountries: [], excludedTopPages: [] };
+  const filtersMutation = useAnalyticsFilters(siteId);
+  const [pendingScope, setPendingScope] = useState(null);
+
+  const refreshing = filtersMutation.isPending || (isFetching && !isLoading);
+  useEffect(() => { if (!refreshing) setPendingScope(null); }, [refreshing]);
+
+  const channelsRefreshing = pendingScope === 'channels' && refreshing;
+  const pagesRefreshing = pendingScope === 'pages' && refreshing;
+
+  const setExcludedCountries = (excludedCountries) => {
+    setPendingScope('channels');
+    filtersMutation.mutate({ excludedCountries });
+  };
+  const excludePage = (page) => {
+    setPendingScope('pages');
+    filtersMutation.mutate({ excludedTopPages: [...(filters.excludedTopPages || []), page] });
+  };
+  const restorePage = (page) => {
+    setPendingScope('pages');
+    filtersMutation.mutate({ excludedTopPages: (filters.excludedTopPages || []).filter((p) => p !== page) });
+  };
 
   if (isLoading) {
     return (
-      <Card>
-        <div className="flex justify-center py-12">
-          <Spinner size="md" />
+      <div className="space-y-4">
+        <Card>
+          <Sk className="h-4 w-20 mb-5 rounded-full" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-3">
+                <Sk className="h-2.5 w-14 rounded-full" />
+                <Sk className="h-6 w-20" />
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card>
+          <Sk className="h-4 w-32 mb-4 rounded-full" />
+          <div className="rounded-lg border border-brand-outline-variant dark:border-brand-outline overflow-hidden">
+            <div className="bg-brand-surface-container-low dark:bg-brand-on-surface/50 px-3 py-2.5 flex gap-6">
+              <Sk className="h-2.5 w-6 rounded-full" />
+              <Sk className="h-2.5 w-24 rounded-full" />
+              <Sk className="h-2.5 w-12 rounded-full ml-auto" />
+            </div>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="border-t border-gray-50 dark:border-brand-outline px-3 py-2.5 flex gap-6">
+                <Sk className="h-2.5 w-4 rounded-full" />
+                <Sk className="h-2.5 w-28 rounded-full" />
+                <Sk className="h-2.5 w-10 rounded-full ml-auto" />
+              </div>
+            ))}
+          </div>
+        </Card>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <Card><Sk className="h-48 w-full rounded-xl" /></Card>
+          <Card><Sk className="h-48 w-full rounded-xl" /></Card>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -74,6 +145,8 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
   const overview = data?.overview || {};
   const details = data?.details || {};
   const events = details.events || {};
+  const fileDownloadUsers = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
+  const formSubmitUsers = sumEventUsersByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
 
   return (
     <div className="space-y-4">
@@ -87,21 +160,8 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
           </div>
         </div>
 
-        {/* Period pills */}
-        <div className="flex gap-1.5 mb-5">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-
         {/* KPI Cards — session/page_view counts are shown in the Event panel below; keep only non-event metrics here */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiCard
             label="Total Users"
             value={formatNumber(overview.uniqueVisitors)}
@@ -122,6 +182,18 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
             value={formatDuration(overview.avgTimeOnPage)}
             color={themeColor(themeKey, 3)}
           />
+          <KpiCard
+            label="File Downloads"
+            value={formatNumber(fileDownloadUsers)}
+            subtitle="Users who downloaded a file"
+            color={themeColor(themeKey, 4)}
+          />
+          <KpiCard
+            label="Form Submitted"
+            value={formatNumber(formSubmitUsers)}
+            subtitle="Users who completed a form"
+            color={themeColor(themeKey, 5)}
+          />
         </div>
       </Card>
 
@@ -133,15 +205,38 @@ function WebsiteDashboard({ siteId, themeKey, viewMode }) {
       {/* Traffic by Channel + Top Pages */}
       {viewMode === 'charts' ? (
         <Card>
-          <ChannelBreakdownChart channels={details.channels} themeKey={themeKey} />
+          <ChannelBreakdownChart
+            channels={details.channels}
+            themeKey={themeKey}
+            siteId={siteId}
+            dateRange={dateRange}
+            excludedCountries={filters.excludedCountries || []}
+            onExcludedCountriesChange={setExcludedCountries}
+            isRefreshing={channelsRefreshing}
+          />
         </Card>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <Card>
-            <ChannelBreakdownChart channels={details.channels} themeKey={themeKey} />
+            <ChannelBreakdownChart
+              channels={details.channels}
+              themeKey={themeKey}
+              siteId={siteId}
+              dateRange={dateRange}
+              excludedCountries={filters.excludedCountries || []}
+              onExcludedCountriesChange={setExcludedCountries}
+              isRefreshing={channelsRefreshing}
+            />
           </Card>
           <Card>
-            <TopPagesVisitedTable pages={details.topPages} themeKey={themeKey} />
+            <TopPagesVisitedTable
+              pages={details.topPages}
+              themeKey={themeKey}
+              excludedPages={filters.excludedTopPages || []}
+              onExclude={excludePage}
+              onRestore={restorePage}
+              isRefreshing={pagesRefreshing}
+            />
           </Card>
         </div>
       )}
@@ -158,5 +253,5 @@ export default function WebsiteAnalyticsSection({ siteId, themeKey, viewMode }) 
     return null;
   }
 
-  return <WebsiteDashboard siteId={siteId} themeKey={themeKey} viewMode={viewMode} />;
+  return <WebsiteDashboard siteId={siteId} themeKey={themeKey} viewMode={viewMode} analyticsStatus={analyticsStatus} />;
 }

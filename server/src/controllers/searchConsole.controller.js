@@ -116,7 +116,11 @@ exports.getPerformance = async (req, res, next) => {
     }
 
     const period = req.query.period || '28d';
-    const { startDate, endDate } = dateRange(period);
+    const customStart = req.query.startDate;
+    const customEnd = req.query.endDate;
+    const { startDate, endDate } = (customStart && customEnd)
+      ? { startDate: customStart, endDate: customEnd }
+      : dateRange(period);
 
     // For 'daily' period, always include date dimension
     const dimensions = period === 'daily' ? ['date'] : [];
@@ -173,7 +177,11 @@ exports.getInsights = async (req, res, next) => {
     }
 
     const period = req.query.period || '28d';
-    const { startDate, endDate } = dateRange(period);
+    const customStart = req.query.startDate;
+    const customEnd = req.query.endDate;
+    const { startDate, endDate } = (customStart && customEnd)
+      ? { startDate: customStart, endDate: customEnd }
+      : dateRange(period);
 
     const effectiveUser = await resolveGoogleUser(req);
     const insights = await searchConsoleService.getInsights(effectiveUser, property, {

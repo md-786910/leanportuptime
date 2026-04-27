@@ -9,5 +9,7 @@ router.post('/unlink', adminOnly, analyticsController.unlinkProperty);
 router.get('/overview', analyticsController.getOverview);
 router.get('/insights', analyticsController.getInsights);
 router.get('/website', analyticsController.getWebsite);
+router.get('/countries', analyticsController.getCountries);
+router.patch('/filters', adminOnly, analyticsController.updateFilters);
 
 module.exports = router;

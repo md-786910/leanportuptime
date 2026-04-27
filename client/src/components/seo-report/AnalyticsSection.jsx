@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { computeDateRange } from '../common/SectionDateFilter';
+import { useSeoReportStore } from '../../store/seoReportStore';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
+import { Sk } from '../common/Skeleton';
 import { getGoogleAuthUrl } from '../../api/searchConsole.api';
 import { useGoogleStatus, useGoogleDisconnect } from '../../hooks/useSearchConsole';
 import {
@@ -19,12 +22,6 @@ import OrganicLandingPagesTable from './OrganicLandingPagesTable';
 import NewVsReturningChart from './NewVsReturningChart';
 import OrganicDeviceBreakdown from './OrganicDeviceBreakdown';
 import OrganicCountryBreakdown from './OrganicCountryBreakdown';
-
-const PERIODS = [
-  { key: '7d', label: '7 days' },
-  { key: '28d', label: '28 days' },
-  { key: '2m', label: '2 months' },
-];
 
 function formatNumber(n) {
   if (n == null) return '—';
@@ -174,9 +171,12 @@ function PropertySelector({ siteId }) {
 
 // ========== Analytics Dashboard ==========
 function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
-  const [period, setPeriod] = useState('28d');
-  const { data: overviewData, isLoading, error } = useAnalyticsOverview(siteId, period);
-  const { insights, isLoading: insightsLoading } = useAnalyticsInsights(siteId, period);
+  const period = useSeoReportStore((s) => s.period);
+  const customFrom = useSeoReportStore((s) => s.customFrom);
+  const customTo = useSeoReportStore((s) => s.customTo);
+  const dateRange = computeDateRange(period, customFrom, customTo);
+  const { data: overviewData, isLoading, error } = useAnalyticsOverview(siteId, period, dateRange);
+  const { insights, isLoading: insightsLoading } = useAnalyticsInsights(siteId, period, dateRange);
   const unlinkMutation = useAnalyticsUnlink(siteId);
   const disconnectMutation = useGoogleDisconnect();
   const isViewer = useIsViewer();
@@ -191,11 +191,20 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
 
   if (isLoading) {
     return (
-      <Card>
-        <div className="flex justify-center py-12">
-          <Spinner size="md" />
-        </div>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <Sk className="h-4 w-24 mb-5 rounded-full" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-3">
+                <Sk className="h-2.5 w-14 rounded-full" />
+                <Sk className="h-6 w-20" />
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card><Sk className="h-44 w-full rounded-xl" /></Card>
+      </div>
     );
   }
 
@@ -264,19 +273,6 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
           )}
         </div>
 
-        {/* Period pills */}
-        <div className="flex gap-1.5 mb-5">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard
@@ -303,7 +299,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
       </Card>
 
       {/* Organic Traffic Trend */}
-      {viewMode === 'charts' && trend.length > 1 && (
+      {trend.length > 1 && (
         <Card>
           <OrganicTrendChart trend={trend} themeKey={themeKey} />
         </Card>
@@ -311,11 +307,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
 
       {/* Insights section */}
       {insightsLoading ? (
-        <Card>
-          <div className="flex justify-center py-8">
-            <Spinner size="sm" />
-          </div>
-        </Card>
+        <Card><Sk className="h-48 w-full rounded-xl" /></Card>
       ) : insights ? (
         <>
           {viewMode === 'details' && (
