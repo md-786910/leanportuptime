@@ -356,7 +356,7 @@ exports.refresh = async (req, res, next) => {
         base.url = url;
         base.lastCheckedAt = now;
         base.lastCheckError = null;
-        base.history.push({ position, url, checkedAt: now });
+        base.history.push({ position, url, checkedAt: now, source: 'api', changedBy: null });
         if (base.history.length > historyMax) {
           base.history = base.history.slice(base.history.length - historyMax);
         }
@@ -404,6 +404,103 @@ exports.refresh = async (req, res, next) => {
         providerConfig: { locationCode, languageCode },
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /:keyword — admin-only manual override of a single keyword.
+const KEYWORD_EDITABLE_FIELDS = ['position', 'url', 'searchVolume', 'keywordDifficulty', 'cpc'];
+
+exports.manualOverrideKeyword = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const target = decodeURIComponent(req.params.keyword || '').trim();
+    if (!target) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_KEYWORD', message: 'Keyword is required in the path' },
+      });
+    }
+
+    const items = site.keywords?.items || [];
+    const item = items.find((it) => normalizeKw(it.keyword) === normalizeKw(target));
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Keyword not found for this site' },
+      });
+    }
+
+    const body = req.body || {};
+    const disallowed = Object.keys(body).filter((k) => !KEYWORD_EDITABLE_FIELDS.includes(k));
+    if (disallowed.length) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'UNKNOWN_FIELDS', message: `Unsupported fields: ${disallowed.join(', ')}` },
+      });
+    }
+
+    const toNumberOrNull = (v, fieldName) => {
+      if (v === null || v === '' || v === undefined) return null;
+      const n = Number(v);
+      if (!Number.isFinite(n)) {
+        const err = new Error(`Field "${fieldName}" must be a number`);
+        err.code = 'INVALID_VALUE';
+        throw err;
+      }
+      return n;
+    };
+
+    const positionProvided = Object.prototype.hasOwnProperty.call(body, 'position');
+    const urlProvided = Object.prototype.hasOwnProperty.call(body, 'url');
+
+    let nextPosition = item.position ?? null;
+    let nextUrl = item.url || null;
+
+    try {
+      if (positionProvided) nextPosition = toNumberOrNull(body.position, 'position');
+      if (urlProvided) nextUrl = body.url === null || body.url === '' ? null : String(body.url);
+      if (Object.prototype.hasOwnProperty.call(body, 'searchVolume')) item.searchVolume = toNumberOrNull(body.searchVolume, 'searchVolume');
+      if (Object.prototype.hasOwnProperty.call(body, 'keywordDifficulty')) item.keywordDifficulty = toNumberOrNull(body.keywordDifficulty, 'keywordDifficulty');
+      if (Object.prototype.hasOwnProperty.call(body, 'cpc')) item.cpc = toNumberOrNull(body.cpc, 'cpc');
+    } catch (err) {
+      if (err.code === 'INVALID_VALUE') {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_VALUE', message: err.message } });
+      }
+      throw err;
+    }
+
+    const now = new Date();
+    const positionChanged = positionProvided && nextPosition !== (item.position ?? null);
+    const urlChanged = urlProvided && nextUrl !== (item.url || null);
+
+    if (positionChanged || urlChanged) {
+      if (positionChanged) item.previousPosition = item.position ?? null;
+      item.position = nextPosition;
+      item.url = nextUrl;
+
+      const historyMax = config.keywords.historyMaxEntries;
+      if (!Array.isArray(item.history)) item.history = [];
+      item.history.push({
+        position: nextPosition,
+        url: nextUrl,
+        checkedAt: now,
+        source: 'manual',
+        changedBy: req.user?._id || null,
+      });
+      if (item.history.length > historyMax) {
+        item.history = item.history.slice(item.history.length - historyMax);
+      }
+    }
+
+    item.lastCheckedAt = now;
+    item.lastCheckError = null;
+
+    site.markModified('keywords');
+    await site.save();
+
+    res.json({ success: true, data: { item: serializeItem(item) } });
   } catch (error) {
     next(error);
   }

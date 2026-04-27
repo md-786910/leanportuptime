@@ -5,6 +5,26 @@ import { themeColor } from './colorThemes';
 import { useBacklinksStatus, useBacklinksRefresh } from '../../hooks/useBacklinks';
 import { useIsViewer } from '../../hooks/useRole';
 import BacklinksTable from './BacklinksTable';
+import EditDomainAuthorityModal from './EditDomainAuthorityModal';
+import BacklinksChangelogDrawer from './BacklinksChangelogDrawer';
+
+// Small delta chip — renders current vs. previous for aggregate stats.
+// `direction` flips the good/bad colour: 'higher-better' (default) means ↑ is good.
+function DeltaChip({ current, previous, direction = 'higher-better' }) {
+  if (current == null || previous == null) return null;
+  const delta = current - previous;
+  if (delta === 0) return null;
+  const isUp = delta > 0;
+  const isGood = direction === 'higher-better' ? isUp : !isUp;
+  const cls = isGood
+    ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+    : 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-[9px] font-semibold font-label px-1 py-0.5 rounded ${cls}`}>
+      {isUp ? '↑' : '↓'}{Math.abs(delta).toLocaleString()}
+    </span>
+  );
+}
 
 const METRIC_LABELS = {
   domain_rank: 'Domain Rank',
@@ -103,6 +123,8 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
   const [period, setPeriod] = useState('1m');
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
+  const [editDAOpen, setEditDAOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   const Title = showTitle ? (
     <h3 className="text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-wider font-label">Domain Authority</h3>
@@ -225,6 +247,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
   // Domain Authority variant — DA score + companion stats (ref domains, new/lost), period pills, refresh controls.
   if (variant === 'domain-authority') {
     return (
+      <>
       <div>
         {!isViewer && (
           <div className="flex items-center justify-end gap-2 mb-3">
@@ -237,6 +260,28 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
             >
               {quota.used} / {quota.limit} this month
             </span>
+            <button
+              type="button"
+              onClick={() => setChangelogOpen(true)}
+              className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
+              title="View change history"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              History
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditDAOpen(true)}
+              className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
+              title="Edit Domain Authority stats"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </button>
             <button
               onClick={handleRefresh}
               disabled={quotaExhausted || refresh.isPending || providerNotConfigured}
@@ -297,31 +342,46 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
             <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">{scoreLabel}</span>
-            <p className="text-2xl font-bold my-1 tabular-nums font-headline" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
+            <div className="flex items-center justify-center gap-1 my-1">
+              <p className="text-2xl font-bold tabular-nums font-headline" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
+              <DeltaChip current={data.domainRank} previous={data.previousDomainRank} direction="higher-better" />
+            </div>
             <span className="text-[9px] text-brand-outline">{providerDisplay}</span>
           </div>
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
             <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Backlinks</span>
-            <p className="text-2xl font-bold text-brand-on-surface dark:text-white my-1 tabular-nums font-headline">{fmt(data.backlinksCount)}</p>
+            <div className="flex items-center justify-center gap-1 my-1">
+              <p className="text-2xl font-bold text-brand-on-surface dark:text-white tabular-nums font-headline">{fmt(data.backlinksCount)}</p>
+              <DeltaChip current={data.backlinksCount} previous={data.previousBacklinksCount} direction="higher-better" />
+            </div>
             <span className="text-[9px] text-brand-outline">Total links</span>
           </div>
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
             <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Ref. Domains</span>
-            <p className="text-2xl font-bold text-brand-on-surface dark:text-white my-1 tabular-nums font-headline">{fmt(data.referringDomains)}</p>
+            <div className="flex items-center justify-center gap-1 my-1">
+              <p className="text-2xl font-bold text-brand-on-surface dark:text-white tabular-nums font-headline">{fmt(data.referringDomains)}</p>
+              <DeltaChip current={data.referringDomains} previous={data.previousReferringDomains} direction="higher-better" />
+            </div>
             <span className="text-[9px] text-brand-outline">Unique sources</span>
           </div>
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
             <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">New Links</span>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 my-1 tabular-nums font-headline">
-              {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
-            </p>
+            <div className="flex items-center justify-center gap-1 my-1">
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums font-headline">
+                {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
+              </p>
+              <DeltaChip current={data.newLinksLast30d} previous={data.previousNewLinksLast30d} direction="higher-better" />
+            </div>
             <span className="text-[9px] text-brand-outline">{periodLabel}</span>
           </div>
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
             <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Lost Links</span>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400 my-1 tabular-nums font-headline">
-              {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
-            </p>
+            <div className="flex items-center justify-center gap-1 my-1">
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400 tabular-nums font-headline">
+                {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
+              </p>
+              <DeltaChip current={data.lostLinksLast30d} previous={data.previousLostLinksLast30d} direction="lower-better" />
+            </div>
             <span className="text-[9px] text-brand-outline">{periodLabel}</span>
           </div>
         </div>
@@ -342,6 +402,18 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
           </div>
         )}
       </div>
+      <EditDomainAuthorityModal
+        isOpen={editDAOpen}
+        onClose={() => setEditDAOpen(false)}
+        siteId={siteId}
+        current={data}
+      />
+      <BacklinksChangelogDrawer
+        isOpen={changelogOpen}
+        onClose={() => setChangelogOpen(false)}
+        siteId={siteId}
+      />
+      </>
     );
   }
 
@@ -353,6 +425,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
           items={data.items || []}
           listFetchedAt={data.listFetchedAt}
           listFetchError={data.listFetchError}
+          siteId={siteId}
         />
 
         {data.lastFetchedAt && (
@@ -493,6 +566,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
         items={data.items || []}
         listFetchedAt={data.listFetchedAt}
         listFetchError={data.listFetchError}
+        siteId={siteId}
       />
 
       {data.lastFetchedAt && (

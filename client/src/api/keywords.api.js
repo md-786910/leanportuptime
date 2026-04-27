@@ -24,3 +24,8 @@ export const refreshKeywords = async (siteId) => {
   const { data } = await api.post(`/api/sites/${siteId}/keywords/refresh`);
   return data.data;
 };
+
+export const manualOverrideKeyword = async (siteId, keyword, payload) => {
+  const { data } = await api.patch(`/api/sites/${siteId}/keywords/${encodeURIComponent(keyword)}`, payload);
+  return data.data;
+};

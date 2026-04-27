@@ -116,6 +116,7 @@ export default function KeywordRankingsSection({ siteId, themeKey }) {
             onRemove={(keyword) => removeMutation.mutate(keyword)}
             removePending={removeMutation.isPending}
             themeKey={themeKey}
+            siteId={siteId}
           />
 
           {status?.fetchError && (

@@ -3,6 +3,7 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import Badge from '../common/Badge';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { themeColor } from './colorThemes';
+import EditKeywordModal from './EditKeywordModal';
 
 export function fmt(n) {
   if (n == null) return '—';
@@ -94,8 +95,9 @@ function VolumeSparkline({ monthlySearches, themeKey }) {
   );
 }
 
-export default function KeywordRankingsTable({ items, isViewer, onRemove, removePending, themeKey }) {
+export default function KeywordRankingsTable({ items, isViewer, onRemove, removePending, themeKey, siteId }) {
   const [pendingRemove, setPendingRemove] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
 
   const sortedItems = [...(items || [])].sort((a, b) => {
     const ap = a.position;
@@ -200,15 +202,26 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
                 </td>
                 {!isViewer && (
                   <td className="py-2 px-2">
-                    <button
-                      onClick={() => setPendingRemove(it.keyword)}
-                      title="Remove keyword"
-                      className="text-brand-outline hover:text-red-500 transition-colors"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center gap-2 justify-end">
+                      <button
+                        onClick={() => setEditingItem(it)}
+                        title="Edit keyword"
+                        className="text-brand-outline hover:text-brand-primary transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setPendingRemove(it.keyword)}
+                        title="Remove keyword"
+                        className="text-brand-outline hover:text-red-500 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                 )}
               </tr>
@@ -228,6 +241,13 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
         message={`Stop tracking "${pendingRemove}"? This also clears its position history.`}
         confirmText="Remove"
         isLoading={removePending}
+      />
+
+      <EditKeywordModal
+        isOpen={!!editingItem}
+        onClose={() => setEditingItem(null)}
+        siteId={siteId}
+        item={editingItem}
       />
     </>
   );

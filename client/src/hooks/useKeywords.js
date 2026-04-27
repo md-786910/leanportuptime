@@ -6,6 +6,7 @@ import {
   addKeywordsBulk,
   removeKeyword,
   refreshKeywords,
+  manualOverrideKeyword,
 } from '../api/keywords.api';
 
 export const useKeywordsStatus = (siteId) => {
@@ -66,6 +67,21 @@ export const useRemoveKeyword = (siteId) => {
     onError: (err) => {
       const errData = err.response?.data?.error;
       toast.error(errData?.message || 'Failed to remove keyword');
+    },
+  });
+};
+
+export const useKeywordManualOverride = (siteId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ keyword, payload }) => manualOverrideKeyword(siteId, keyword, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['keywordsStatus', siteId] });
+      toast.success('Keyword updated');
+    },
+    onError: (err) => {
+      const errData = err.response?.data?.error;
+      toast.error(errData?.message || 'Failed to update keyword');
     },
   });
 };

@@ -99,6 +99,12 @@ const siteSchema = new mongoose.Schema(
       referringDomains: { type: Number, default: 0 },
       newLinksLast30d: { type: Number, default: 0 },
       lostLinksLast30d: { type: Number, default: 0 },
+      // Previous snapshots — drive delta chips in the UI. Null until the first change.
+      previousDomainRank: { type: Number, default: null },
+      previousBacklinksCount: { type: Number, default: null },
+      previousReferringDomains: { type: Number, default: null },
+      previousNewLinksLast30d: { type: Number, default: null },
+      previousLostLinksLast30d: { type: Number, default: null },
       providerName: { type: String, default: null },
       providerMetric: { type: String, default: null },
       lastFetchedAt: { type: Date, default: null },
@@ -106,7 +112,7 @@ const siteSchema = new mongoose.Schema(
       refreshCountThisMonth: { type: Number, default: 0 },
       monthKey: { type: String, default: null },
       items: [{
-        _id: false,
+        // _id auto-generated so admins can address rows for PATCH/DELETE
         sourceUrl: { type: String },
         targetUrl: { type: String },
         anchor: { type: String },
@@ -115,6 +121,10 @@ const siteSchema = new mongoose.Schema(
         lastSeen: { type: Date },
         linkType: { type: String },
         domainFromRank: { type: Number },
+        source: { type: String, enum: ['api', 'manual'], default: 'api' },
+        addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        updatedAt: { type: Date, default: null },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
       }],
       listFetchedAt: { type: Date, default: null },
       listFetchError: { type: String, default: null },
@@ -131,6 +141,35 @@ const siteSchema = new mongoose.Schema(
       }],
       historyFetchedAt: { type: Date, default: null },
       historyFetchError: { type: String, default: null },
+      // Append-only audit log for both API refreshes and manual admin edits.
+      // `kind` discriminates aggregate-stats changes from per-item actions.
+      changeLog: [{
+        _id: false,
+        changedAt: { type: Date, default: Date.now },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        source: { type: String, enum: ['api', 'manual'], required: true },
+        kind: { type: String, enum: ['stats', 'item-added', 'item-updated', 'item-removed'], required: true },
+        // Populated for kind === 'stats'
+        before: {
+          domainRank: { type: Number, default: null },
+          backlinksCount: { type: Number, default: null },
+          referringDomains: { type: Number, default: null },
+          newLinksLast30d: { type: Number, default: null },
+          lostLinksLast30d: { type: Number, default: null },
+        },
+        after: {
+          domainRank: { type: Number, default: null },
+          backlinksCount: { type: Number, default: null },
+          referringDomains: { type: Number, default: null },
+          newLinksLast30d: { type: Number, default: null },
+          lostLinksLast30d: { type: Number, default: null },
+        },
+        // Populated for kind === 'item-*'
+        itemId: { type: mongoose.Schema.Types.ObjectId, default: null },
+        itemSourceUrl: { type: String, default: null },
+        itemBefore: { type: mongoose.Schema.Types.Mixed, default: null },
+        itemAfter: { type: mongoose.Schema.Types.Mixed, default: null },
+      }],
     },
     keywords: {
       items: [{
@@ -160,6 +199,8 @@ const siteSchema = new mongoose.Schema(
           position: { type: Number, default: null },
           url: { type: String, default: null },
           checkedAt: { type: Date },
+          source: { type: String, enum: ['api', 'manual'], default: 'api' },
+          changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
         }],
       }],
       providerName: { type: String, default: null },

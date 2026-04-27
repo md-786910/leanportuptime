@@ -1,6 +1,23 @@
+const mongoose = require('mongoose');
 const Site = require('../models/Site');
 const AppSettings = require('../models/AppSettings');
 const backlinksService = require('../services/backlinks/backlinks.service');
+
+const CHANGELOG_MAX_ENTRIES = 50;
+const STATS_FIELDS = [
+  'domainRank',
+  'backlinksCount',
+  'referringDomains',
+  'newLinksLast30d',
+  'lostLinksLast30d',
+];
+const PREVIOUS_FIELD_BY_STAT = {
+  domainRank: 'previousDomainRank',
+  backlinksCount: 'previousBacklinksCount',
+  referringDomains: 'previousReferringDomains',
+  newLinksLast30d: 'previousNewLinksLast30d',
+  lostLinksLast30d: 'previousLostLinksLast30d',
+};
 
 function buildQuotaInfo(site, limit, currentMonthKey) {
   const used = site.backlinks?.monthKey === currentMonthKey
@@ -14,9 +31,138 @@ function buildQuotaInfo(site, limit, currentMonthKey) {
   };
 }
 
+function snapshotStats(bl) {
+  return STATS_FIELDS.reduce((acc, k) => {
+    acc[k] = bl?.[k] ?? null;
+    return acc;
+  }, {});
+}
+
+function statsEqual(a, b) {
+  return STATS_FIELDS.every((k) => (a?.[k] ?? null) === (b?.[k] ?? null));
+}
+
+function serializeBacklinks(bl) {
+  return {
+    domainRank: bl.domainRank || 0,
+    backlinksCount: bl.backlinksCount || 0,
+    referringDomains: bl.referringDomains || 0,
+    newLinksLast30d: bl.newLinksLast30d || 0,
+    lostLinksLast30d: bl.lostLinksLast30d || 0,
+    previousDomainRank: bl.previousDomainRank ?? null,
+    previousBacklinksCount: bl.previousBacklinksCount ?? null,
+    previousReferringDomains: bl.previousReferringDomains ?? null,
+    previousNewLinksLast30d: bl.previousNewLinksLast30d ?? null,
+    previousLostLinksLast30d: bl.previousLostLinksLast30d ?? null,
+    providerName: bl.providerName || null,
+    providerMetric: bl.providerMetric || null,
+    lastFetchedAt: bl.lastFetchedAt || null,
+    fetchError: bl.fetchError || null,
+    items: (bl.items || []).map(serializeItem),
+    listFetchedAt: bl.listFetchedAt || null,
+    listFetchError: bl.listFetchError || null,
+    history: bl.history || [],
+    historyFetchedAt: bl.historyFetchedAt || null,
+    historyFetchError: bl.historyFetchError || null,
+  };
+}
+
+function serializeItem(it) {
+  const o = typeof it.toObject === 'function' ? it.toObject() : { ...it };
+  return {
+    _id: o._id ? String(o._id) : undefined,
+    sourceUrl: o.sourceUrl || null,
+    targetUrl: o.targetUrl || null,
+    anchor: o.anchor || null,
+    doFollow: typeof o.doFollow === 'boolean' ? o.doFollow : null,
+    firstSeen: o.firstSeen || null,
+    lastSeen: o.lastSeen || null,
+    linkType: o.linkType || null,
+    domainFromRank: typeof o.domainFromRank === 'number' ? o.domainFromRank : null,
+    source: o.source || 'api',
+    addedBy: o.addedBy ? String(o.addedBy) : null,
+    updatedAt: o.updatedAt || null,
+    updatedBy: o.updatedBy ? String(o.updatedBy) : null,
+  };
+}
+
+function pushChangeLog(bl, entry) {
+  if (!Array.isArray(bl.changeLog)) bl.changeLog = [];
+  bl.changeLog.push(entry);
+  if (bl.changeLog.length > CHANGELOG_MAX_ENTRIES) {
+    bl.changeLog.splice(0, bl.changeLog.length - CHANGELOG_MAX_ENTRIES);
+  }
+}
+
+// Merge an incoming API items array into the existing items array, preserving
+// manually-added/edited rows (matched case-insensitively by sourceUrl).
+function mergeItems(existing, incoming) {
+  const existingList = (existing || []).map((it) => (typeof it.toObject === 'function' ? it.toObject() : it));
+  const incomingList = incoming || [];
+
+  const manualByUrl = new Map();
+  for (const it of existingList) {
+    if (it.source === 'manual' && it.sourceUrl) {
+      manualByUrl.set(it.sourceUrl.toLowerCase(), it);
+    }
+  }
+
+  const seenManualKeys = new Set();
+  const merged = [];
+
+  for (const api of incomingList) {
+    const key = (api.sourceUrl || '').toLowerCase();
+    const manualMatch = manualByUrl.get(key);
+    if (manualMatch) {
+      // Refresh scraped fields on the manual row but keep its provenance metadata.
+      merged.push({
+        ...manualMatch,
+        targetUrl: api.targetUrl ?? manualMatch.targetUrl,
+        anchor: api.anchor ?? manualMatch.anchor,
+        doFollow: typeof api.doFollow === 'boolean' ? api.doFollow : manualMatch.doFollow,
+        linkType: api.linkType ?? manualMatch.linkType,
+        firstSeen: api.firstSeen ?? manualMatch.firstSeen,
+        lastSeen: api.lastSeen ?? manualMatch.lastSeen,
+        domainFromRank: typeof api.domainFromRank === 'number' ? api.domainFromRank : manualMatch.domainFromRank,
+      });
+      seenManualKeys.add(key);
+    } else {
+      merged.push({ ...api, source: 'api' });
+    }
+  }
+
+  // Preserve manual rows that didn't match any incoming API row.
+  for (const [key, manualRow] of manualByUrl.entries()) {
+    if (!seenManualKeys.has(key)) merged.push(manualRow);
+  }
+
+  return merged;
+}
+
+// One-time backfill: items saved under the old (`_id: false`) schema lack an
+// _id. Assign fresh ObjectIds so subsequent PATCH/DELETE by id succeed. Called
+// from getStatus so the transition is transparent on first admin load.
+async function backfillLegacyItemIds(site) {
+  const items = site?.backlinks?.items;
+  if (!Array.isArray(items) || items.length === 0) return false;
+  let mutated = false;
+  for (const it of items) {
+    if (!it._id) {
+      it._id = new mongoose.Types.ObjectId();
+      mutated = true;
+    }
+  }
+  if (mutated) {
+    site.markModified('backlinks.items');
+    await site.save();
+  }
+  return mutated;
+}
+
 exports.getStatus = async (req, res, next) => {
   try {
     const site = req.site;
+    await backfillLegacyItemIds(site);
     const settings = await AppSettings.getSingleton();
     const currentMonthKey = backlinksService.currentMonthKey();
 
@@ -26,23 +172,7 @@ exports.getStatus = async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        backlinks: {
-          domainRank: bl.domainRank || 0,
-          backlinksCount: bl.backlinksCount || 0,
-          referringDomains: bl.referringDomains || 0,
-          newLinksLast30d: bl.newLinksLast30d || 0,
-          lostLinksLast30d: bl.lostLinksLast30d || 0,
-          providerName: bl.providerName || null,
-          providerMetric: bl.providerMetric || null,
-          lastFetchedAt,
-          fetchError: bl.fetchError || null,
-          items: bl.items || [],
-          listFetchedAt: bl.listFetchedAt || null,
-          listFetchError: bl.listFetchError || null,
-          history: bl.history || [],
-          historyFetchedAt: bl.historyFetchedAt || null,
-          historyFetchError: bl.historyFetchError || null,
-        },
+        backlinks: serializeBacklinks(bl),
         isStale: backlinksService.isStale(lastFetchedAt),
         hasData: !!lastFetchedAt,
         quota: buildQuotaInfo(site, settings.backlinksMonthlyLimit, currentMonthKey),
@@ -96,11 +226,9 @@ exports.refresh = async (req, res, next) => {
     try {
       summary = await backlinksService.fetchSummary(site.url);
     } catch (err) {
-      // Save error on site, return appropriate status
       await Site.findByIdAndUpdate(site._id, {
         'backlinks.fetchError': err.message,
       });
-
       const status = err.statusCode || 502;
       return res.status(status).json({
         success: false,
@@ -111,9 +239,7 @@ exports.refresh = async (req, res, next) => {
       });
     }
 
-    // Also fetch per-link list. Partial failure allowed: summary still commits
-    // even if list fetch fails (e.g. provider doesn't support listing, or network error).
-    // Quota still increments by 1 — the refresh click is a single user-facing action.
+    // Partial-failure-allowed sub-fetches.
     let listItems = null;
     let listFetchError = null;
     try {
@@ -124,7 +250,6 @@ exports.refresh = async (req, res, next) => {
       listFetchError = err.message;
     }
 
-    // Also fetch monthly history (24 months). Same partial-failure semantics.
     let historyItems = null;
     let historyFetchError = null;
     try {
@@ -135,76 +260,316 @@ exports.refresh = async (req, res, next) => {
       historyFetchError = err.message;
     }
 
-    // Save data + increment counter
+    // Apply to the loaded doc so we can mutate sub-arrays (changeLog, items) cleanly.
     const now = new Date();
-    const newCount = currentCount + 1;
-    const update = {
-      'backlinks.domainRank': summary.domainRank,
-      'backlinks.backlinksCount': summary.backlinksCount,
-      'backlinks.referringDomains': summary.referringDomains,
-      'backlinks.newLinksLast30d': summary.newLinksLast30d,
-      'backlinks.lostLinksLast30d': summary.lostLinksLast30d,
-      'backlinks.providerName': summary.providerName,
-      'backlinks.providerMetric': summary.providerMetric,
-      'backlinks.lastFetchedAt': now,
-      'backlinks.fetchError': null,
-      'backlinks.refreshCountThisMonth': newCount,
-      'backlinks.monthKey': currentMonthKey,
+    if (!site.backlinks) site.backlinks = {};
+    const bl = site.backlinks;
+
+    const before = snapshotStats(bl);
+    const after = {
+      domainRank: summary.domainRank,
+      backlinksCount: summary.backlinksCount,
+      referringDomains: summary.referringDomains,
+      newLinksLast30d: summary.newLinksLast30d,
+      lostLinksLast30d: summary.lostLinksLast30d,
     };
+
+    if (!statsEqual(before, after)) {
+      for (const k of STATS_FIELDS) bl[PREVIOUS_FIELD_BY_STAT[k]] = before[k];
+      pushChangeLog(bl, {
+        changedAt: now,
+        changedBy: null,
+        source: 'api',
+        kind: 'stats',
+        before,
+        after,
+      });
+    }
+
+    for (const k of STATS_FIELDS) bl[k] = after[k];
+    bl.providerName = summary.providerName;
+    bl.providerMetric = summary.providerMetric;
+    bl.lastFetchedAt = now;
+    bl.fetchError = null;
+    bl.refreshCountThisMonth = currentCount + 1;
+    bl.monthKey = currentMonthKey;
+
     if (listItems) {
-      update['backlinks.items'] = listItems;
-      update['backlinks.listFetchedAt'] = now;
-      update['backlinks.listFetchError'] = null;
+      bl.items = mergeItems(bl.items, listItems);
+      bl.listFetchedAt = now;
+      bl.listFetchError = null;
     } else {
-      update['backlinks.listFetchError'] = listFetchError;
+      bl.listFetchError = listFetchError;
     }
+
     if (historyItems) {
-      update['backlinks.history'] = historyItems;
-      update['backlinks.historyFetchedAt'] = now;
-      update['backlinks.historyFetchError'] = null;
+      bl.history = historyItems;
+      bl.historyFetchedAt = now;
+      bl.historyFetchError = null;
     } else {
-      update['backlinks.historyFetchError'] = historyFetchError;
+      bl.historyFetchError = historyFetchError;
     }
 
-    await Site.findByIdAndUpdate(site._id, update);
-
-    // Read existing items if list/history fetch failed (so response is consistent with DB)
-    const existingItems = site.backlinks?.items || [];
-    const existingListFetchedAt = site.backlinks?.listFetchedAt || null;
-    const existingHistory = site.backlinks?.history || [];
-    const existingHistoryFetchedAt = site.backlinks?.historyFetchedAt || null;
+    site.markModified('backlinks');
+    await site.save();
 
     res.json({
       success: true,
       data: {
-        backlinks: {
-          domainRank: summary.domainRank,
-          backlinksCount: summary.backlinksCount,
-          referringDomains: summary.referringDomains,
-          newLinksLast30d: summary.newLinksLast30d,
-          lostLinksLast30d: summary.lostLinksLast30d,
-          providerName: summary.providerName,
-          providerMetric: summary.providerMetric,
-          lastFetchedAt: now,
-          fetchError: null,
-          items: listItems || existingItems,
-          listFetchedAt: listItems ? now : existingListFetchedAt,
-          listFetchError,
-          history: historyItems || existingHistory,
-          historyFetchedAt: historyItems ? now : existingHistoryFetchedAt,
-          historyFetchError,
-        },
+        backlinks: serializeBacklinks(bl),
         isStale: false,
         hasData: true,
         quota: {
-          used: newCount,
+          used: bl.refreshCountThisMonth,
           limit,
-          remaining: Math.max(0, limit - newCount),
+          remaining: Math.max(0, limit - bl.refreshCountThisMonth),
           monthKey: currentMonthKey,
         },
         providerInfo,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /manual — admin-only override of aggregate DA stats.
+exports.manualOverride = async (req, res, next) => {
+  try {
+    const site = req.site;
+    if (!site.backlinks) site.backlinks = {};
+    const bl = site.backlinks;
+
+    const body = req.body || {};
+    const updates = {};
+    for (const k of STATS_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(body, k)) {
+        const v = body[k];
+        if (v === null || v === '') {
+          updates[k] = null;
+        } else {
+          const n = Number(v);
+          if (!Number.isFinite(n)) {
+            return res.status(400).json({
+              success: false,
+              error: { code: 'INVALID_VALUE', message: `Field "${k}" must be a number` },
+            });
+          }
+          updates[k] = n;
+        }
+      }
+    }
+
+    const disallowed = Object.keys(body).filter((k) => !STATS_FIELDS.includes(k));
+    if (disallowed.length) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'UNKNOWN_FIELDS', message: `Unsupported fields: ${disallowed.join(', ')}` },
+      });
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'EMPTY_PAYLOAD', message: 'Provide at least one field to update' },
+      });
+    }
+
+    const before = snapshotStats(bl);
+    const after = { ...before, ...updates };
+
+    if (!statsEqual(before, after)) {
+      for (const k of Object.keys(updates)) bl[PREVIOUS_FIELD_BY_STAT[k]] = before[k];
+      pushChangeLog(bl, {
+        changedAt: new Date(),
+        changedBy: req.user?._id || null,
+        source: 'manual',
+        kind: 'stats',
+        before,
+        after,
+      });
+    }
+
+    for (const k of Object.keys(updates)) bl[k] = updates[k];
+
+    site.markModified('backlinks');
+    await site.save();
+
+    res.json({
+      success: true,
+      data: {
+        backlinks: serializeBacklinks(bl),
+        isStale: backlinksService.isStale(bl.lastFetchedAt),
+        hasData: !!bl.lastFetchedAt,
+        quota: buildQuotaInfo(site, (await AppSettings.getSingleton()).backlinksMonthlyLimit, backlinksService.currentMonthKey()),
+        providerInfo: backlinksService.getProviderInfo(),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getChangelog = async (req, res, next) => {
+  try {
+    const site = await Site.findById(req.site._id).populate('backlinks.changeLog.changedBy', 'email').lean();
+    const entries = (site?.backlinks?.changeLog || []).slice().reverse();
+    res.json({ success: true, data: { entries } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /items — add a manual backlink row.
+exports.addItem = async (req, res, next) => {
+  try {
+    const site = req.site;
+    if (!site.backlinks) site.backlinks = {};
+    const bl = site.backlinks;
+    if (!Array.isArray(bl.items)) bl.items = [];
+
+    const { sourceUrl, targetUrl, anchor, doFollow, linkType, firstSeen, lastSeen, domainFromRank } = req.body || {};
+    if (!sourceUrl || typeof sourceUrl !== 'string') {
+      return res.status(400).json({ success: false, error: { code: 'SOURCE_URL_REQUIRED', message: 'sourceUrl is required' } });
+    }
+
+    const normalized = sourceUrl.trim();
+    const dup = bl.items.find((it) => (it.sourceUrl || '').toLowerCase() === normalized.toLowerCase());
+    if (dup) {
+      return res.status(409).json({ success: false, error: { code: 'DUPLICATE_SOURCE_URL', message: 'A backlink with this sourceUrl already exists' } });
+    }
+
+    const now = new Date();
+    const newItem = {
+      sourceUrl: normalized,
+      targetUrl: targetUrl || null,
+      anchor: anchor || null,
+      doFollow: typeof doFollow === 'boolean' ? doFollow : undefined,
+      linkType: linkType || null,
+      firstSeen: firstSeen ? new Date(firstSeen) : null,
+      lastSeen: lastSeen ? new Date(lastSeen) : null,
+      domainFromRank: typeof domainFromRank === 'number' ? domainFromRank : (domainFromRank ? Number(domainFromRank) : undefined),
+      source: 'manual',
+      addedBy: req.user?._id || null,
+      updatedAt: null,
+      updatedBy: null,
+    };
+
+    bl.items.push(newItem);
+    const created = bl.items[bl.items.length - 1];
+
+    pushChangeLog(bl, {
+      changedAt: now,
+      changedBy: req.user?._id || null,
+      source: 'manual',
+      kind: 'item-added',
+      itemId: created._id,
+      itemSourceUrl: created.sourceUrl,
+      itemBefore: null,
+      itemAfter: created.toObject ? created.toObject() : { ...created },
+    });
+
+    site.markModified('backlinks');
+    await site.save();
+
+    res.status(201).json({ success: true, data: { item: serializeItem(created) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const ITEM_EDITABLE_FIELDS = ['sourceUrl', 'targetUrl', 'anchor', 'doFollow', 'linkType', 'firstSeen', 'lastSeen', 'domainFromRank'];
+
+exports.updateItem = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const { itemId } = req.params;
+    const bl = site.backlinks || {};
+    const item = Array.isArray(bl.items) ? bl.items.id?.(itemId) : null;
+    if (!item) {
+      return res.status(404).json({ success: false, error: { code: 'ITEM_NOT_FOUND', message: 'Backlink item not found' } });
+    }
+
+    const before = item.toObject ? item.toObject() : { ...item };
+    const body = req.body || {};
+    const disallowed = Object.keys(body).filter((k) => !ITEM_EDITABLE_FIELDS.includes(k));
+    if (disallowed.length) {
+      return res.status(400).json({ success: false, error: { code: 'UNKNOWN_FIELDS', message: `Unsupported fields: ${disallowed.join(', ')}` } });
+    }
+
+    for (const k of ITEM_EDITABLE_FIELDS) {
+      if (!Object.prototype.hasOwnProperty.call(body, k)) continue;
+      const v = body[k];
+      if (k === 'doFollow') {
+        item.doFollow = typeof v === 'boolean' ? v : (v === 'true' || v === 1);
+      } else if (k === 'firstSeen' || k === 'lastSeen') {
+        item[k] = v ? new Date(v) : null;
+      } else if (k === 'domainFromRank') {
+        if (v === null || v === '') item.domainFromRank = undefined;
+        else {
+          const n = Number(v);
+          if (!Number.isFinite(n)) return res.status(400).json({ success: false, error: { code: 'INVALID_VALUE', message: 'domainFromRank must be a number' } });
+          item.domainFromRank = n;
+        }
+      } else {
+        item[k] = v == null ? null : String(v);
+      }
+    }
+
+    item.source = 'manual';
+    item.updatedAt = new Date();
+    item.updatedBy = req.user?._id || null;
+
+    pushChangeLog(bl, {
+      changedAt: item.updatedAt,
+      changedBy: req.user?._id || null,
+      source: 'manual',
+      kind: 'item-updated',
+      itemId: item._id,
+      itemSourceUrl: item.sourceUrl,
+      itemBefore: before,
+      itemAfter: item.toObject ? item.toObject() : { ...item },
+    });
+
+    site.markModified('backlinks');
+    await site.save();
+
+    res.json({ success: true, data: { item: serializeItem(item) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.removeItem = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const { itemId } = req.params;
+    const bl = site.backlinks || {};
+    const item = Array.isArray(bl.items) ? bl.items.id?.(itemId) : null;
+    if (!item) {
+      return res.status(404).json({ success: false, error: { code: 'ITEM_NOT_FOUND', message: 'Backlink item not found' } });
+    }
+
+    const snapshot = item.toObject ? item.toObject() : { ...item };
+
+    if (typeof item.deleteOne === 'function') item.deleteOne();
+    else bl.items.pull({ _id: itemId });
+
+    pushChangeLog(bl, {
+      changedAt: new Date(),
+      changedBy: req.user?._id || null,
+      source: 'manual',
+      kind: 'item-removed',
+      itemId: snapshot._id,
+      itemSourceUrl: snapshot.sourceUrl,
+      itemBefore: snapshot,
+      itemAfter: null,
+    });
+
+    site.markModified('backlinks');
+    await site.save();
+
+    res.json({ success: true, data: { removed: String(snapshot._id) } });
   } catch (error) {
     next(error);
   }
