@@ -6,141 +6,113 @@ export default function KPICards({ sites }) {
   const down = sites.filter((s) => s.currentStatus === 'down').length;
   const degraded = sites.filter((s) => s.currentStatus === 'degraded').length;
 
-  const getPercentage = (value) => (total > 0 ? (value / total) * 100 : 0);
   const uptime = total > 0 ? ((up / total) * 100).toFixed(1) : 0;
 
   const cards = [
     {
-      label: 'Fleet Overview',
+      label: 'Fleet Assets',
       value: total,
-      sublabel: 'Monitored Assets',
-      change: 'Active',
-      trend: 'stable',
+      sub: 'Total monitored',
+      status: 'Active',
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/5',
+      border: 'border-blue-500/20',
+      glow: 'shadow-blue-500/10',
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
-      ),
-      color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-500',
-      accent: 'border-blue-500/20 dark:border-blue-500/30',
-      iconBg: 'bg-blue-50 dark:bg-blue-500/10',
-      lightBg: 'bg-blue-50/30 dark:bg-blue-500/5',
-      percent: 100,
+      )
     },
     {
       label: 'Availability',
       value: `${uptime}%`,
-      sublabel: 'Aggregate Uptime',
-      change: uptime >= 99 ? 'Healthy' : 'Suboptimal',
-      trend: uptime >= 99 ? 'up' : 'down',
+      sub: 'Uptime index',
+      status: uptime >= 99 ? 'Nominal' : 'Warning',
+      color: uptime >= 99 ? 'text-emerald-500' : 'text-amber-500',
+      bg: uptime >= 99 ? 'bg-emerald-500/5' : 'bg-amber-500/5',
+      border: uptime >= 99 ? 'border-emerald-500/20' : 'border-amber-500/20',
+      glow: uptime >= 99 ? 'shadow-emerald-500/10' : 'shadow-amber-500/10',
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-      ),
-      color: 'text-emerald-600 dark:text-emerald-400',
-      bgColor: 'bg-emerald-500',
-      accent: 'border-emerald-500/20 dark:border-emerald-500/30',
-      iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
-      lightBg: 'bg-emerald-50/30 dark:bg-emerald-500/5',
-      percent: getPercentage(up),
+      )
     },
     {
-      label: 'Critical Failures',
+      label: 'Critical',
       value: down,
-      sublabel: 'Immediate Action',
-      change: down > 0 ? `${down} Down` : 'Zero',
-      trend: down > 0 ? 'down' : 'stable',
+      sub: 'Failure states',
+      status: down > 0 ? 'Urgent' : 'Stable',
+      color: down > 0 ? 'text-rose-500' : 'text-brand-outline',
+      bg: down > 0 ? 'bg-rose-500/5' : 'bg-brand-outline/5',
+      border: down > 0 ? 'border-rose-500/20' : 'border-brand-outline/10',
+      glow: down > 0 ? 'shadow-rose-500/10' : 'shadow-transparent',
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-      ),
-      color: 'text-rose-600 dark:text-rose-400',
-      bgColor: 'bg-rose-500',
-      accent: 'border-rose-500/20 dark:border-rose-500/30',
-      iconBg: 'bg-rose-50 dark:bg-rose-500/10',
-      lightBg: 'bg-rose-50/30 dark:bg-rose-500/5',
-      percent: getPercentage(down),
+      )
     },
     {
-      label: 'System Load',
+      label: 'Performance',
       value: degraded,
-      sublabel: 'Latency/Degraded',
-      change: degraded > 0 ? 'Warning' : 'Nominal',
-      trend: degraded > 0 ? 'down' : 'stable',
+      sub: 'Latency issues',
+      status: degraded > 0 ? 'Degraded' : 'Optimal',
+      color: degraded > 0 ? 'text-amber-500' : 'text-brand-outline',
+      bg: degraded > 0 ? 'bg-amber-500/5' : 'bg-brand-outline/5',
+      border: degraded > 0 ? 'border-amber-500/20' : 'border-brand-outline/10',
+      glow: degraded > 0 ? 'shadow-amber-500/10' : 'shadow-transparent',
       icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-      ),
-      color: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-500',
-      accent: 'border-amber-500/20 dark:border-amber-500/30',
-      iconBg: 'bg-amber-50 dark:bg-amber-500/10',
-      lightBg: 'bg-amber-50/30 dark:bg-amber-500/5',
-      percent: getPercentage(degraded),
-    },
+      )
+    }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card) => (
-        <Card
+        <div 
           key={card.label}
-          className={`group relative overflow-hidden transition-all duration-300 border-2 ${card.accent} hover:shadow-xl dark:shadow-none hover:-translate-y-1 ${card.lightBg}`}
-          padding="lg"
+          className={`relative group bg-white dark:bg-brand-surface-container-low border ${card.border} rounded-2xl p-5 shadow-sm hover:shadow-md ${card.glow} transition-all duration-300 overflow-hidden`}
         >
-          {/* Subtle animated light effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          {/* Subtle tech grid background pattern */}
+          <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" 
+               style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
           
-          <div className="flex flex-col gap-6 relative z-10">
-            {/* Header with Icon and Trend Badge */}
-            <div className="flex items-start justify-between">
-              <div className={`h-12 w-12 rounded-2xl ${card.iconBg} flex items-center justify-center ${card.color} shadow-sm border border-white/20 dark:border-white/5`}>
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className={`p-2 rounded-xl ${card.bg} ${card.color} border border-current/10`}>
                 {card.icon}
               </div>
-              <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
-                card.trend === 'down' 
-                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' 
-                  : card.trend === 'stable' 
-                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' 
-                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-              }`}>
-                {card.change}
-              </div>
+              <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border border-current/20 ${card.color} ${card.bg}`}>
+                {card.status}
+              </span>
             </div>
 
-            {/* Value Section */}
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.25em]">
+            <div>
+              <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest mb-1">
                 {card.label}
               </p>
               <div className="flex items-baseline gap-2">
-                <h3 className="text-4xl font-bold text-brand-on-surface dark:text-white tracking-tighter font-headline">
+                <h3 className="text-3xl font-bold text-brand-on-surface dark:text-white tracking-tighter">
                   {card.value}
                 </h3>
+                <span className="text-[11px] font-medium text-brand-outline/60 dark:text-brand-on-surface-variant/40 italic">
+                  {card.sub}
+                </span>
               </div>
-              <p className="text-[11px] font-bold text-brand-outline/70 dark:text-brand-on-surface-variant/70 italic">
-                {card.sublabel}
-              </p>
             </div>
 
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="h-1.5 w-full bg-brand-surface-container-high dark:bg-white/5 rounded-full overflow-hidden border border-brand-outline-variant/10">
-                <div
-                  className={`h-full ${card.bgColor} rounded-full transition-all duration-1000 ease-out`}
-                  style={{ width: `${card.percent}%` }}
-                />
-              </div>
+            {/* Bottom mini gauge indicator */}
+            <div className="h-1 w-full bg-brand-surface-container rounded-full overflow-hidden">
+              <div className={`h-full bg-current transition-all duration-1000 ${card.color}`} 
+                   style={{ width: card.label === 'Fleet Assets' ? '100%' : card.label === 'Availability' ? `${uptime}%` : card.value > 0 ? '100%' : '0%' }} />
             </div>
           </div>
-          
-          {/* Decorative background shape */}
-          <div className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-3xl opacity-10 ${card.bgColor} group-hover:scale-150 transition-transform duration-700`} />
-        </Card>
+        </div>
       ))}
     </div>
   );
