@@ -341,10 +341,12 @@ exports.manualOverride = async (req, res, next) => {
     const bl = site.backlinks;
 
     const body = req.body || {};
+    const { effectiveDate, ...statsBody } = body;
+
     const updates = {};
     for (const k of STATS_FIELDS) {
-      if (Object.prototype.hasOwnProperty.call(body, k)) {
-        const v = body[k];
+      if (Object.prototype.hasOwnProperty.call(statsBody, k)) {
+        const v = statsBody[k];
         if (v === null || v === '') {
           updates[k] = null;
         } else {
@@ -360,7 +362,7 @@ exports.manualOverride = async (req, res, next) => {
       }
     }
 
-    const disallowed = Object.keys(body).filter((k) => !STATS_FIELDS.includes(k));
+    const disallowed = Object.keys(statsBody).filter((k) => !STATS_FIELDS.includes(k));
     if (disallowed.length) {
       return res.status(400).json({
         success: false,
@@ -375,22 +377,121 @@ exports.manualOverride = async (req, res, next) => {
       });
     }
 
+    // Determine effective date and the corresponding history bucket.
+    const currentMonthKey = backlinksService.currentMonthKey();
+    let effective = null;
+    if (effectiveDate) {
+      effective = new Date(effectiveDate);
+      if (Number.isNaN(effective.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'INVALID_DATE', message: 'effectiveDate must be a valid date' },
+        });
+      }
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      if (effective.getTime() > todayEnd.getTime()) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'FUTURE_DATE', message: 'effectiveDate cannot be in the future' },
+        });
+      }
+    }
+    const effectiveMonthKey = effective
+      ? `${effective.getFullYear()}-${String(effective.getMonth() + 1).padStart(2, '0')}`
+      : currentMonthKey;
+    const isBackfill = effectiveMonthKey !== currentMonthKey;
+
     const before = snapshotStats(bl);
     const after = { ...before, ...updates };
 
-    if (!statsEqual(before, after)) {
-      for (const k of Object.keys(updates)) bl[PREVIOUS_FIELD_BY_STAT[k]] = before[k];
+    if (isBackfill) {
+      // Past month → only upsert the history bucket for that month, do NOT touch live stats.
+      if (!Array.isArray(bl.history)) bl.history = [];
+      let bucket = bl.history.find((h) => h.monthKey === effectiveMonthKey);
+      const beforeBucket = bucket ? { ...(typeof bucket.toObject === 'function' ? bucket.toObject() : bucket) } : null;
+      if (!bucket) {
+        bucket = {
+          monthKey: effectiveMonthKey,
+          newDomains: 0,
+          lostDomains: 0,
+          newBacklinks: 0,
+          lostBacklinks: 0,
+          backlinks: 0,
+          referringDomains: 0,
+          rank: 0,
+        };
+        bl.history.push(bucket);
+        bucket = bl.history[bl.history.length - 1];
+      }
+      if (Object.prototype.hasOwnProperty.call(updates, 'domainRank')) bucket.rank = updates.domainRank ?? 0;
+      if (Object.prototype.hasOwnProperty.call(updates, 'backlinksCount')) bucket.backlinks = updates.backlinksCount ?? 0;
+      if (Object.prototype.hasOwnProperty.call(updates, 'referringDomains')) bucket.referringDomains = updates.referringDomains ?? 0;
+      if (Object.prototype.hasOwnProperty.call(updates, 'newLinksLast30d')) bucket.newBacklinks = updates.newLinksLast30d ?? 0;
+      if (Object.prototype.hasOwnProperty.call(updates, 'lostLinksLast30d')) bucket.lostBacklinks = updates.lostLinksLast30d ?? 0;
+
+      // Audit trail: log a stats entry timestamped at the effective date with the bucket's before/after
+      // expressed in the same shape as live stats (so the changelog UI keeps working uniformly).
+      const bucketBeforeAsStats = beforeBucket ? {
+        domainRank: beforeBucket.rank ?? null,
+        backlinksCount: beforeBucket.backlinks ?? null,
+        referringDomains: beforeBucket.referringDomains ?? null,
+        newLinksLast30d: beforeBucket.newBacklinks ?? null,
+        lostLinksLast30d: beforeBucket.lostBacklinks ?? null,
+      } : { domainRank: null, backlinksCount: null, referringDomains: null, newLinksLast30d: null, lostLinksLast30d: null };
+      const bucketAfterAsStats = {
+        domainRank: bucket.rank ?? null,
+        backlinksCount: bucket.backlinks ?? null,
+        referringDomains: bucket.referringDomains ?? null,
+        newLinksLast30d: bucket.newBacklinks ?? null,
+        lostLinksLast30d: bucket.lostBacklinks ?? null,
+      };
       pushChangeLog(bl, {
-        changedAt: new Date(),
+        changedAt: effective,
         changedBy: req.user?._id || null,
         source: 'manual',
         kind: 'stats',
-        before,
-        after,
+        before: bucketBeforeAsStats,
+        after: bucketAfterAsStats,
       });
-    }
+    } else {
+      // Current month → existing behavior plus mirror into this month's history bucket.
+      if (!statsEqual(before, after)) {
+        for (const k of Object.keys(updates)) bl[PREVIOUS_FIELD_BY_STAT[k]] = before[k];
+        pushChangeLog(bl, {
+          changedAt: effective || new Date(),
+          changedBy: req.user?._id || null,
+          source: 'manual',
+          kind: 'stats',
+          before,
+          after,
+        });
+      }
+      for (const k of Object.keys(updates)) bl[k] = updates[k];
 
-    for (const k of Object.keys(updates)) bl[k] = updates[k];
+      // Mirror to history[currentMonthKey] so period charts see today's manual edits.
+      if (!Array.isArray(bl.history)) bl.history = [];
+      let bucket = bl.history.find((h) => h.monthKey === currentMonthKey);
+      if (!bucket) {
+        bucket = {
+          monthKey: currentMonthKey,
+          newDomains: 0,
+          lostDomains: 0,
+          newBacklinks: 0,
+          lostBacklinks: 0,
+          backlinks: 0,
+          referringDomains: 0,
+          rank: 0,
+        };
+        bl.history.push(bucket);
+        bucket = bl.history[bl.history.length - 1];
+      }
+      bucket.rank = after.domainRank ?? 0;
+      bucket.backlinks = after.backlinksCount ?? 0;
+      bucket.referringDomains = after.referringDomains ?? 0;
+      bucket.newBacklinks = after.newLinksLast30d ?? 0;
+      bucket.lostBacklinks = after.lostLinksLast30d ?? 0;
+    }
 
     site.markModified('backlinks');
     await site.save();

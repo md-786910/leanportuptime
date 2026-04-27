@@ -31,10 +31,10 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
         onClick={onClose} 
       />
       <div
-        className={`relative bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[60vh] flex flex-col animate-in fade-in zoom-in-95 duration-300`}
+        className={`relative bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-300`}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-brand-outline-variant dark:border-brand-outline/60">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-brand-outline-variant dark:border-brand-outline/60 flex-shrink-0">
             <h3 className="text-xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">{title}</h3>
             <button
               onClick={onClose}
@@ -46,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
             </button>
           </div>
         )}
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 overflow-y-auto flex-1">
           {children}
         </div>
       </div>
