@@ -275,7 +275,7 @@ export default function DashboardAnalytics({ sites, isLoading }) {
            <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-bold text-brand-on-surface dark:text-white">Performance Benchmarks</h3>
-              <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-1 font-medium">Individual website performance trends over time</p>
+              <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-1 font-medium">website performance trends over time</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold text-brand-outline uppercase tracking-widest">Period</span>
@@ -311,7 +311,26 @@ export default function DashboardAnalytics({ sites, isLoading }) {
           ) : (
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={performanceChartData}>
+                <AreaChart data={performanceChartData}>
+                  <defs>
+                    {trends.map((siteData, idx) => {
+                      const colors = ['#3525cd', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
+                      const color = colors[idx % colors.length];
+                      return (
+                        <linearGradient 
+                          key={`gradient-${siteData.site.id}`}
+                          id={`gradient-${siteData.site.id}`} 
+                          x1="0" 
+                          y1="0" 
+                          x2="0" 
+                          y2="1"
+                        >
+                          <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={color} stopOpacity={0} />
+                        </linearGradient>
+                      );
+                    })}
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="date" 
@@ -326,7 +345,7 @@ export default function DashboardAnalytics({ sites, isLoading }) {
                     domain={[0, 100]}
                   />
                   <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', padding: '12px' }}
                     formatter={(value) => [value ? `${value}/100` : 'N/A']}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
@@ -337,20 +356,23 @@ export default function DashboardAnalytics({ sites, isLoading }) {
                   />
                   {trends.map((siteData, idx) => {
                     const colors = ['#3525cd', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
+                    const color = colors[idx % colors.length];
                     return (
-                      <Line
+                      <Area
                         key={siteData.site.id}
                         type="monotone"
                         dataKey={siteData.site.name}
-                        stroke={colors[idx % colors.length]}
-                        strokeWidth={2}
+                        stroke={color}
+                        strokeWidth={2.5}
+                        fill={`url(#gradient-${siteData.site.id})`}
+                        fillOpacity={1}
                         dot={false}
                         isAnimationActive={true}
                         connectNulls
                       />
                     );
                   })}
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           )}

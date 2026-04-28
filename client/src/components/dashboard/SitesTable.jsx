@@ -90,7 +90,7 @@ export default function SitesTable({ sites, isLoading, onAddSite }) {
           <div 
             key={site._id}
             onClick={() => navigate(`/sites/${site._id}`)}
-            className="group relative bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant/30 rounded-3xl p-5 hover:border-brand-primary/40 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1 overflow-hidden"
+            className="group relative bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant/30 rounded-xl p-5 hover:border-brand-primary/40 transition-all duration-300 cursor-pointer shadow-sm overflow-hidden"
           >
             {/* Top Identity Row */}
             <div className="flex items-start justify-between gap-4 mb-6">
