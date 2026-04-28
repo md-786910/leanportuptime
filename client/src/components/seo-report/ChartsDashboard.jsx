@@ -277,9 +277,7 @@ function BacklinksListSection({ siteId, themeKey }) {
       accent="amber"
       icon={LinkIcon}
     >
-      <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4">
-        <BacklinksSection siteId={siteId} themeKey={themeKey} showTitle={false} variant="backlinks" />
-      </div>
+      <BacklinksSection siteId={siteId} themeKey={themeKey} showTitle={false} variant="backlinks" />
     </ReportSection>
   );
 }

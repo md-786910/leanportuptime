@@ -144,9 +144,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
           accent="amber"
           icon={LinkIcon}
         >
-          <Card>
-            <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="backlinks" />
-          </Card>
+          <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="backlinks" />
         </ReportSection>
 
         {/* All-site traffic — GA4 all sources */}
