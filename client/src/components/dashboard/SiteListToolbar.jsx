@@ -3,7 +3,7 @@ import Button from '../common/Button';
 
 const statusOptions = [
   { 
-    label: 'All Assets', 
+    label: 'Filters', 
     value: '', 
     icon: (
       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,7 +86,7 @@ export default function SiteListToolbar({ onAddSite, statusFilter, onStatusFilte
         {isOpen && (
           <div className="absolute top-full left-0 right-0 sm:left-auto sm:w-64 mt-2 bg-white dark:bg-brand-surface-container-low border-2 border-brand-outline-variant/30 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="px-4 py-2 mb-1 border-b border-brand-outline-variant/20">
-              <span className="text-[10px] font-black text-brand-outline uppercase tracking-[0.2em]">Filter Assets</span>
+              <span className="text-[10px] font-black text-brand-outline tracking-[0.2em]">Filter Assets</span>
             </div>
             {statusOptions.map((opt) => (
               <button
@@ -123,12 +123,12 @@ export default function SiteListToolbar({ onAddSite, statusFilter, onStatusFilte
         <Button 
           onClick={onAddSite} 
           size="md" 
-          className="w-full sm:w-auto px-6 h-[46px] rounded-xl font-black uppercase tracking-widest gap-3 shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all active:scale-95"
+          className="w-full sm:w-auto px-6 h-[46px] rounded-xl font-black tracking-widest gap-3 shadow-lg shadow-brand-primary/20 hover:shadow-brand-primary/30 transition-all active:scale-95"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
           </svg>
-          Initialize Asset
+          Add Site
         </Button>
       )}
     </div>
