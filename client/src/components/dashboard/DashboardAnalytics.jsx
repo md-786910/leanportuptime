@@ -2,9 +2,11 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { useState, useEffect, useMemo } from 'react';
 import Spinner from '../common/Spinner';
 import AlertsFeed from './AlertsFeed';
+import { usePerformanceDashboardTrends } from '../../hooks/useSites';
 
 export default function DashboardAnalytics({ sites, isLoading }) {
-  const [selectedPeriod, setSelectedPeriod] = useState('7d');
+  const [selectedPeriod, setSelectedPeriod] = useState('30');
+  const { trends, isLoading: trendsLoading } = usePerformanceDashboardTrends(parseInt(selectedPeriod));
 
   // Aggregate real data from sites
   const aggregates = useMemo(() => {
@@ -46,6 +48,52 @@ export default function DashboardAnalytics({ sites, isLoading }) {
       };
     });
   }, [sites.length, selectedPeriod]);
+
+  // Transform performance trends data for line chart
+  const performanceChartData = useMemo(() => {
+    if (!trends || !trends.length) return [];
+
+    // Create a map of all unique timestamps
+    const timestampMap = new Map();
+
+    for (const siteData of trends) {
+      for (const entry of siteData.history) {
+        const timestamp = new Date(entry.timestamp).getTime();
+        if (!timestampMap.has(timestamp)) {
+          timestampMap.set(timestamp, {
+            timestamp: entry.timestamp,
+            date: new Date(entry.timestamp).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+            }),
+          });
+        }
+      }
+    }
+
+    // Convert to sorted array
+    const sortedTimestamps = Array.from(timestampMap.values()).sort(
+      (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    // Build chart data with site performance scores
+    const chartData = sortedTimestamps.map((ts) => {
+      const point = { timestamp: ts.timestamp, date: ts.date };
+
+      for (const siteData of trends) {
+        const entry = siteData.history.find(
+          (h) => new Date(h.timestamp).getTime() === new Date(ts.timestamp).getTime()
+        );
+        if (entry) {
+          point[`${siteData.site.name}`] = entry.performanceScore;
+        }
+      }
+
+      return point;
+    });
+
+    return chartData;
+  }, [trends]);
 
   if (isLoading) {
     return (
@@ -224,40 +272,92 @@ export default function DashboardAnalytics({ sites, isLoading }) {
           </div>
         </div> */}
         <div className="lg:col-span-3 bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant dark:border-brand-outline/20 rounded-xl py-4 px-6 shadow-sm">
-           <div className="mb-6">
-            <h3 className="text-xl font-bold text-brand-on-surface dark:text-white">Performance Benchmarks</h3>
-            <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-1 font-medium">Top 5 sites by PageSpeed score</p>
+           <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-brand-on-surface dark:text-white">Performance Benchmarks</h3>
+              <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-1 font-medium">Individual website performance trends over time</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-brand-outline uppercase tracking-widest">Period</span>
+              <div className="flex p-1 bg-brand-surface-container-low dark:bg-brand-on-surface/10 rounded-lg border border-brand-outline-variant dark:border-brand-outline/20">
+                {['7', '30', '90'].map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setSelectedPeriod(period)}
+                    className={`px-3 py-1 rounded text-[10px] font-bold transition-all whitespace-nowrap ${
+                      selectedPeriod === period
+                        ? 'bg-white dark:bg-brand-primary text-brand-primary dark:text-white shadow-sm'
+                        : 'text-brand-outline hover:text-brand-on-surface dark:hover:text-white'
+                    }`}
+                  >
+                    {period}d
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[...sites].sort((a,b) => (b.siteScan?.performanceScore || 0) - (a.siteScan?.performanceScore || 0)).slice(0, 5)}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#777587', fontSize: 10, fontWeight: 600 }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#777587', fontSize: 10, fontWeight: 600 }}
-                  domain={[0, 100]}
-                />
-                <Tooltip
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-                />
-                <Bar 
-                  dataKey="siteScan.performanceScore" 
-                  name="Performance Score"
-                  fill="#8b5cf6" 
-                  radius={[6, 6, 0, 0]}
-                  barSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+
+          {trendsLoading ? (
+            <div className="flex justify-center items-center h-[400px]">
+              <div className="flex flex-col items-center gap-3">
+                <Spinner size="md" />
+                <p className="text-xs font-medium text-brand-outline animate-pulse">Loading performance data...</p>
+              </div>
+            </div>
+          ) : performanceChartData.length === 0 ? (
+            <div className="flex justify-center items-center h-[400px]">
+              <p className="text-sm font-medium text-brand-outline">No performance data available yet. Scans will populate this chart.</p>
+            </div>
+          ) : (
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={performanceChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#777587', fontSize: 10, fontWeight: 600 }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#777587', fontSize: 10, fontWeight: 600 }}
+                    domain={[0, 100]}
+                  />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                    formatter={(value) => [value ? `${value}/100` : 'N/A']}
+                    labelFormatter={(label) => `Date: ${label}`}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    wrapperStyle={{ paddingTop: '20px' }}
+                  />
+                  {trends.map((siteData, idx) => {
+                    const colors = ['#3525cd', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
+                    return (
+                      <Line
+                        key={siteData.site.id}
+                        type="monotone"
+                        dataKey={siteData.site.name}
+                        stroke={colors[idx % colors.length]}
+                        strokeWidth={2}
+                        dot={false}
+                        isAnimationActive={true}
+                        connectNulls
+                      />
+                    );
+                  })}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          
+          <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant mt-4 font-medium">
+            Performance scores represent the overall site scan quality metrics (0-100). Higher scores indicate better performance.
+          </p>
         </div>
 
         {/* Fleet Distribution */}

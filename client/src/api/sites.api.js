@@ -10,6 +10,13 @@ export const fetchSite = async (id) => {
   return data.data;
 };
 
+export const fetchPerformanceDashboardTrends = async (days = 30) => {
+  const { data } = await api.get('/api/sites/performance/dashboard-trends', {
+    params: { days },
+  });
+  return data.data;
+};
+
 export const createSite = async (siteData) => {
   const { data } = await api.post('/api/sites', siteData);
   return data.data;

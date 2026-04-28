@@ -49,6 +49,7 @@ router.use(auth);
 
 router.get('/', sitesController.list);
 router.post('/', requireAdmin, validate(createSiteSchema), sitesController.create);
+router.get('/performance/dashboard-trends', require('../controllers/sitescan.controller').getDashboardTrends);
 router.get('/:id', sitesController.get);
 router.patch('/:id', requireAdmin, validate(updateSiteSchema), sitesController.update);
 router.delete('/:id', requireAdmin, sitesController.remove);
