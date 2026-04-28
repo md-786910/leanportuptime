@@ -8,6 +8,7 @@ import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsFilters } from '..
 import ChannelBreakdownChart from './ChannelBreakdownChart';
 import TopPagesVisitedTable from './TopPagesVisitedTable';
 import GA4EventsPanel from './GA4EventsPanel';
+import CompareWebsiteAnalyticsModal from './CompareWebsiteAnalyticsModal';
 
 function formatNumber(n) {
   if (n == null) return '—';
@@ -46,31 +47,28 @@ function sumEventUsersByName(allEvents, matcher) {
 
 function KpiCard({ label, value, subtitle, accent }) {
   return (
-    <div className={`py-3 px-4 rounded-xl border ${accent.border} ${accent.bg} ${accent.color} space-y-2 relative overflow-hidden group`}>
-      <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-current opacity-[0.04] rounded-full group-hover:scale-110 transition-transform duration-500" />
-      <div className="flex items-center gap-2">
-        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 bg-current`} />
-        <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em] truncate">
-          {label}
-        </p>
-      </div>
-      <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-tight">
+    <div className="relative rounded-xl bg-white dark:bg-brand-surface-container-lowest border border-brand-outline-variant/70 dark:border-brand-outline/60 px-4 pt-4 pb-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] hover:border-brand-outline-variant dark:hover:border-brand-outline transition-all overflow-hidden group">
+      <div className={`absolute top-0 left-0 right-0 h-[1px] ${accent.bar}`} />
+      <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] mb-1.5">
+        {label}
+      </p>
+      <p className="text-[26px] font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-none mb-1">
         {value}
       </p>
       {subtitle && (
-        <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-medium font-label">{subtitle}</p>
+        <p className="text-[10.5px] text-brand-outline dark:text-brand-on-surface-variant font-medium font-label leading-tight">{subtitle}</p>
       )}
     </div>
   );
 }
 
 const KPI_ACCENTS = [
-  { color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50/50 dark:bg-indigo-500/5', border: 'border-indigo-100 dark:border-indigo-500/20' },
-  { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50/50 dark:bg-blue-500/5', border: 'border-blue-100 dark:border-blue-500/20' },
-  { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/50 dark:bg-emerald-500/5', border: 'border-emerald-100 dark:border-emerald-500/20' },
-  { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/50 dark:bg-amber-500/5', border: 'border-amber-100 dark:border-amber-500/20' },
-  { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50/50 dark:bg-rose-500/5', border: 'border-rose-100 dark:border-rose-500/20' },
-  { color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50/50 dark:bg-violet-500/5', border: 'border-violet-100 dark:border-violet-500/20' },
+  { bar: 'bg-[#6366F1] dark:bg-[#818CF8]' }, // refined indigo
+  { bar: 'bg-[#0EA5E9] dark:bg-[#38BDF8]' }, // premium sky blue
+  { bar: 'bg-[#10B981] dark:bg-[#34D399]' }, // elegant emerald
+  { bar: 'bg-[#F59E0B] dark:bg-[#FBBF24]' }, // warm gold (better than amber)
+  { bar: 'bg-[#F43F5E] dark:bg-[#FB7185]' }, // modern rose/red
+  { bar: 'bg-[#8B5CF6] dark:bg-[#A78BFA]' }, // soft violet
 ];
 
 function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
@@ -89,6 +87,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
 
   const channelsRefreshing = pendingScope === 'channels' && refreshing;
   const pagesRefreshing = pendingScope === 'pages' && refreshing;
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const setExcludedCountries = (excludedCountries) => {
     setPendingScope('channels');
@@ -172,6 +171,17 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
               All Traffic
             </span>
           </div>
+          <button
+            type="button"
+            onClick={() => setCompareOpen(true)}
+            className="text-xs font-medium px-2 py-1 rounded-md border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1.5 font-label self-start sm:self-auto"
+            title="Compare against a past period"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+            </svg>
+            Compare
+          </button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiCard label="Total Users" value={formatNumber(overview.uniqueVisitors)} accent={KPI_ACCENTS[0]} />
@@ -226,6 +236,14 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
           />
         </BentoCard>
       )}
+
+      <CompareWebsiteAnalyticsModal
+        isOpen={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        siteId={siteId}
+        currentData={data}
+        currentLabel="Current Period"
+      />
     </div>
   );
 }
