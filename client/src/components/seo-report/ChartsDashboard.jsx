@@ -567,6 +567,7 @@ function GASection({ siteId, themeKey }) {
                 onExclude={excludePage}
                 onRestore={restorePage}
                 isRefreshing={pagesRefreshing}
+                siteId={siteId}
               />
             </PanelCard>
           )}

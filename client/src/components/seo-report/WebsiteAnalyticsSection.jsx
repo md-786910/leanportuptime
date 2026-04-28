@@ -220,6 +220,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
               onExclude={excludePage}
               onRestore={restorePage}
               isRefreshing={pagesRefreshing}
+              siteId={siteId}
             />
           </BentoCard>
         </div>
