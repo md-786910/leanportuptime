@@ -153,7 +153,7 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
       isOpen={isOpen}
       onClose={onClose}
       title="Compare Organic Landing Pages"
-      width="lg"
+      width="4xl"
       footer={
         <div className="flex items-center justify-end gap-3">
           <Button type="button" onClick={onClose}>Done</Button>
