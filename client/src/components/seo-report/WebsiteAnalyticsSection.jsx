@@ -195,7 +195,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
 
       {/* GA4 events — full width (table reads better wide) */}
       <BentoCard>
-        <GA4EventsPanel events={events.allEvents || []} themeKey={themeKey} />
+        <GA4EventsPanel events={events.allEvents || []} themeKey={themeKey} siteId={siteId} />
       </BentoCard>
 
       {/* Channel breakdown + Top pages — side-by-side 2-col grid */}

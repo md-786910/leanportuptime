@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { themeColor } from './colorThemes';
+import CompareEventsModal from './CompareEventsModal';
 
 const FORM_EVENT_NAMES = new Set([
   'generate_lead',
@@ -46,8 +47,9 @@ function eventBadge(eventName) {
   return null;
 }
 
-export default function GA4EventsPanel({ events, themeKey }) {
+export default function GA4EventsPanel({ events, themeKey, siteId }) {
   const [expanded, setExpanded] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const list = Array.isArray(events) ? events : [];
 
   const { totalCount, maxCount, sorted } = useMemo(() => {
@@ -63,6 +65,7 @@ export default function GA4EventsPanel({ events, themeKey }) {
 
   return (
     <div>
+      {/* Event and clicks */}
       <div className="flex items-start justify-between mb-4">
         <div>
           <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant flex items-center gap-2">
@@ -75,12 +78,27 @@ export default function GA4EventsPanel({ events, themeKey }) {
             Every event tracked during this period — use this to identify real event names in your GA4 setup.
           </p>
         </div>
-        {sorted.length > 0 && (
-          <div className="text-right flex-shrink-0">
-            <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Total events</div>
-            <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{formatNumber(totalCount)}</div>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* {sorted.length > 0 && (
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Total events</div>
+              <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{formatNumber(totalCount)}</div>
+            </div>
+          )} */}
+          {siteId && sorted.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setCompareOpen(true)}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1.5 font-label"
+              title="Compare against a past period"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+              </svg>
+              Compare
+            </button>
+          )}
+        </div>
       </div>
 
       {sorted.length === 0 ? (
@@ -158,6 +176,16 @@ export default function GA4EventsPanel({ events, themeKey }) {
             {expanded ? `Show top 20 only` : `Show all ${sorted.length} events`}
           </button>
         </div>
+      )}
+
+      {siteId && (
+        <CompareEventsModal
+          isOpen={compareOpen}
+          onClose={() => setCompareOpen(false)}
+          siteId={siteId}
+          currentEvents={list}
+          currentLabel="Current Period"
+        />
       )}
     </div>
   );
