@@ -1,6 +1,7 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
 import { useState, useEffect, useMemo } from 'react';
 import Spinner from '../common/Spinner';
+import AlertsFeed from './AlertsFeed';
 
 export default function DashboardAnalytics({ sites, isLoading }) {
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
@@ -60,29 +61,7 @@ export default function DashboardAnalytics({ sites, isLoading }) {
   const COLORS = ['#3525cd', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
-    <div className="space-y-10">
-      {/* Period Selector & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest">Timeframe</span>
-          <div className="flex p-1 bg-brand-surface-container-low dark:bg-brand-on-surface/10 rounded-xl border border-brand-outline-variant dark:border-brand-outline/20">
-            {['7d', '30d', '90d'].map((period) => (
-              <button
-                key={period}
-                onClick={() => setSelectedPeriod(period)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  selectedPeriod === period
-                    ? 'bg-white dark:bg-brand-primary text-brand-primary dark:text-white shadow-sm'
-                    : 'text-brand-outline hover:text-brand-on-surface dark:hover:text-white'
-                }`}
-              >
-                {period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-8">
       {/* Fleet Health Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
@@ -124,9 +103,9 @@ export default function DashboardAnalytics({ sites, isLoading }) {
             desc: aggregates?.sslExpiringSoon > 0 ? `${aggregates.sslExpiringSoon} expiring soon` : 'All certificates healthy'
           },
         ].map((stat, idx) => (
-          <div key={idx} className={`p-6 rounded-2xl border ${stat.border} ${stat.bg} space-y-3 relative overflow-hidden group`}>
+          <div key={idx} className={`py-2 px-4 rounded-xl border ${stat.border} ${stat.bg} space-y-2 relative overflow-hidden group`}>
              <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-current opacity-[0.03] rounded-full group-hover:scale-110 transition-transform duration-500" />
-            <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em]">
+            <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em]">
               {stat.label}
             </p>
             <div className="flex items-baseline gap-1">
@@ -146,10 +125,31 @@ export default function DashboardAnalytics({ sites, isLoading }) {
         ))}
       </div>
 
+      {/* Period Selector & Quick Actions */}
+      {/* <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest">Timeframe</span>
+          <div className="flex p-1 bg-brand-surface-container-low dark:bg-brand-on-surface/10 rounded-xl border border-brand-outline-variant dark:border-brand-outline/20">
+            {['7d', '30d', '90d'].map((period) => (
+              <button
+                key={period}
+                onClick={() => setSelectedPeriod(period)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedPeriod === period
+                    ? 'bg-white dark:bg-brand-primary text-brand-primary dark:text-white shadow-sm'
+                    : 'text-brand-outline hover:text-brand-on-surface hover:bg-white dark:hover:text-white'
+                }`}
+              >
+                {period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div> */}
+
       {/* Main Analytics Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Traffic Trends Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant dark:border-brand-outline/20 rounded-3xl p-8 shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* <div className="lg:col-span-3 bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant dark:border-brand-outline/20 rounded-3xl p-8 shadow-sm">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-xl font-bold text-brand-on-surface dark:text-white">Traffic Intelligence</h3>
@@ -222,61 +222,126 @@ export default function DashboardAnalytics({ sites, isLoading }) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
+        </div> */}
+        <div className="lg:col-span-3 bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant dark:border-brand-outline/20 rounded-xl py-4 px-6 shadow-sm">
+           <div className="mb-6">
+            <h3 className="text-xl font-bold text-brand-on-surface dark:text-white">Performance Benchmarks</h3>
+            <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-1 font-medium">Top 5 sites by PageSpeed score</p>
+          </div>
+          <div className="h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={[...sites].sort((a,b) => (b.siteScan?.performanceScore || 0) - (a.siteScan?.performanceScore || 0)).slice(0, 5)}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#777587', fontSize: 10, fontWeight: 600 }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#777587', fontSize: 10, fontWeight: 600 }}
+                  domain={[0, 100]}
+                />
+                <Tooltip
+                  cursor={{ fill: 'transparent' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
+                />
+                <Bar 
+                  dataKey="siteScan.performanceScore" 
+                  name="Performance Score"
+                  fill="#8b5cf6" 
+                  radius={[6, 6, 0, 0]}
+                  barSize={40}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Fleet Distribution */}
-        <div className="bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant dark:border-brand-outline/20 rounded-3xl p-8 shadow-sm flex flex-col">
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-brand-on-surface dark:text-white">Status Distribution</h3>
-            <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-1 font-medium">Infrastructure availability breakdown</p>
-          </div>
-          
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Healthy', value: sites.filter(s => s.currentStatus === 'up').length },
-                      { name: 'Degraded', value: sites.filter(s => s.currentStatus === 'degraded').length },
-                      { name: 'Down', value: sites.filter(s => s.currentStatus === 'down').length },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={8}
-                    dataKey="value"
-                  >
-                    <Cell fill="#10b981" />
-                    <Cell fill="#f59e0b" />
-                    <Cell fill="#ef4444" />
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+        <div className='flex flex-col gap-4'>
+          <AlertsFeed sites={sites} />
+          <div className="bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant dark:border-brand-outline/20 rounded-lg p-3 shadow-sm flex flex-col">
+            {/* Header */}
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-brand-on-surface dark:text-white">
+                Status Distribution
+              </h3>
+              <p className="text-[9px] text-brand-outline dark:text-brand-on-surface-variant mt-0.5 font-medium">
+                Infrastructure availability breakdown
+              </p>
             </div>
-            
-            <div className="grid grid-cols-3 gap-2 mt-4">
-               {[
-                 { label: 'Live', color: 'bg-emerald-500' },
-                 { label: 'Degraded', color: 'bg-amber-500' },
-                 { label: 'Critical', color: 'bg-rose-500' }
-               ].map((item, i) => (
-                 <div key={i} className="text-center space-y-1">
-                   <div className={`h-1.5 w-8 mx-auto rounded-full ${item.color}`} />
-                   <p className="text-[10px] font-bold text-brand-outline uppercase tracking-wider">{item.label}</p>
-                 </div>
-               ))}
+
+            {/* Chart Section */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="h-[100px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        {
+                          name: "Healthy",
+                          value: sites.filter((s) => s.currentStatus === "up").length,
+                        },
+                        {
+                          name: "Degraded",
+                          value: sites.filter((s) => s.currentStatus === "degraded").length,
+                        },
+                        {
+                          name: "Down",
+                          value: sites.filter((s) => s.currentStatus === "down").length,
+                        },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={32}
+                      outerRadius={48}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#f59e0b" />
+                      <Cell fill="#ef4444" />
+                    </Pie>
+
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                        fontSize: "12px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Legend */}
+              <div className="grid grid-cols-3 gap-2 w-full mt-4">
+                {[
+                  { label: "LIVE", color: "bg-emerald-500" },
+                  { label: "DEGRADED", color: "bg-amber-500" },
+                  { label: "CRITICAL", color: "bg-rose-500" },
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <div
+                      className={`h-[3px] w-7 rounded-full ${item.color}`}
+                    />
+                    <p className="text-[8px] font-medium text-brand-outline uppercase mt-1 tracking-wide">
+                      {item.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Engagement Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant dark:border-brand-outline/20 rounded-3xl p-8 shadow-sm">
            <div className="mb-6">
             <h3 className="text-xl font-bold text-brand-on-surface dark:text-white">Performance Benchmarks</h3>
@@ -349,7 +414,7 @@ export default function DashboardAnalytics({ sites, isLoading }) {
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

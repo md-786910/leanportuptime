@@ -55,15 +55,15 @@ export default function AlertsFeed({ sites }) {
   }, [sites]);
 
   return (
-    <div className="bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant/30 rounded-3xl p-6 h-full flex flex-col shadow-sm">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-sm font-black text-brand-on-surface dark:text-white uppercase tracking-widest flex items-center gap-2">
+    <div className="bg-white dark:bg-brand-surface-container-low border border-brand-outline-variant/30 rounded-xl p-4 h-full flex flex-col shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-black text-brand-on-surface dark:text-white tracking-widest flex items-center gap-2">
           System Alerts
           {alerts.length > 0 && (
             <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
           )}
         </h3>
-        <span className="text-[10px] font-bold text-brand-outline uppercase tracking-wider bg-brand-surface-container px-2 py-0.5 rounded-md">
+        <span className="text-[10px] font-bold text-brand-outline tracking-wider bg-brand-surface-container px-2 py-0.5 rounded-md">
           Live Sync
         </span>
       </div>
