@@ -121,7 +121,27 @@ function MiniSparkline({ data, dataKey, color, height = 36 }) {
   );
 }
 
-function StatCard({ label, value, delta, sparkline, hint }) {
+function StatCard({ label, value, delta, sparkline, hint, accent }) {
+  if (accent) {
+    return (
+      <div className={`py-3 px-4 rounded-xl border ${accent.border} ${accent.bg} ${accent.color} space-y-2 relative overflow-hidden group`}>
+        <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-current opacity-[0.03] rounded-full group-hover:scale-110 transition-transform duration-500" />
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em] truncate">
+            {label}
+          </p>
+          <DeltaChip delta={delta} />
+        </div>
+        <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-tight">
+          {value}
+        </p>
+        {sparkline && <MiniSparkline data={sparkline.data} dataKey={sparkline.dataKey} color={sparkline.color} />}
+        {hint && (
+          <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-medium font-label">{hint}</p>
+        )}
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-3 flex flex-col gap-1.5 hover:border-brand-outline-variant dark:hover:border-brand-outline transition-colors">
       <div className="flex items-center justify-between gap-2">
@@ -140,6 +160,14 @@ function StatCard({ label, value, delta, sparkline, hint }) {
     </div>
   );
 }
+
+const GA_STAT_ACCENTS = [
+  { color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50/50 dark:bg-indigo-500/5', border: 'border-indigo-100 dark:border-indigo-500/20' },
+  { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/50 dark:bg-emerald-500/5', border: 'border-emerald-100 dark:border-emerald-500/20' },
+  { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/50 dark:bg-amber-500/5', border: 'border-amber-100 dark:border-amber-500/20' },
+  { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50/50 dark:bg-rose-500/5', border: 'border-rose-100 dark:border-rose-500/20' },
+  { color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50/50 dark:bg-violet-500/5', border: 'border-violet-100 dark:border-violet-500/20' },
+];
 
 function PanelCard({ title, action, children, className = '' }) {
   return (
@@ -484,11 +512,11 @@ function GASection({ siteId, themeKey }) {
       icon={AnalyticsIcon}
     >
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" />
-        <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" />
-        <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" />
-        <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" />
-        <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" />
+        <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} />
+        <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" accent={GA_STAT_ACCENTS[1]} />
+        <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} />
+        <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} />
+        <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} />
       </div>
 
       {(barData.length > 0 || topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
