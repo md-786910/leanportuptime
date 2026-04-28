@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { themeColor } from './colorThemes';
+import CompareLandingPagesModal from './CompareLandingPagesModal';
 
 function formatDuration(seconds) {
   if (!seconds || seconds <= 0) return '0s';
@@ -12,7 +14,9 @@ function formatPct(val) {
   return `${(val * 100).toFixed(1)}%`;
 }
 
-export default function OrganicLandingPagesTable({ pages, themeKey }) {
+export default function OrganicLandingPagesTable({ pages, themeKey, siteId }) {
+  const [compareOpen, setCompareOpen] = useState(false);
+
   if (!pages || pages.length === 0) {
     return (
       <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
@@ -23,12 +27,28 @@ export default function OrganicLandingPagesTable({ pages, themeKey }) {
 
   return (
     <div>
-      <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3 flex items-center gap-2">
-        <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        Organic Landing Pages
-      </h4>
+      {/* Organic Landing Pages */}
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant flex items-center gap-2">
+          <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Organic Landing Pages
+        </h4>
+        {siteId && (
+          <button
+            type="button"
+            onClick={() => setCompareOpen(true)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1.5 font-label flex-shrink-0"
+            title="Compare against a past period"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+            </svg>
+            Compare
+          </button>
+        )}
+      </div>
       <div className="overflow-x-auto rounded-lg border border-brand-outline-variant dark:border-brand-outline">
         <table className="w-full text-sm">
           <thead>
@@ -79,6 +99,16 @@ export default function OrganicLandingPagesTable({ pages, themeKey }) {
           </tbody>
         </table>
       </div>
+
+      {siteId && (
+        <CompareLandingPagesModal
+          isOpen={compareOpen}
+          onClose={() => setCompareOpen(false)}
+          siteId={siteId}
+          currentPages={pages}
+          currentLabel="Current Period"
+        />
+      )}
     </div>
   );
 }

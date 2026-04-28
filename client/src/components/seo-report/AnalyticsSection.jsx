@@ -317,6 +317,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
                 newUsers={overview.newUsers || 0}
                 returningUsers={overview.returningUsers || 0}
                 themeKey={themeKey}
+                siteId={siteId}
               />
             </BentoCard>
           ) : insights && viewMode === 'details' ? (
@@ -325,6 +326,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
                 newUsers={overview.newUsers || 0}
                 returningUsers={overview.returningUsers || 0}
                 themeKey={themeKey}
+                siteId={siteId}
               />
             </BentoCard>
           ) : null}
@@ -344,7 +346,7 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
         <>
           {viewMode === 'details' && (
             <BentoCard>
-              <OrganicLandingPagesTable pages={insights.landingPages} themeKey={themeKey} />
+              <OrganicLandingPagesTable pages={insights.landingPages} themeKey={themeKey} siteId={siteId} />
             </BentoCard>
           )}
 
