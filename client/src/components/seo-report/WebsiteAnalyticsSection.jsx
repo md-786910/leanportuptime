@@ -5,7 +5,6 @@ import Card from '../common/Card';
 import BentoCard from '../common/BentoCard';
 import { Sk } from '../common/Skeleton';
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsFilters } from '../../hooks/useAnalytics';
-import { themeColor } from './colorThemes';
 import ChannelBreakdownChart from './ChannelBreakdownChart';
 import TopPagesVisitedTable from './TopPagesVisitedTable';
 import GA4EventsPanel from './GA4EventsPanel';
@@ -45,22 +44,34 @@ function sumEventUsersByName(allEvents, matcher) {
   );
 }
 
-function KpiCard({ label, value, subtitle, color }) {
+function KpiCard({ label, value, subtitle, accent }) {
   return (
-    <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-1 hover:border-brand-outline-variant dark:hover:border-brand-outline transition-colors">
+    <div className={`py-3 px-4 rounded-xl border ${accent.border} ${accent.bg} ${accent.color} space-y-2 relative overflow-hidden group`}>
+      <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-current opacity-[0.04] rounded-full group-hover:scale-110 transition-transform duration-500" />
       <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 bg-current`} />
+        <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em] truncate">
           {label}
-        </span>
+        </p>
       </div>
-      <span className="text-xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums">{value}</span>
+      <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-tight">
+        {value}
+      </p>
       {subtitle && (
-        <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant leading-tight font-label">{subtitle}</span>
+        <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-medium font-label">{subtitle}</p>
       )}
     </div>
   );
 }
+
+const KPI_ACCENTS = [
+  { color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50/50 dark:bg-indigo-500/5', border: 'border-indigo-100 dark:border-indigo-500/20' },
+  { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50/50 dark:bg-blue-500/5', border: 'border-blue-100 dark:border-blue-500/20' },
+  { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/50 dark:bg-emerald-500/5', border: 'border-emerald-100 dark:border-emerald-500/20' },
+  { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/50 dark:bg-amber-500/5', border: 'border-amber-100 dark:border-amber-500/20' },
+  { color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50/50 dark:bg-rose-500/5', border: 'border-rose-100 dark:border-rose-500/20' },
+  { color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50/50 dark:bg-violet-500/5', border: 'border-violet-100 dark:border-violet-500/20' },
+];
 
 function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const period = useSeoReportStore((s) => s.period);
@@ -163,12 +174,12 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <KpiCard label="Total Users" value={formatNumber(overview.uniqueVisitors)} color={themeColor(themeKey, 0)} />
-          <KpiCard label="New Users" value={formatNumber(overview.newUsers)} color={themeColor(themeKey, 1)} />
-          <KpiCard label="Bounce Rate" value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'} color={themeColor(themeKey, 2)} />
-          <KpiCard label="Avg. Time" value={formatDuration(overview.avgTimeOnPage)} color={themeColor(themeKey, 3)} />
-          <KpiCard label="File Downloads" value={formatNumber(fileDownloadUsers)} subtitle="Users who downloaded a file" color={themeColor(themeKey, 4)} />
-          <KpiCard label="Form Submitted" value={formatNumber(formSubmitUsers)} subtitle="Users who completed a form" color={themeColor(themeKey, 5)} />
+          <KpiCard label="Total Users" value={formatNumber(overview.uniqueVisitors)} accent={KPI_ACCENTS[0]} />
+          <KpiCard label="New Users" value={formatNumber(overview.newUsers)} accent={KPI_ACCENTS[1]} />
+          <KpiCard label="Bounce Rate" value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'} accent={KPI_ACCENTS[2]} />
+          <KpiCard label="Avg. Time" value={formatDuration(overview.avgTimeOnPage)} accent={KPI_ACCENTS[3]} />
+          <KpiCard label="File Downloads" value={formatNumber(fileDownloadUsers)} subtitle="Users who downloaded a file" accent={KPI_ACCENTS[4]} />
+          <KpiCard label="Form Submitted" value={formatNumber(formSubmitUsers)} subtitle="Users who completed a form" accent={KPI_ACCENTS[5]} />
         </div>
       </BentoCard>
 
