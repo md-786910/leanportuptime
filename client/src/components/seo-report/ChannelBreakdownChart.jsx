@@ -203,7 +203,7 @@ export default function ChannelBreakdownChart({
     <div className="relative">
       <Header />
 
-      <div className="space-y-2.5">
+      <div className="space-y-5 mt-10">
         {chartData.map((c) => (
           <div key={c.name} className="flex items-center gap-3">
             <span className="text-xs text-brand-on-surface-variant dark:text-brand-outline w-28 flex-shrink-0 truncate font-label" title={c.name}>
@@ -236,7 +236,7 @@ export default function ChannelBreakdownChart({
         ))}
       </div>
 
-      <div className="mt-3 pt-3 border-t border-brand-outline-variant dark:border-brand-outline flex justify-between text-xs text-brand-outline dark:text-brand-on-surface-variant font-label">
+      <div className="mt-8 pt-8 border-t border-brand-outline-variant dark:border-brand-outline flex justify-between text-xs text-brand-outline dark:text-brand-on-surface-variant font-label">
         <span>Total Sessions</span>
         <span className="font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline">{formatNumber(totalSessions)}</span>
       </div>

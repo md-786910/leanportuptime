@@ -717,27 +717,53 @@ function OrganicSection({ siteId, themeKey }) {
     >
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          label="Organic Sessions"
-          value={fmt(ov.sessions)}
-          delta={sessionsDelta}
-          sparkline={trend.length > 1 ? { data: trend, dataKey: 'sessions', color: themeColor(themeKey, 0) } : null}
-        />
-        <StatCard
-          label="Engagement Rate"
-          value={ov.engagementRate != null ? `${(ov.engagementRate * 100).toFixed(1)}%` : '—'}
-          hint="Engaged / total sessions"
-        />
-        <StatCard
-          label="Avg. Engagement"
-          value={fmtDur(ov.avgEngagementTime)}
-          hint="Per engaged session"
-        />
-        <StatCard
-          label="Conversions"
-          value={fmt(ov.conversions)}
-          hint="Key events fired"
-        />
+        {[
+          {
+            label: 'Organic Sessions',
+            value: fmt(ov.sessions),
+            delta: sessionsDelta,
+            sparkline: trend.length > 1 ? { data: trend, dataKey: 'sessions', color: themeColor(themeKey, 0) } : null,
+            bar: 'bg-[#6366F1] dark:bg-[#818CF8]',
+          },
+          {
+            label: 'Engagement Rate',
+            value: ov.engagementRate != null ? `${(ov.engagementRate * 100).toFixed(1)}%` : '—',
+            hint: 'Engaged / total sessions',
+            bar: 'bg-[#10B981] dark:bg-[#34D399]',
+          },
+          {
+            label: 'Avg. Engagement',
+            value: fmtDur(ov.avgEngagementTime),
+            hint: 'Per engaged session',
+            bar: 'bg-[#F59E0B] dark:bg-[#FBBF24]',
+          },
+          {
+            label: 'Conversions',
+            value: fmt(ov.conversions),
+            hint: 'Key events fired',
+            bar: 'bg-[#8B5CF6] dark:bg-[#A78BFA]',
+          },
+        ].map((stat, idx) => (
+          <div
+            key={idx}
+            className="relative rounded-xl bg-white dark:bg-brand-surface-container-lowest border border-brand-outline-variant/70 dark:border-brand-outline/60 px-4 pt-4 pb-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] hover:border-brand-outline-variant dark:hover:border-brand-outline transition-all overflow-hidden group"
+          >
+            <div className={`absolute top-0 left-0 right-0 h-[1px] ${stat.bar}`} />
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] truncate">
+                {stat.label}
+              </p>
+              <DeltaChip delta={stat.delta} />
+            </div>
+            <p className="text-[26px] font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-none mb-1">
+              {stat.value}
+            </p>
+            {stat.sparkline && <MiniSparkline data={stat.sparkline.data} dataKey={stat.sparkline.dataKey} color={stat.sparkline.color} />}
+            {stat.hint && (
+              <p className="text-[10.5px] text-brand-outline dark:text-brand-on-surface-variant font-medium font-label leading-tight">{stat.hint}</p>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Trend chart + New vs Returning */}
