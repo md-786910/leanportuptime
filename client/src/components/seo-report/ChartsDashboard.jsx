@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, RadialBarChart, RadialBar,
-  AreaChart, Area, LineChart, Line, BarChart, Bar,
+  AreaChart, Area, LineChart, Line, BarChart, Bar, LabelList,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import Spinner from '../common/Spinner';
@@ -521,39 +521,102 @@ function GASection({ siteId, themeKey }) {
 
       {(barData.length > 0 || topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
         <div className="grid grid-cols-12 gap-6">
-          {barData.length > 0 && (
-            <PanelCard
-              title="Sessions by Channel"
-              className="col-span-12 lg:col-span-8"
-              action={
-                <CountryFilterDropdown
-                  siteId={siteId}
-                  dateRange={dateRange}
-                  excluded={filters.excludedCountries || []}
-                  onChange={setExcludedCountries}
-                />
-              }
-            >
-              <div className="h-48 relative">
-                {channelsRefreshing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-brand-on-surface/60 backdrop-blur-[1px] rounded-lg z-10">
-                    <Spinner size="sm" />
+          {barData.length > 0 && (() => {
+            const totalChannelSessions = barData.reduce((s, b) => s + (b.sessions || 0), 0);
+            const leader = barData.reduce((best, b) => (b.sessions > (best?.sessions || 0) ? b : best), null);
+            const leaderPct = leader && totalChannelSessions > 0 ? ((leader.sessions / totalChannelSessions) * 100).toFixed(1) : '0';
+            return (
+              <PanelCard
+                title="Sessions by Channel"
+                className="col-span-12 lg:col-span-8"
+                action={
+                  <CountryFilterDropdown
+                    siteId={siteId}
+                    dateRange={dateRange}
+                    excluded={filters.excludedCountries || []}
+                    onChange={setExcludedCountries}
+                  />
+                }
+              >
+                {/* Summary strip */}
+                {/* <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                  <div className="rounded-lg bg-brand-surface-container-low/60 dark:bg-brand-on-surface/40 px-3 py-2 border border-brand-outline-variant/60 dark:border-brand-outline/60">
+                    <div className="text-[9px] uppercase tracking-[0.18em] text-brand-outline font-label font-bold">Total Sessions</div>
+                    <div className="text-lg font-headline font-extrabold tabular-nums text-brand-on-surface dark:text-white leading-tight">{fmt(totalChannelSessions)}</div>
                   </div>
-                )}
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
-                    <Bar dataKey="sessions" radius={[4, 4, 0, 0]}>
-                      {barData.map((e, i) => <Cell key={i} fill={e.fill} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </PanelCard>
-          )}
+                  <div className="rounded-lg bg-brand-surface-container-low/60 dark:bg-brand-on-surface/40 px-3 py-2 border border-brand-outline-variant/60 dark:border-brand-outline/60">
+                    <div className="text-[9px] uppercase tracking-[0.18em] text-brand-outline font-label font-bold">Top Channel</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-bold font-label text-brand-on-surface dark:text-white truncate" title={leader?.name}>{leader?.name || '—'}</span>
+                      <span className="text-[11px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 font-label">{leaderPct}%</span>
+                    </div>
+                  </div>
+                  <div className="hidden sm:block rounded-lg bg-brand-surface-container-low/60 dark:bg-brand-on-surface/40 px-3 py-2 border border-brand-outline-variant/60 dark:border-brand-outline/60">
+                    <div className="text-[9px] uppercase tracking-[0.18em] text-brand-outline font-label font-bold">Channels</div>
+                    <div className="text-lg font-headline font-extrabold tabular-nums text-brand-on-surface dark:text-white leading-tight">{barData.length}</div>
+                  </div>
+                </div> */}
+
+                {/* Chart */}
+                <div className="h-96 relative">
+                  {channelsRefreshing && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-brand-on-surface/60 backdrop-blur-[1px] rounded-lg z-10">
+                      <Spinner size="sm" />
+                    </div>
+                  )}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={barData} margin={{ top: 24, right: 10, bottom: 5, left: -10 }} barCategoryGap="22%">
+                      <defs>
+                        {barData.map((e, i) => (
+                          <linearGradient key={i} id={`channelBar${i}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={e.fill} stopOpacity={1} />
+                            <stop offset="100%" stopColor={e.fill} stopOpacity={0.55} />
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      <CartesianGrid strokeDasharray="2 6" stroke="#e5e7eb" strokeOpacity={0.6} vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 500 }}
+                        tickLine={false}
+                        axisLine={{ stroke: '#e5e7eb' }}
+                        interval={0}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 10, fill: '#9ca3af' }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(v) => fmt(v)}
+                        width={45}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(99, 102, 241, 0.06)' }}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255,255,255,0.98)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '10px',
+                          fontSize: '11px',
+                          boxShadow: '0 8px 16px -4px rgba(15, 23, 42, 0.12)',
+                          padding: '8px 12px',
+                        }}
+                        formatter={(value) => [fmt(value), 'Sessions']}
+                        labelStyle={{ fontWeight: 600, color: '#111827', marginBottom: 4 }}
+                      />
+                      <Bar dataKey="sessions" radius={[8, 8, 2, 2]} maxBarSize={68}>
+                        {barData.map((e, i) => <Cell key={i} fill={`url(#channelBar${i})`} />)}
+                        <LabelList
+                          dataKey="sessions"
+                          position="top"
+                          formatter={(v) => fmt(v)}
+                          style={{ fontSize: 11, fontWeight: 700, fill: '#374151' }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </PanelCard>
+            );
+          })()}
 
           {(topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
             <PanelCard
