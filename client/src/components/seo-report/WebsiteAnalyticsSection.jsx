@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { computeDateRange } from '../common/SectionDateFilter';
 import { useSeoReportStore } from '../../store/seoReportStore';
 import Card from '../common/Card';
+import BentoCard from '../common/BentoCard';
 import { Sk } from '../common/Skeleton';
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsFilters } from '../../hooks/useAnalytics';
 import { themeColor } from './colorThemes';
@@ -93,39 +94,41 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <Card>
+      <div className="space-y-6">
+        <BentoCard>
           <Sk className="h-4 w-20 mb-5 rounded-full" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[0, 1, 2, 3].map((i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-3">
                 <Sk className="h-2.5 w-14 rounded-full" />
                 <Sk className="h-6 w-20" />
               </div>
             ))}
           </div>
-        </Card>
-        <Card>
-          <Sk className="h-4 w-32 mb-4 rounded-full" />
-          <div className="rounded-lg border border-brand-outline-variant dark:border-brand-outline overflow-hidden">
-            <div className="bg-brand-surface-container-low dark:bg-brand-on-surface/50 px-3 py-2.5 flex gap-6">
-              <Sk className="h-2.5 w-6 rounded-full" />
-              <Sk className="h-2.5 w-24 rounded-full" />
-              <Sk className="h-2.5 w-12 rounded-full ml-auto" />
-            </div>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="border-t border-gray-50 dark:border-brand-outline px-3 py-2.5 flex gap-6">
-                <Sk className="h-2.5 w-4 rounded-full" />
-                <Sk className="h-2.5 w-28 rounded-full" />
-                <Sk className="h-2.5 w-10 rounded-full ml-auto" />
+        </BentoCard>
+        <div className="grid grid-cols-12 gap-6">
+          <BentoCard className="col-span-12 lg:col-span-8">
+            <Sk className="h-4 w-32 mb-4 rounded-full" />
+            <div className="rounded-lg border border-brand-outline-variant dark:border-brand-outline overflow-hidden">
+              <div className="bg-brand-surface-container-low dark:bg-brand-on-surface/50 px-3 py-2.5 flex gap-6">
+                <Sk className="h-2.5 w-6 rounded-full" />
+                <Sk className="h-2.5 w-24 rounded-full" />
+                <Sk className="h-2.5 w-12 rounded-full ml-auto" />
               </div>
-            ))}
-          </div>
-        </Card>
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <Card><Sk className="h-48 w-full rounded-xl" /></Card>
-          <Card><Sk className="h-48 w-full rounded-xl" /></Card>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="border-t border-gray-50 dark:border-brand-outline px-3 py-2.5 flex gap-6">
+                  <Sk className="h-2.5 w-4 rounded-full" />
+                  <Sk className="h-2.5 w-28 rounded-full" />
+                  <Sk className="h-2.5 w-10 rounded-full ml-auto" />
+                </div>
+              ))}
+            </div>
+          </BentoCard>
+          <BentoCard className="col-span-12 lg:col-span-4">
+            <Sk className="h-48 w-full rounded-xl" />
+          </BentoCard>
         </div>
+        <BentoCard><Sk className="h-48 w-full rounded-xl" /></BentoCard>
       </div>
     );
   }
@@ -149,9 +152,9 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const formSubmitUsers = sumEventUsersByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
 
   return (
-    <div className="space-y-4">
-      <Card>
-        {/* Header */}
+    <div className="space-y-6">
+      {/* KPI row */}
+      <BentoCard>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-medium font-label uppercase">
@@ -159,65 +162,25 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
             </span>
           </div>
         </div>
-
-        {/* KPI Cards — session/page_view counts are shown in the Event panel below; keep only non-event metrics here */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <KpiCard
-            label="Total Users"
-            value={formatNumber(overview.uniqueVisitors)}
-            color={themeColor(themeKey, 0)}
-          />
-          <KpiCard
-            label="New Users"
-            value={formatNumber(overview.newUsers)}
-            color={themeColor(themeKey, 1)}
-          />
-          <KpiCard
-            label="Bounce Rate"
-            value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'}
-            color={themeColor(themeKey, 2)}
-          />
-          <KpiCard
-            label="Avg. Time"
-            value={formatDuration(overview.avgTimeOnPage)}
-            color={themeColor(themeKey, 3)}
-          />
-          <KpiCard
-            label="File Downloads"
-            value={formatNumber(fileDownloadUsers)}
-            subtitle="Users who downloaded a file"
-            color={themeColor(themeKey, 4)}
-          />
-          <KpiCard
-            label="Form Submitted"
-            value={formatNumber(formSubmitUsers)}
-            subtitle="Users who completed a form"
-            color={themeColor(themeKey, 5)}
-          />
+          <KpiCard label="Total Users" value={formatNumber(overview.uniqueVisitors)} color={themeColor(themeKey, 0)} />
+          <KpiCard label="New Users" value={formatNumber(overview.newUsers)} color={themeColor(themeKey, 1)} />
+          <KpiCard label="Bounce Rate" value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'} color={themeColor(themeKey, 2)} />
+          <KpiCard label="Avg. Time" value={formatDuration(overview.avgTimeOnPage)} color={themeColor(themeKey, 3)} />
+          <KpiCard label="File Downloads" value={formatNumber(fileDownloadUsers)} subtitle="Users who downloaded a file" color={themeColor(themeKey, 4)} />
+          <KpiCard label="Form Submitted" value={formatNumber(formSubmitUsers)} subtitle="Users who completed a form" color={themeColor(themeKey, 5)} />
         </div>
-      </Card>
+      </BentoCard>
 
-      {/* All GA4 events */}
-      <Card>
+      {/* GA4 events — full width (table reads better wide) */}
+      <BentoCard>
         <GA4EventsPanel events={events.allEvents || []} themeKey={themeKey} />
-      </Card>
+      </BentoCard>
 
-      {/* Traffic by Channel + Top Pages */}
-      {viewMode === 'charts' ? (
-        <Card>
-          <ChannelBreakdownChart
-            channels={details.channels}
-            themeKey={themeKey}
-            siteId={siteId}
-            dateRange={dateRange}
-            excludedCountries={filters.excludedCountries || []}
-            onExcludedCountriesChange={setExcludedCountries}
-            isRefreshing={channelsRefreshing}
-          />
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <Card>
+      {/* Channel breakdown + Top pages — side-by-side 2-col grid */}
+      {viewMode !== 'charts' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <BentoCard>
             <ChannelBreakdownChart
               channels={details.channels}
               themeKey={themeKey}
@@ -227,8 +190,8 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
               onExcludedCountriesChange={setExcludedCountries}
               isRefreshing={channelsRefreshing}
             />
-          </Card>
-          <Card>
+          </BentoCard>
+          <BentoCard>
             <TopPagesVisitedTable
               pages={details.topPages}
               themeKey={themeKey}
@@ -237,8 +200,20 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
               onRestore={restorePage}
               isRefreshing={pagesRefreshing}
             />
-          </Card>
+          </BentoCard>
         </div>
+      ) : (
+        <BentoCard>
+          <ChannelBreakdownChart
+            channels={details.channels}
+            themeKey={themeKey}
+            siteId={siteId}
+            dateRange={dateRange}
+            excludedCountries={filters.excludedCountries || []}
+            onExcludedCountriesChange={setExcludedCountries}
+            isRefreshing={channelsRefreshing}
+          />
+        </BentoCard>
       )}
     </div>
   );

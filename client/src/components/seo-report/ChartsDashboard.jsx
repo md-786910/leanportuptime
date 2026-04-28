@@ -18,6 +18,7 @@ import TopPagesVisitedTable from './TopPagesVisitedTable';
 import BacklinksSection from './BacklinksSection';
 import TopKeywordsPanel from './TopKeywordsPanel';
 import ReportSection from './ReportSection';
+import NewVsReturningChart from './NewVsReturningChart';
 import { GaugeIcon, SearchIcon, AnalyticsIcon, LinkIcon } from './chartIcons';
 
 // ======================== Helpers ========================
@@ -142,7 +143,7 @@ function StatCard({ label, value, delta, sparkline, hint }) {
 
 function PanelCard({ title, action, children, className = '' }) {
   return (
-    <div className={`rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-4 ${className}`}>
+    <div className={`rounded-xl shadow-sm transition-all hover:shadow-md bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 ${className}`}>
       {(title || action) && (
         <div className="flex items-center justify-between mb-3">
           {title && <h4 className="text-xs font-semibold text-brand-on-surface dark:text-brand-outline uppercase tracking-wider font-label">{title}</h4>}
@@ -271,7 +272,7 @@ function DomainAuthoritySection({ siteId, themeKey }) {
 function BacklinksListSection({ siteId, themeKey }) {
   return (
     <ReportSection
-      title="Backlinks"
+      title="Backlinks Analysis"
       description="The list of external sources currently pointing at your site."
       accent="amber"
       icon={LinkIcon}
@@ -492,50 +493,58 @@ function GASection({ siteId, themeKey }) {
         <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" />
       </div>
 
-      {barData.length > 0 && (
-        <PanelCard
-          title="Sessions by Channel"
-          action={
-            <CountryFilterDropdown
-              siteId={siteId}
-              dateRange={dateRange}
-              excluded={filters.excludedCountries || []}
-              onChange={setExcludedCountries}
-            />
-          }
-        >
-          <div className="h-48 relative">
-            {channelsRefreshing && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-brand-on-surface/60 backdrop-blur-[1px] rounded-lg z-10">
-                <Spinner size="sm" />
+      {(barData.length > 0 || topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
+        <div className="grid grid-cols-12 gap-6">
+          {barData.length > 0 && (
+            <PanelCard
+              title="Sessions by Channel"
+              className="col-span-12 lg:col-span-8"
+              action={
+                <CountryFilterDropdown
+                  siteId={siteId}
+                  dateRange={dateRange}
+                  excluded={filters.excludedCountries || []}
+                  onChange={setExcludedCountries}
+                />
+              }
+            >
+              <div className="h-48 relative">
+                {channelsRefreshing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-brand-on-surface/60 backdrop-blur-[1px] rounded-lg z-10">
+                    <Spinner size="sm" />
+                  </div>
+                )}
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={barData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
+                    <Bar dataKey="sessions" radius={[4, 4, 0, 0]}>
+                      {barData.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            )}
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
-                <Bar dataKey="sessions" radius={[4, 4, 0, 0]}>
-                  {barData.map((e, i) => <Cell key={i} fill={e.fill} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </PanelCard>
-      )}
+            </PanelCard>
+          )}
 
-      {(topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
-        <PanelCard title="Top 5 Pages Visited">
-          <TopPagesVisitedTable
-            pages={topPages}
-            themeKey={themeKey}
-            excludedPages={filters.excludedTopPages || []}
-            onExclude={excludePage}
-            onRestore={restorePage}
-            isRefreshing={pagesRefreshing}
-          />
-        </PanelCard>
+          {(topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
+            <PanelCard
+              title="Top 5 Pages Visited"
+              className={barData.length > 0 ? 'col-span-12 lg:col-span-4' : 'col-span-12'}
+            >
+              <TopPagesVisitedTable
+                pages={topPages}
+                themeKey={themeKey}
+                excludedPages={filters.excludedTopPages || []}
+                onExclude={excludePage}
+                onRestore={restorePage}
+                isRefreshing={pagesRefreshing}
+              />
+            </PanelCard>
+          )}
+        </div>
       )}
     </ReportSection>
   );
@@ -641,22 +650,31 @@ function OrganicSection({ siteId, themeKey }) {
         />
       </div>
 
-      {/* Trend chart (full width) */}
-      {trend.length > 1 && (
-        <PanelCard title="Organic Sessions Trend">
-          <div className="h-44">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trend} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-                <defs><linearGradient id="orgTrendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={themeColor(themeKey, 0)} stopOpacity={0.3} /><stop offset="95%" stopColor={themeColor(themeKey, 0)} stopOpacity={0} /></linearGradient></defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
-                <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
-                <Area type="monotone" dataKey="sessions" stroke={themeColor(themeKey, 0)} strokeWidth={2} fill="url(#orgTrendGrad)" name="Sessions" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </PanelCard>
+      {/* Trend chart + New vs Returning */}
+      {(trend.length > 1 || totalU > 0) && (
+        <div className="grid grid-cols-12 gap-3">
+          {trend.length > 1 && (
+            <PanelCard title="Organic Sessions Trend" className={totalU > 0 ? 'col-span-12 lg:col-span-8' : 'col-span-12'}>
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trend} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
+                    <defs><linearGradient id="orgTrendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={themeColor(themeKey, 0)} stopOpacity={0.3} /><stop offset="95%" stopColor={themeColor(themeKey, 0)} stopOpacity={0} /></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
+                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} tickLine={false} />
+                    <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
+                    <Area type="monotone" dataKey="sessions" stroke={themeColor(themeKey, 0)} strokeWidth={2} fill="url(#orgTrendGrad)" name="Sessions" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </PanelCard>
+          )}
+          {totalU > 0 && (
+            <PanelCard className={trend.length > 1 ? 'col-span-12 lg:col-span-4' : 'col-span-12'}>
+              <NewVsReturningChart newUsers={newU} returningUsers={retU} themeKey={themeKey} />
+            </PanelCard>
+          )}
+        </div>
       )}
 
       {/* New vs Returning / Device Breakdown / Top Countries — disabled */}

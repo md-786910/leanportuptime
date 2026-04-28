@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import { useAddBacklinkItem } from '../../hooks/useBacklinks';
+import { useAddBacklinkItem, useAddPaidBacklinkItem } from '../../hooks/useBacklinks';
 
 const LINK_TYPES = ['anchor', 'image', 'redirect', 'canonical', 'alternate'];
 
@@ -17,8 +17,11 @@ const EMPTY = {
   lastSeen: '',
 };
 
-export default function AddBacklinkItemModal({ isOpen, onClose, siteId }) {
-  const add = useAddBacklinkItem(siteId);
+export default function AddBacklinkItemModal({ isOpen, onClose, siteId, kind = 'seo' }) {
+  const isPaid = kind === 'paid';
+  const seoAdd = useAddBacklinkItem(siteId);
+  const paidAdd = useAddPaidBacklinkItem(siteId);
+  const add = isPaid ? paidAdd : seoAdd;
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
 
@@ -43,21 +46,22 @@ export default function AddBacklinkItemModal({ isOpen, onClose, siteId }) {
       setErrors(errs);
       return;
     }
-    await add.mutateAsync({
+    const payload = {
       sourceUrl: form.sourceUrl.trim(),
       targetUrl: form.targetUrl.trim() || null,
       anchor: form.anchor || null,
       linkType: form.linkType || null,
       doFollow: !!form.doFollow,
-      domainFromRank: drNum,
       firstSeen: form.firstSeen || null,
       lastSeen: form.lastSeen || null,
-    });
+    };
+    if (!isPaid) payload.domainFromRank = drNum;
+    await add.mutateAsync(payload);
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add backlink" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={isPaid ? 'Add paid backlink' : 'Add backlink'} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Source URL *"
@@ -80,7 +84,7 @@ export default function AddBacklinkItemModal({ isOpen, onClose, siteId }) {
           value={form.anchor}
           onChange={update('anchor')}
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className={isPaid ? '' : 'grid grid-cols-2 gap-3'}>
           <div className="space-y-1">
             <label className="block text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline">Link type</label>
             <select
@@ -93,15 +97,17 @@ export default function AddBacklinkItemModal({ isOpen, onClose, siteId }) {
               ))}
             </select>
           </div>
-          <Input
-            label="DR (domainFromRank)"
-            id="abl-domainFromRank"
-            type="number"
-            inputMode="numeric"
-            value={form.domainFromRank}
-            onChange={update('domainFromRank')}
-            error={errors.domainFromRank}
-          />
+          {!isPaid && (
+            <Input
+              label="DA (domainFromRank)"
+              id="abl-domainFromRank"
+              type="number"
+              inputMode="numeric"
+              value={form.domainFromRank}
+              onChange={update('domainFromRank')}
+              error={errors.domainFromRank}
+            />
+          )}
         </div>
         <label className="flex items-center gap-2 text-sm text-brand-on-surface dark:text-brand-outline cursor-pointer">
           <input
@@ -130,7 +136,7 @@ export default function AddBacklinkItemModal({ isOpen, onClose, siteId }) {
         </div>
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
-          <Button type="submit" isLoading={add.isPending}>Add backlink</Button>
+          <Button type="submit" isLoading={add.isPending}>{isPaid ? 'Add paid backlink' : 'Add backlink'}</Button>
         </div>
       </form>
     </Modal>

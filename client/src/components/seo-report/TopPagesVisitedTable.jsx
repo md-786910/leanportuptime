@@ -167,31 +167,31 @@ export default function TopPagesVisitedTable({
   return (
     <div className="relative">
       <Header />
-      <div className="overflow-x-auto rounded-lg border border-brand-outline-variant dark:border-brand-outline">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50">
-              <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">#</th>
-              <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">Page</th>
-              <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">Page Views</th>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead className="bg-brand-surface-container-low border-b-0">
+            <tr>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant w-8">#</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant">Page</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">Page Views</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-brand-surface-container">
             {pages.map((row, i) => (
-              <tr key={i} className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/30 transition-colors">
-                <td className="py-2 px-3 text-brand-outline dark:text-brand-on-surface-variant tabular-nums">{i + 1}</td>
-                <td className="py-2 px-3 max-w-[350px]">
+              <tr key={i} className="hover:bg-brand-surface-container-low/50 transition-colors">
+                <td className="px-6 py-4 text-[11px] font-bold text-brand-outline tabular-nums">{i + 1}</td>
+                <td className="px-6 py-4 max-w-[350px]">
                   <div className="flex items-center gap-2">
                     <span
                       className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: themeColor(themeKey, i % 4) }}
                     />
-                    <span className="text-brand-on-surface dark:text-brand-outline-variant  text-xs truncate font-label" title={row.page}>
+                    <span className="text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant truncate font-label" title={row.page}>
                       {row.page}
                     </span>
                   </div>
                 </td>
-                <td className="py-2 px-3 text-right tabular-nums font-semibold" style={{ color: themeColor(themeKey, 0) }}>
+                <td className="px-6 py-4 text-right tabular-nums text-sm font-black" style={{ color: themeColor(themeKey, 0) }}>
                   {formatNumber(row.pageViews)}
                 </td>
               </tr>

@@ -349,50 +349,64 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-          <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">{scoreLabel}</span>
-            <div className="flex items-center justify-center gap-1 my-1">
-              <p className="text-2xl font-bold tabular-nums font-headline" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">{scoreLabel}</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-headline font-extrabold tabular-nums" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
               <DeltaChip current={data.domainRank} previous={data.previousDomainRank} direction="higher-better" />
             </div>
-            <span className="text-[9px] text-brand-outline">{providerDisplay}</span>
+            <p className="text-[10px] text-brand-outline mt-1 font-medium">{providerDisplay}</p>
           </div>
-          <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Backlinks</span>
-            <div className="flex items-center justify-center gap-1 my-1">
-              <p className="text-2xl font-bold text-brand-on-surface dark:text-white tabular-nums font-headline">{fmt(data.backlinksCount)}</p>
+
+          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">Backlinks</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums">{fmt(data.backlinksCount)}</p>
               <DeltaChip current={data.backlinksCount} previous={data.previousBacklinksCount} direction="higher-better" />
             </div>
-            <span className="text-[9px] text-brand-outline">Total links</span>
+            <p className="text-[10px] text-brand-outline mt-1 font-medium">Total links</p>
           </div>
-          <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Ref. Domains</span>
-            <div className="flex items-center justify-center gap-1 my-1">
-              <p className="text-2xl font-bold text-brand-on-surface dark:text-white tabular-nums font-headline">{fmt(data.referringDomains)}</p>
+
+          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">Ref. Domains</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums">{fmt(data.referringDomains)}</p>
               <DeltaChip current={data.referringDomains} previous={data.previousReferringDomains} direction="higher-better" />
             </div>
-            <span className="text-[9px] text-brand-outline">Unique sources</span>
+            <p className="text-[10px] text-brand-outline mt-1 font-medium">Unique sources</p>
           </div>
-          <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">New Links</span>
-            <div className="flex items-center justify-center gap-1 my-1">
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums font-headline">
+
+          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">New Links</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-headline font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
                 {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
               </p>
               <DeltaChip current={data.newLinksLast30d} previous={data.previousNewLinksLast30d} direction="higher-better" />
             </div>
-            <span className="text-[9px] text-brand-outline">{periodLabel}</span>
+            <p className="text-[10px] text-brand-outline mt-1 font-medium">{periodLabel}</p>
           </div>
-          <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Lost Links</span>
-            <div className="flex items-center justify-center gap-1 my-1">
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400 tabular-nums font-headline">
+
+          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">Lost Links</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-headline font-extrabold text-red-600 dark:text-red-400 tabular-nums">
                 {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
               </p>
               <DeltaChip current={data.lostLinksLast30d} previous={data.previousLostLinksLast30d} direction="lower-better" />
             </div>
-            <span className="text-[9px] text-brand-outline">{periodLabel}</span>
+            <p className="text-[10px] text-brand-outline mt-1 font-medium">{periodLabel}</p>
           </div>
         </div>
 
@@ -436,11 +450,20 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
     );
   }
 
-  // Backlinks variant — the actual link list only (count/stats now live under Domain Authority).
+  // Backlinks variant — Paid (manual-only) on top, SEO list below.
   if (variant === 'backlinks') {
     return (
-      <div>
+      <div className="space-y-8">
         <BacklinksTable
+          kind="paid"
+          title="Paid Backlinks"
+          items={data.paidItems || []}
+          siteId={siteId}
+        />
+
+        <BacklinksTable
+          kind="seo"
+          title="SEO Backlinks"
           items={data.items || []}
           listFetchedAt={data.listFetchedAt}
           listFetchError={data.listFetchError}

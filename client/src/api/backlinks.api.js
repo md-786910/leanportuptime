@@ -34,3 +34,18 @@ export const removeBacklinkItem = async (siteId, itemId) => {
   const { data } = await api.delete(`/api/sites/${siteId}/backlinks/items/${itemId}`);
   return data.data;
 };
+
+export const addPaidBacklinkItem = async (siteId, payload) => {
+  const { data } = await api.post(`/api/sites/${siteId}/backlinks/paid-items`, payload);
+  return data.data;
+};
+
+export const updatePaidBacklinkItem = async (siteId, itemId, payload) => {
+  const { data } = await api.patch(`/api/sites/${siteId}/backlinks/paid-items/${itemId}`, payload);
+  return data.data;
+};
+
+export const removePaidBacklinkItem = async (siteId, itemId) => {
+  const { data } = await api.delete(`/api/sites/${siteId}/backlinks/paid-items/${itemId}`);
+  return data.data;
+};

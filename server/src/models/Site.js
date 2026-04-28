@@ -130,6 +130,20 @@ const siteSchema = new mongoose.Schema(
         updatedAt: { type: Date, default: null },
         updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
       }],
+      // Paid placements / press-release backlinks. Always manually managed —
+      // never touched by the provider refresh. No DR / source field.
+      paidItems: [{
+        sourceUrl: { type: String },
+        targetUrl: { type: String },
+        anchor: { type: String },
+        doFollow: { type: Boolean },
+        firstSeen: { type: Date },
+        lastSeen: { type: Date },
+        linkType: { type: String },
+        addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        updatedAt: { type: Date, default: null },
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      }],
       listFetchedAt: { type: Date, default: null },
       listFetchError: { type: String, default: null },
       history: [{

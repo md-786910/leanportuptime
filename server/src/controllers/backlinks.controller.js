@@ -59,6 +59,7 @@ function serializeBacklinks(bl) {
     lastFetchedAt: bl.lastFetchedAt || null,
     fetchError: bl.fetchError || null,
     items: (bl.items || []).map(serializeItem),
+    paidItems: (bl.paidItems || []).map(serializePaidItem),
     listFetchedAt: bl.listFetchedAt || null,
     listFetchError: bl.listFetchError || null,
     history: bl.history || [],
@@ -80,6 +81,23 @@ function serializeItem(it) {
     linkType: o.linkType || null,
     domainFromRank: typeof o.domainFromRank === 'number' ? o.domainFromRank : null,
     source: o.source || 'api',
+    addedBy: o.addedBy ? String(o.addedBy) : null,
+    updatedAt: o.updatedAt || null,
+    updatedBy: o.updatedBy ? String(o.updatedBy) : null,
+  };
+}
+
+function serializePaidItem(it) {
+  const o = typeof it.toObject === 'function' ? it.toObject() : { ...it };
+  return {
+    _id: o._id ? String(o._id) : undefined,
+    sourceUrl: o.sourceUrl || null,
+    targetUrl: o.targetUrl || null,
+    anchor: o.anchor || null,
+    doFollow: typeof o.doFollow === 'boolean' ? o.doFollow : null,
+    firstSeen: o.firstSeen || null,
+    lastSeen: o.lastSeen || null,
+    linkType: o.linkType || null,
     addedBy: o.addedBy ? String(o.addedBy) : null,
     updatedAt: o.updatedAt || null,
     updatedBy: o.updatedBy ? String(o.updatedBy) : null,
@@ -655,6 +673,152 @@ exports.removeItem = async (req, res, next) => {
 
     if (typeof item.deleteOne === 'function') item.deleteOne();
     else bl.items.pull({ _id: itemId });
+
+    pushChangeLog(bl, {
+      changedAt: new Date(),
+      changedBy: req.user?._id || null,
+      source: 'manual',
+      kind: 'item-removed',
+      itemId: snapshot._id,
+      itemSourceUrl: snapshot.sourceUrl,
+      itemBefore: snapshot,
+      itemAfter: null,
+    });
+
+    site.markModified('backlinks');
+    await site.save();
+
+    res.json({ success: true, data: { removed: String(snapshot._id) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ===== Paid backlinks (manual-only) =====
+
+const PAID_EDITABLE_FIELDS = ['sourceUrl', 'targetUrl', 'anchor', 'doFollow', 'linkType', 'firstSeen', 'lastSeen'];
+
+exports.addPaidItem = async (req, res, next) => {
+  try {
+    const site = req.site;
+    if (!site.backlinks) site.backlinks = {};
+    const bl = site.backlinks;
+    if (!Array.isArray(bl.paidItems)) bl.paidItems = [];
+
+    const { sourceUrl, targetUrl, anchor, doFollow, linkType, firstSeen, lastSeen } = req.body || {};
+    if (!sourceUrl || typeof sourceUrl !== 'string') {
+      return res.status(400).json({ success: false, error: { code: 'SOURCE_URL_REQUIRED', message: 'sourceUrl is required' } });
+    }
+
+    const normalized = sourceUrl.trim();
+    const dup = bl.paidItems.find((it) => (it.sourceUrl || '').toLowerCase() === normalized.toLowerCase());
+    if (dup) {
+      return res.status(409).json({ success: false, error: { code: 'DUPLICATE_SOURCE_URL', message: 'A paid backlink with this sourceUrl already exists' } });
+    }
+
+    const now = new Date();
+    const newItem = {
+      sourceUrl: normalized,
+      targetUrl: targetUrl || null,
+      anchor: anchor || null,
+      doFollow: typeof doFollow === 'boolean' ? doFollow : undefined,
+      linkType: linkType || null,
+      firstSeen: firstSeen ? new Date(firstSeen) : null,
+      lastSeen: lastSeen ? new Date(lastSeen) : null,
+      addedBy: req.user?._id || null,
+      updatedAt: null,
+      updatedBy: null,
+    };
+
+    bl.paidItems.push(newItem);
+    const created = bl.paidItems[bl.paidItems.length - 1];
+
+    pushChangeLog(bl, {
+      changedAt: now,
+      changedBy: req.user?._id || null,
+      source: 'manual',
+      kind: 'item-added',
+      itemId: created._id,
+      itemSourceUrl: created.sourceUrl,
+      itemBefore: null,
+      itemAfter: created.toObject ? created.toObject() : { ...created },
+    });
+
+    site.markModified('backlinks');
+    await site.save();
+
+    res.status(201).json({ success: true, data: { item: serializePaidItem(created) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updatePaidItem = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const { itemId } = req.params;
+    const bl = site.backlinks || {};
+    const item = Array.isArray(bl.paidItems) ? bl.paidItems.id?.(itemId) : null;
+    if (!item) {
+      return res.status(404).json({ success: false, error: { code: 'ITEM_NOT_FOUND', message: 'Paid backlink not found' } });
+    }
+
+    const before = item.toObject ? item.toObject() : { ...item };
+    const body = req.body || {};
+    const disallowed = Object.keys(body).filter((k) => !PAID_EDITABLE_FIELDS.includes(k));
+    if (disallowed.length) {
+      return res.status(400).json({ success: false, error: { code: 'UNKNOWN_FIELDS', message: `Unsupported fields: ${disallowed.join(', ')}` } });
+    }
+
+    for (const k of PAID_EDITABLE_FIELDS) {
+      if (!Object.prototype.hasOwnProperty.call(body, k)) continue;
+      const v = body[k];
+      if (k === 'doFollow') {
+        item.doFollow = typeof v === 'boolean' ? v : (v === 'true' || v === 1);
+      } else if (k === 'firstSeen' || k === 'lastSeen') {
+        item[k] = v ? new Date(v) : null;
+      } else {
+        item[k] = v == null ? null : String(v);
+      }
+    }
+
+    item.updatedAt = new Date();
+    item.updatedBy = req.user?._id || null;
+
+    pushChangeLog(bl, {
+      changedAt: item.updatedAt,
+      changedBy: req.user?._id || null,
+      source: 'manual',
+      kind: 'item-updated',
+      itemId: item._id,
+      itemSourceUrl: item.sourceUrl,
+      itemBefore: before,
+      itemAfter: item.toObject ? item.toObject() : { ...item },
+    });
+
+    site.markModified('backlinks');
+    await site.save();
+
+    res.json({ success: true, data: { item: serializePaidItem(item) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.removePaidItem = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const { itemId } = req.params;
+    const bl = site.backlinks || {};
+    const item = Array.isArray(bl.paidItems) ? bl.paidItems.id?.(itemId) : null;
+    if (!item) {
+      return res.status(404).json({ success: false, error: { code: 'ITEM_NOT_FOUND', message: 'Paid backlink not found' } });
+    }
+
+    const snapshot = item.toObject ? item.toObject() : { ...item };
+
+    if (typeof item.deleteOne === 'function') item.deleteOne();
+    else bl.paidItems.pull({ _id: itemId });
 
     pushChangeLog(bl, {
       changedAt: new Date(),

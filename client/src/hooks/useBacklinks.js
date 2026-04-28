@@ -8,6 +8,9 @@ import {
   addBacklinkItem,
   updateBacklinkItem,
   removeBacklinkItem,
+  addPaidBacklinkItem,
+  updatePaidBacklinkItem,
+  removePaidBacklinkItem,
 } from '../api/backlinks.api';
 
 export const useBacklinksStatus = (siteId) => {
@@ -112,6 +115,54 @@ export const useRemoveBacklinkItem = (siteId) => {
     onError: (err) => {
       const errData = err.response?.data?.error;
       toast.error(errData?.message || 'Failed to remove backlink');
+    },
+  });
+};
+
+export const useAddPaidBacklinkItem = (siteId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => addPaidBacklinkItem(siteId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['backlinksStatus', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['backlinksChangelog', siteId] });
+      toast.success('Paid backlink added');
+    },
+    onError: (err) => {
+      const errData = err.response?.data?.error;
+      toast.error(errData?.message || 'Failed to add paid backlink');
+    },
+  });
+};
+
+export const useUpdatePaidBacklinkItem = (siteId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, payload }) => updatePaidBacklinkItem(siteId, itemId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['backlinksStatus', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['backlinksChangelog', siteId] });
+      toast.success('Paid backlink updated');
+    },
+    onError: (err) => {
+      const errData = err.response?.data?.error;
+      toast.error(errData?.message || 'Failed to update paid backlink');
+    },
+  });
+};
+
+export const useRemovePaidBacklinkItem = (siteId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId) => removePaidBacklinkItem(siteId, itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['backlinksStatus', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['backlinksChangelog', siteId] });
+      toast.success('Paid backlink removed');
+    },
+    onError: (err) => {
+      const errData = err.response?.data?.error;
+      toast.error(errData?.message || 'Failed to remove paid backlink');
     },
   });
 };

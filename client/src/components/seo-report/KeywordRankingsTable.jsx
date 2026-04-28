@@ -40,8 +40,8 @@ export function DeltaCell({ position, previousPosition }) {
   if (delta < 0) {
     // Position improved (smaller number)
     return (
-      <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-medium font-label">
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+      <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-bold font-headline">
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
         </svg>
         {Math.abs(delta)}
@@ -49,8 +49,8 @@ export function DeltaCell({ position, previousPosition }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-0.5 text-red-600 dark:text-red-400 font-medium font-label">
-      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <span className="inline-flex items-center gap-0.5 text-red-600 dark:text-red-400 font-bold font-headline">
+      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
       </svg>
       {delta}
@@ -65,13 +65,13 @@ function KdBadge({ value }) {
 }
 
 function VolumeSparkline({ monthlySearches, themeKey }) {
-  if (!monthlySearches?.length) return <span className="text-brand-outline dark:text-brand-on-surface-variant text-xs font-label">—</span>;
+  if (!monthlySearches?.length) return <span className="text-brand-outline dark:text-brand-on-surface-variant text-[10px] font-bold uppercase tracking-wider">—</span>;
   const sorted = [...monthlySearches].sort((a, b) =>
     (a.year * 100 + a.month) - (b.year * 100 + b.month)
   );
   const color = themeColor(themeKey, 1);
   return (
-    <div className="w-20 h-8">
+    <div className="w-20 h-8 mx-auto">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={sorted} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
           <defs>
@@ -110,12 +110,14 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
 
   if (!items || items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-brand-outline-variant dark:border-brand-outline">
-        <svg className="w-10 h-10 text-brand-outline dark:text-brand-on-surface-variant mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">No keywords tracked yet</p>
-        <p className="text-[10px] text-brand-outline text-center max-w-[280px] font-label">
+      <div className="p-10 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand-surface-container-high dark:bg-brand-on-surface flex items-center justify-center">
+          <svg className="w-8 h-8 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline font-headline font-bold mb-1">No keywords tracked yet</p>
+        <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-medium uppercase tracking-wider max-w-[280px] mx-auto">
           {isViewer
             ? 'Contact the site owner to add keywords to track their SERP positions.'
             : 'Click Manage Keywords to add your first one — paste a list or enter keywords one by one.'}
@@ -127,29 +129,29 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="w-full text-xs font-label">
-          <thead>
-            <tr className="text-left text-brand-on-surface-variant dark:text-brand-outline border-b border-brand-outline-variant dark:border-brand-outline">
-              <th className="py-2 px-2 font-medium">#</th>
-              <th className="py-2 px-2 font-medium">Keyword</th>
-              <th className="py-2 px-2 font-medium text-right">Position</th>
-              <th className="py-2 px-2 font-medium text-right">Δ</th>
-              <th className="py-2 px-2 font-medium text-right">Volume</th>
-              <th className="py-2 px-2 font-medium text-center">KD</th>
-              <th className="py-2 px-2 font-medium text-right">CPC</th>
-              <th className="py-2 px-2 font-medium text-center">Vol. trend</th>
-              <th className="py-2 px-2 font-medium">URL</th>
-              <th className="py-2 px-2 font-medium">Last check</th>
-              {!isViewer && <th className="py-2 px-2 font-medium w-10" />}
+        <table className="w-full text-left">
+          <thead className="bg-brand-surface-container-low border-b-0">
+            <tr>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant w-8">#</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant">Keyword</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">Position</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right w-12">Δ</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">Volume</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-center">KD</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">CPC</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-center">Trend</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant">URL</th>
+              <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant">Last check</th>
+              {!isViewer && <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant w-16" />}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-brand-surface-container dark:divide-brand-outline/30">
             {sortedItems.map((it, idx) => (
-              <tr key={it.keyword} className="border-b border-brand-outline-variant dark:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/40">
-                <td className="py-2 px-2 text-brand-outline tabular-nums">{idx + 1}</td>
-                <td className="py-2 px-2 font-medium text-brand-on-surface dark:text-brand-outline-variant">
+              <tr key={it.keyword} className="group hover:bg-brand-surface-container-low/50 dark:hover:bg-brand-on-surface/30 transition-colors">
+                <td className="px-6 py-4 text-brand-outline tabular-nums text-xs">{idx + 1}</td>
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <span>{it.keyword}</span>
+                    <span className="text-sm font-bold font-headline text-brand-on-surface dark:text-brand-outline-variant">{it.keyword}</span>
                     {it.lastCheckError && (
                       <span
                         title={it.lastCheckError}
@@ -162,62 +164,62 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
                     )}
                   </div>
                 </td>
-                <td className="py-2 px-2 text-right tabular-nums">
-                  <span className={positionClass(it.position)}>
+                <td className="px-6 py-4 text-right tabular-nums">
+                  <span className={`text-sm font-extrabold font-headline ${positionClass(it.position)}`}>
                     {it.position == null ? 'Not ranked' : it.position}
                   </span>
                 </td>
-                <td className="py-2 px-2 text-right tabular-nums">
+                <td className="px-6 py-4 text-right tabular-nums">
                   <DeltaCell position={it.position} previousPosition={it.previousPosition} />
                 </td>
-                <td className="py-2 px-2 text-right text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
+                <td className="px-6 py-4 text-right text-xs font-bold text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
                   {fmt(it.searchVolume)}
                 </td>
-                <td className="py-2 px-2 text-center">
+                <td className="px-6 py-4 text-center">
                   <KdBadge value={it.keywordDifficulty} />
                 </td>
-                <td className="py-2 px-2 text-right text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
+                <td className="px-6 py-4 text-right text-xs font-bold text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
                   {it.cpc == null ? '—' : `$${it.cpc.toFixed(2)}`}
                 </td>
-                <td className="py-2 px-2 text-center">
+                <td className="px-6 py-4 text-center">
                   <VolumeSparkline monthlySearches={it.monthlySearches} themeKey={themeKey} />
                 </td>
-                <td className="py-2 px-2 text-brand-on-surface-variant dark:text-brand-outline max-w-[200px]">
+                <td className="px-6 py-4 max-w-[200px]">
                   {it.url ? (
                     <a
                       href={it.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       title={it.url}
-                      className="block truncate text-brand-primary dark:text-brand-400 hover:underline"
+                      className="block truncate text-xs font-medium text-brand-primary dark:text-brand-400 hover:underline"
                     >
                       {it.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                     </a>
                   ) : (
-                    <span className="text-brand-outline dark:text-brand-on-surface-variant">—</span>
+                    <span className="text-brand-outline dark:text-brand-on-surface-variant text-xs">—</span>
                   )}
                 </td>
-                <td className="py-2 px-2 text-brand-on-surface-variant dark:text-brand-outline whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap text-xs font-medium text-brand-on-surface-variant dark:text-brand-outline">
                   {timeAgo(it.lastCheckedAt)}
                 </td>
                 {!isViewer && (
-                  <td className="py-2 px-2">
-                    <div className="flex items-center gap-2 justify-end">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => setEditingItem(it)}
                         title="Edit keyword"
-                        className="text-brand-outline hover:text-brand-primary transition-colors"
+                        className="p-1.5 rounded-lg text-brand-outline hover:text-brand-primary hover:bg-brand-surface-container-high transition-colors"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       <button
                         onClick={() => setPendingRemove(it.keyword)}
                         title="Remove keyword"
-                        className="text-brand-outline hover:text-red-500 transition-colors"
+                        className="p-1.5 rounded-lg text-brand-outline hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
                         </svg>
                       </button>

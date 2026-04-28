@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
 import Input from '../common/Input';
 import Button from '../common/Button';
-import { useUpdateBacklinkItem } from '../../hooks/useBacklinks';
+import { useUpdateBacklinkItem, useUpdatePaidBacklinkItem } from '../../hooks/useBacklinks';
 
 const LINK_TYPES = ['anchor', 'image', 'redirect', 'canonical', 'alternate'];
 
@@ -13,8 +13,11 @@ function isoDate(d) {
   return dt.toISOString().slice(0, 10);
 }
 
-export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item }) {
-  const update = useUpdateBacklinkItem(siteId);
+export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item, kind = 'seo' }) {
+  const isPaid = kind === 'paid';
+  const seoUpdate = useUpdateBacklinkItem(siteId);
+  const paidUpdate = useUpdatePaidBacklinkItem(siteId);
+  const update = isPaid ? paidUpdate : seoUpdate;
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
 
@@ -49,26 +52,24 @@ export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item })
       setErrors(errs);
       return;
     }
-    await update.mutateAsync({
-      itemId: item._id,
-      payload: {
-        sourceUrl: form.sourceUrl.trim(),
-        targetUrl: form.targetUrl.trim() || null,
-        anchor: form.anchor || null,
-        linkType: form.linkType || null,
-        doFollow: !!form.doFollow,
-        domainFromRank: form.domainFromRank === '' ? null : drNum,
-        firstSeen: form.firstSeen || null,
-        lastSeen: form.lastSeen || null,
-      },
-    });
+    const payload = {
+      sourceUrl: form.sourceUrl.trim(),
+      targetUrl: form.targetUrl.trim() || null,
+      anchor: form.anchor || null,
+      linkType: form.linkType || null,
+      doFollow: !!form.doFollow,
+      firstSeen: form.firstSeen || null,
+      lastSeen: form.lastSeen || null,
+    };
+    if (!isPaid) payload.domainFromRank = form.domainFromRank === '' ? null : drNum;
+    await update.mutateAsync({ itemId: item._id, payload });
     onClose();
   };
 
   if (!item) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit backlink" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={isPaid ? 'Edit paid backlink' : 'Edit backlink'} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Source URL *"
@@ -89,7 +90,7 @@ export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item })
           value={form.anchor ?? ''}
           onChange={setField('anchor')}
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className={isPaid ? '' : 'grid grid-cols-2 gap-3'}>
           <div className="space-y-1">
             <label className="block text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline">Link type</label>
             <select
@@ -102,15 +103,17 @@ export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item })
               ))}
             </select>
           </div>
-          <Input
-            label="DR (domainFromRank)"
-            id="ebl-domainFromRank"
-            type="number"
-            inputMode="numeric"
-            value={form.domainFromRank ?? ''}
-            onChange={setField('domainFromRank')}
-            error={errors.domainFromRank}
-          />
+          {!isPaid && (
+            <Input
+              label="DA (domainFromRank)"
+              id="ebl-domainFromRank"
+              type="number"
+              inputMode="numeric"
+              value={form.domainFromRank ?? ''}
+              onChange={setField('domainFromRank')}
+              error={errors.domainFromRank}
+            />
+          )}
         </div>
         <label className="flex items-center gap-2 text-sm text-brand-on-surface dark:text-brand-outline cursor-pointer">
           <input

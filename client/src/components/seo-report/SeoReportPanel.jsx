@@ -19,6 +19,7 @@ import GenerateReportButton from './GenerateReportButton';
 import ReportSection from './ReportSection';
 import BacklinksSection from './BacklinksSection';
 import KeywordRankingsSection from './KeywordRankingsSection';
+import BentoCard from '../common/BentoCard';
 import { GaugeIcon, SearchIcon, AnalyticsIcon, LinkIcon } from './chartIcons';
 
 const GLOBAL_PERIODS = [
@@ -138,7 +139,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
         {/* Backlinks — volume, growth, and raw list */}
         <ReportSection
-          title="Backlinks"
+          title="Backlinks Analysis"
           description="Total inbound links, unique referring domains, and links gained or lost in the selected window."
           accent="amber"
           icon={LinkIcon}
@@ -239,21 +240,17 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
             accent="amber"
             icon={LinkIcon}
           >
-            <Card>
-              <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="domain-authority" />
-            </Card>
+            <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="domain-authority" />
           </ReportSection>
 
           {/* Backlinks — volume, growth, and raw list */}
           <ReportSection
-            title="Backlinks"
+            title="Backlinks Analysis"
             description="The list of external sources currently pointing at your site."
             accent="amber"
             icon={LinkIcon}
           >
-            <Card>
-              <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="backlinks" />
-            </Card>
+            <BacklinksSection siteId={siteId} themeKey={colorTheme} showTitle={false} variant="backlinks" />
           </ReportSection>
 
           {/* Keyword rankings — tracked queries */}
@@ -263,9 +260,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
             accent="amber"
             icon={LinkIcon}
           >
-            <Card>
-              <KeywordRankingsSection siteId={siteId} themeKey={colorTheme} />
-            </Card>
+            <KeywordRankingsSection siteId={siteId} themeKey={colorTheme} />
           </ReportSection>
 
           {/* Site Performance — Lighthouse */}
@@ -295,27 +290,29 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
               </>
             }
           >
-            <Card>
+            <BentoCard>
               <ScoreGaugesRow scores={scores} themeKey={colorTheme} />
-            </Card>
+            </BentoCard>
 
-            <Card>
-              <MetricsSection scores={scores} themeKey={colorTheme} viewMode={viewMode} />
-            </Card>
+            <div className="grid grid-cols-12 gap-6">
+              <BentoCard className="col-span-12 lg:col-span-8">
+                {historyLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner size="sm" />
+                  </div>
+                ) : (
+                  <ScoreTrendChart
+                    history={history}
+                    themeKey={colorTheme}
+                    strategy={activeStrategy}
+                  />
+                )}
+              </BentoCard>
 
-            <Card>
-              {historyLoading ? (
-                <div className="flex justify-center py-8">
-                  <Spinner size="sm" />
-                </div>
-              ) : (
-                <ScoreTrendChart
-                  history={history}
-                  themeKey={colorTheme}
-                  strategy={activeStrategy}
-                />
-              )}
-            </Card>
+              <BentoCard className="col-span-12 lg:col-span-4">
+                <MetricsSection scores={scores} themeKey={colorTheme} viewMode={viewMode} />
+              </BentoCard>
+            </div>
           </ReportSection>
         </>
       )}

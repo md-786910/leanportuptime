@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { computeDateRange } from '../common/SectionDateFilter';
 import { useSeoReportStore } from '../../store/seoReportStore';
 import Card from '../common/Card';
+import BentoCard from '../common/BentoCard';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { Sk } from '../common/Skeleton';
@@ -191,8 +192,8 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <Card>
+      <div className="space-y-6">
+        <BentoCard>
           <Sk className="h-4 w-24 mb-5 rounded-full" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[0, 1, 2, 3].map((i) => (
@@ -202,8 +203,11 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
               </div>
             ))}
           </div>
-        </Card>
-        <Card><Sk className="h-44 w-full rounded-xl" /></Card>
+        </BentoCard>
+        <div className="grid grid-cols-12 gap-6">
+          <BentoCard className="col-span-12 lg:col-span-8"><Sk className="h-44 w-full rounded-xl" /></BentoCard>
+          <BentoCard className="col-span-12 lg:col-span-4"><Sk className="h-44 w-full rounded-xl" /></BentoCard>
+        </div>
       </div>
     );
   }
@@ -243,9 +247,9 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
   const trend = overviewData?.trend || [];
 
   return (
-    <div className="space-y-4">
-      <Card>
-        {/* Header */}
+    <div className="space-y-6">
+      {/* KPI row */}
+      <BentoCard>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium font-label uppercase">
@@ -273,67 +277,64 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
           )}
         </div>
 
-        {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard
-            label="Organic Sessions"
-            value={formatNumber(overview.sessions)}
-            color={themeColor(themeKey, 0)}
-          />
-          <KpiCard
-            label="Engagement Rate"
-            value={overview.engagementRate != null ? `${(overview.engagementRate * 100).toFixed(1)}%` : '—'}
-            color={themeColor(themeKey, 1)}
-          />
-          <KpiCard
-            label="Avg. Engagement Time"
-            value={formatDuration(overview.avgEngagementTime)}
-            color={themeColor(themeKey, 2)}
-          />
-          <KpiCard
-            label="Organic Conversions"
-            value={formatNumber(overview.conversions)}
-            color={themeColor(themeKey, 3)}
-          />
+          <KpiCard label="Organic Sessions" value={formatNumber(overview.sessions)} color={themeColor(themeKey, 0)} />
+          <KpiCard label="Engagement Rate" value={overview.engagementRate != null ? `${(overview.engagementRate * 100).toFixed(1)}%` : '—'} color={themeColor(themeKey, 1)} />
+          <KpiCard label="Avg. Engagement Time" value={formatDuration(overview.avgEngagementTime)} color={themeColor(themeKey, 2)} />
+          <KpiCard label="Organic Conversions" value={formatNumber(overview.conversions)} color={themeColor(themeKey, 3)} />
         </div>
-      </Card>
+      </BentoCard>
 
-      {/* Organic Traffic Trend */}
-      {trend.length > 1 && (
-        <Card>
-          <OrganicTrendChart trend={trend} themeKey={themeKey} />
-        </Card>
+      {/* 12-col bento: Trend (8) + breakdown sidebar (4) */}
+      {(trend.length > 1 || insights) && (
+        <div className="grid grid-cols-12 gap-6">
+          {trend.length > 1 && (
+            <BentoCard className="col-span-12 lg:col-span-8">
+              <OrganicTrendChart trend={trend} themeKey={themeKey} />
+            </BentoCard>
+          )}
+          {insightsLoading ? (
+            <BentoCard className={trend.length > 1 ? 'col-span-12 lg:col-span-4' : 'col-span-12'}>
+              <Sk className="h-48 w-full rounded-xl" />
+            </BentoCard>
+          ) : insights && viewMode === 'charts' ? (
+            <BentoCard className={trend.length > 1 ? 'col-span-12 lg:col-span-4' : 'col-span-12'}>
+              <NewVsReturningChart
+                newUsers={overview.newUsers || 0}
+                returningUsers={overview.returningUsers || 0}
+                themeKey={themeKey}
+              />
+            </BentoCard>
+          ) : insights && viewMode === 'details' ? (
+            <BentoCard className={trend.length > 1 ? 'col-span-12 lg:col-span-4' : 'col-span-12'}>
+              <NewVsReturningChart
+                newUsers={overview.newUsers || 0}
+                returningUsers={overview.returningUsers || 0}
+                themeKey={themeKey}
+              />
+            </BentoCard>
+          ) : null}
+        </div>
       )}
 
-      {/* Insights section */}
-      {insightsLoading ? (
-        <Card><Sk className="h-48 w-full rounded-xl" /></Card>
-      ) : insights ? (
+      {/* Full-width insights below */}
+      {!insightsLoading && insights ? (
         <>
           {viewMode === 'details' && (
-            <Card>
+            <BentoCard>
               <OrganicLandingPagesTable pages={insights.landingPages} themeKey={themeKey} />
-            </Card>
+            </BentoCard>
           )}
 
           {viewMode === 'charts' && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card>
-                  <NewVsReturningChart
-                    newUsers={overview.newUsers || 0}
-                    returningUsers={overview.returningUsers || 0}
-                    themeKey={themeKey}
-                  />
-                </Card>
-                <Card>
-                  <OrganicDeviceBreakdown devices={insights.devices} themeKey={themeKey} />
-                </Card>
-              </div>
-              <Card>
+            <div className="grid grid-cols-12 gap-6">
+              <BentoCard className="col-span-12 lg:col-span-6">
+                <OrganicDeviceBreakdown devices={insights.devices} themeKey={themeKey} />
+              </BentoCard>
+              <BentoCard className="col-span-12 lg:col-span-6">
                 <OrganicCountryBreakdown countries={insights.countries} themeKey={themeKey} />
-              </Card>
-            </>
+              </BentoCard>
+            </div>
           )}
         </>
       ) : null}

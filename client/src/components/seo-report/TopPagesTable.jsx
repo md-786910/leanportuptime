@@ -38,7 +38,7 @@ function PositionInfo() {
 
   return (
     <span className="inline-flex items-center gap-1">
-      Position
+      POS
       <button
         ref={btnRef}
         type="button"
@@ -47,7 +47,7 @@ function PositionInfo() {
         onMouseLeave={() => setOpen(false)}
         className="inline-flex items-center text-brand-outline hover:text-amber-500 transition-colors"
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z" />
         </svg>
       </button>
@@ -56,12 +56,12 @@ function PositionInfo() {
           ref={tooltipRef}
           onMouseEnter={() => setOpen(true)}
           onMouseLeave={() => setOpen(false)}
-          className="w-52 p-2.5 rounded-lg bg-brand-on-surface text-white text-[11px] font-normal leading-relaxed shadow-xl font-label"
-          style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 9999, transform: 'translateY(-100%)' }}
+          className="w-52 p-3 rounded-xl bg-brand-on-surface text-white text-[11px] font-bold leading-tight shadow-2xl font-label z-[9999]"
+          style={{ position: 'absolute', top: pos.top, left: pos.left, transform: 'translateY(-100%)' }}
         >
-          <div className="flex items-center gap-1.5 mb-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block flex-shrink-0"></span> Top 10 — Excellent ranking</div>
-          <div className="flex items-center gap-1.5 mb-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block flex-shrink-0"></span> 11-20 — Needs improvement</div>
-          <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-brand-surface-container-highest inline-block flex-shrink-0"></span> 20+ — Low visibility</div>
+          <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block flex-shrink-0"></span> TOP 10 — EXCELLENT</div>
+          <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-amber-500 inline-block flex-shrink-0"></span> 11-20 — NEEDS WORK</div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-brand-outline inline-block flex-shrink-0"></span> 20+ — LOW VISIBILITY</div>
         </div>,
         document.body
       )}
@@ -81,68 +81,60 @@ function shortenUrl(url) {
 export default function TopPagesTable({ pages, themeKey }) {
   if (!pages || pages.length === 0) {
     return (
-      <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
-        No page data available for this period.
+      <p className="text-xs font-black uppercase tracking-widest text-brand-outline text-center py-8">
+        No page data available.
       </p>
     );
   }
 
   return (
-    <div>
-      <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3 flex items-center gap-2">
-        <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        Top Pages
-      </h4>
-      <div className="overflow-x-auto rounded-lg border border-brand-outline-variant dark:border-brand-outline">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50">
-              <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">#</th>
-              <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">Page</th>
-              <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">Clicks</th>
-              <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">Impressions</th>
-              <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">CTR</th>
-              <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-xs uppercase tracking-wider font-label">
-                <PositionInfo />
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {pages.map((row, i) => (
-              <tr key={i} className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/30 transition-colors">
-                <td className="py-2 px-3 text-brand-outline dark:text-brand-on-surface-variant tabular-nums">{i + 1}</td>
-                <td className="py-2 px-3 max-w-[280px]">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: themeColor(themeKey, i % 4) }}
-                    />
-                    <span className="text-brand-on-surface dark:text-brand-outline-variant  text-xs truncate font-label" title={row.page}>
-                      {shortenUrl(row.page)}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-2 px-3 text-right tabular-nums font-semibold" style={{ color: themeColor(themeKey, 0) }}>
-                  {row.clicks.toLocaleString()}
-                </td>
-                <td className="py-2 px-3 text-right text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
-                  {row.impressions.toLocaleString()}
-                </td>
-                <td className="py-2 px-3 text-right text-brand-on-surface-variant dark:text-brand-outline tabular-nums">
-                  {formatCtr(row.ctr)}
-                </td>
-                <td className="py-2 px-3 text-right tabular-nums">
-                  <span className={row.position <= 10 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : row.position <= 20 ? 'text-amber-600 dark:text-amber-400' : 'text-brand-on-surface-variant dark:text-brand-outline'}>
-                    {row.position.toFixed(1)}
+    <div className="overflow-x-auto">
+      <table className="w-full text-left">
+        <thead className="bg-brand-surface-container-low border-b-0">
+          <tr>
+            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant w-8">#</th>
+            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant">Page Path</th>
+            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">Clicks</th>
+            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">IMPR</th>
+            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">CTR</th>
+            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-brand-on-surface-variant text-right">
+              <PositionInfo />
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-brand-surface-container">
+          {pages.map((row, i) => (
+            <tr key={i} className="hover:bg-brand-surface-container-low/50 transition-colors group">
+              <td className="px-6 py-4 text-[11px] font-bold text-brand-outline tabular-nums">{i + 1}</td>
+              <td className="px-6 py-4 max-w-[240px] truncate">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
+                    style={{ backgroundColor: themeColor(themeKey, i % 4) }}
+                  />
+                  <span className="text-sm font-bold text-brand-on-surface dark:text-brand-outline-variant truncate font-label" title={row.page}>
+                    {shortenUrl(row.page)}
                   </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 text-right tabular-nums text-sm font-black" style={{ color: themeColor(themeKey, 0) }}>
+                {row.clicks.toLocaleString()}
+              </td>
+              <td className="px-6 py-4 text-right text-brand-on-surface-variant/80 dark:text-brand-outline tabular-nums text-[11px] font-bold">
+                {row.impressions.toLocaleString()}
+              </td>
+              <td className="px-6 py-4 text-right text-brand-on-surface-variant/80 dark:text-brand-outline tabular-nums text-[11px] font-bold">
+                {formatCtr(row.ctr)}
+              </td>
+              <td className="px-6 py-4 text-right tabular-nums text-[11px] font-black">
+                <span className={row.position <= 10 ? 'text-green-600 dark:text-green-400' : row.position <= 20 ? 'text-[#a44100] dark:text-[#a44100]' : 'text-brand-outline'}>
+                  {row.position.toFixed(1)}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -43,14 +43,14 @@ export default function KeywordRankingsSection({ siteId, themeKey }) {
   };
 
   return (
-    <div>
+    <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-sm overflow-hidden">
       {/* Header row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+      <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium font-label uppercase">
+          <span className="text-[10px] font-bold font-label uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
             {prettyLocation(providerConfig.locationCode, providerConfig.languageCode)}
           </span>
-          <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-label">
+          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline tabular-nums px-1.5 py-0.5 rounded bg-brand-surface-container-high">
             {items.length} / {maxKeywords} keywords
           </span>
         </div>
@@ -99,12 +99,14 @@ export default function KeywordRankingsSection({ siteId, themeKey }) {
 
       {/* Provider-not-configured empty state */}
       {providerNotConfigured ? (
-        <div className="flex flex-col items-center justify-center py-10 rounded-xl border border-brand-outline-variant dark:border-brand-outline">
-          <svg className="w-10 h-10 text-brand-outline dark:text-brand-on-surface-variant mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-          <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">Provider Not Configured</p>
-          <p className="text-[10px] text-brand-outline text-center max-w-[280px] font-label">
+        <div className="p-10 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand-surface-container-high dark:bg-brand-on-surface flex items-center justify-center">
+            <svg className="w-8 h-8 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline font-headline font-bold mb-1">Provider Not Configured</p>
+          <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-medium uppercase tracking-wider">
             Set <code>DATAFORSEO_EMAIL</code> and <code>DATAFORSEO_PASSWORD</code> in the server environment.
           </p>
         </div>
@@ -119,16 +121,18 @@ export default function KeywordRankingsSection({ siteId, themeKey }) {
             siteId={siteId}
           />
 
-          {status?.fetchError && (
-            <p className="text-[10px] text-amber-500 mt-2 font-label">
-              Last refresh warning: {status.fetchError}
-            </p>
-          )}
-          {status?.lastFetchedAt && (
-            <p className="text-[10px] text-brand-outline mt-2 text-center font-label">
-              Last refreshed {new Date(status.lastFetchedAt).toLocaleString()} · Provider: {providerInfo.name}
-            </p>
-          )}
+          <div className="px-6 py-4 space-y-1">
+            {status?.fetchError && (
+              <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                Last refresh warning: {status.fetchError}
+              </p>
+            )}
+            {status?.lastFetchedAt && (
+              <p className="text-[10px] font-bold text-brand-outline text-center uppercase tracking-wider">
+                Last refreshed {new Date(status.lastFetchedAt).toLocaleString()} · Provider: {providerInfo.name}
+              </p>
+            )}
+          </div>
         </>
       )}
 

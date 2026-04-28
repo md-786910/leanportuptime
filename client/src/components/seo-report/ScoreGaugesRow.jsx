@@ -1,89 +1,43 @@
-import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
-import { gaugeColor } from './colorThemes';
+function scoreTextColorClass(score) {
+  if (score >= 90) return 'text-green-500';
+  if (score >= 50) return 'text-[#a44100]';
+  return 'text-[#ba1a1a]';
+}
 
-function ScoreGauge({ label, score, themeKey, index }) {
-  if (score == null) return null;
-
-  const color = gaugeColor(score, themeKey, index);
-  const data = [{ value: score, fill: color }];
+function Gauge({ score, label, icon, desc }) {
+  const textColor = scoreTextColorClass(score);
+  const circumference = 251.2;
+  const offset = circumference - ((score || 0) / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative">
-        <RadialBarChart
-          width={140}
-          height={140}
-          cx={70}
-          cy={70}
-          innerRadius={52}
-          outerRadius={66}
-          barSize={14}
-          data={data}
-          startAngle={90}
-          endAngle={-270}
-        >
-          <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-          <RadialBar
-            background={{ fill: '#e5e7eb', className: 'dark:fill-gray-700' }}
-            dataKey="value"
-            angleAxisId={0}
-            cornerRadius={7}
-          />
-        </RadialBarChart>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-2xl font-bold font-label" style={{ color }}>{score}</span>
-        </div>
+    <div className="flex flex-col items-center">
+      <div className="flex justify-between items-start mb-2 w-full px-2">
+        <span className="text-sm font-bold font-headline text-brand-on-surface-variant">{label}</span>
+        <span className={`material-symbols-outlined ${textColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon || 'speed'}</span>
       </div>
-      <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline text-center">{label}</span>
+      <div className="flex items-center justify-center relative py-2">
+        <svg className="w-24 h-24 transform -rotate-90">
+          <circle className="text-brand-surface-container-high" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" strokeWidth="8"></circle>
+          <circle className={`${textColor} transition-all duration-1000 ease-out`} cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" strokeDasharray="251.2" strokeDashoffset={offset} strokeWidth="8" strokeLinecap="round"></circle>
+        </svg>
+        <span className={`absolute text-2xl font-headline font-extrabold ${textColor}`}>{score || 0}</span>
+      </div>
+      <p className="text-xs text-center mt-2 text-brand-on-surface-variant font-medium">{desc}</p>
     </div>
   );
 }
 
-function ScoreLegend({ themeKey }) {
-  if (themeKey !== 'default') return null;
-
-  return (
-    <div className="flex items-center justify-center gap-4 text-xs text-brand-on-surface-variant dark:text-brand-outline mt-2 font-label">
-      <div className="flex items-center gap-1.5">
-        <span className="inline-block w-0 h-0 border-l-[5px] border-r-[5px] border-b-[8px] border-transparent border-b-red-500" />
-        <span>0–49</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <span className="inline-block w-2.5 h-2.5 bg-amber-500" />
-        <span>50–89</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" />
-        <span>90–100</span>
-      </div>
-    </div>
-  );
-}
-
-export default function ScoreGaugesRow({ scores, themeKey }) {
+export default function ScoreGaugesRow({ scores }) {
   if (!scores) return null;
 
-  const categories = [
-    { key: 'performance', label: 'Performance' },
-    { key: 'accessibility', label: 'Accessibility' },
-    { key: 'bestPractices', label: 'Best Practices' },
-    { key: 'seo', label: 'SEO' },
-  ];
-
   return (
-    <div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 place-items-center">
-        {categories.map((cat, i) => (
-          <ScoreGauge
-            key={cat.key}
-            label={cat.label}
-            score={scores[cat.key]}
-            themeKey={themeKey}
-            index={i}
-          />
-        ))}
+    <div className="py-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <Gauge score={scores.performance} label="Performance" icon="speed" desc={scores.performance >= 90 ? 'Excellent loading speed' : 'Improvements needed for speed'} />
+        <Gauge score={scores.accessibility} label="Accessibility" icon="accessibility_new" desc={scores.accessibility >= 90 ? 'Highly accessible' : 'Fix accessibility issues'} />
+        <Gauge score={scores.bestPractices} label="Best Practices" icon="verified" desc={scores.bestPractices >= 90 ? 'Exceeding web standards' : 'Update modern practices'} />
+        <Gauge score={scores.seo} label="SEO" icon="travel_explore" desc={scores.seo >= 90 ? 'Optimization is within targets' : 'SEO improvements required'} />
       </div>
-      <ScoreLegend themeKey={themeKey} />
     </div>
   );
 }

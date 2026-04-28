@@ -9,26 +9,30 @@ export default function ReportSection({ title, description, accent = 'violet', i
   const accentClasses = ACCENTS[accent] || ACCENTS.violet;
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-start gap-3 px-1">
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${accentClasses}`}>
-          {icon}
+    <section className="space-y-6">
+      <div className="flex items-start gap-4 px-1">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${accentClasses}`}>
+          {typeof icon === 'string' ? (
+            <span className="material-symbols-outlined text-2xl">{icon}</span>
+          ) : (
+            icon
+          )}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant leading-tight">
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-black font-headline text-brand-on-surface dark:text-brand-outline-variant leading-tight tracking-tight uppercase">
               {title}
             </h2>
-            {actions && <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>}
+            {actions && <div className="flex items-center gap-3 flex-shrink-0">{actions}</div>}
           </div>
           {description && (
-            <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline mt-0.5 font-label">
+            <p className="text-sm text-brand-on-surface-variant/80 dark:text-brand-outline mt-1 font-label leading-relaxed max-w-3xl">
               {description}
             </p>
           )}
         </div>
       </div>
-      <div className="space-y-6">{children}</div>
+      <div className="space-y-8">{children}</div>
     </section>
   );
 }
