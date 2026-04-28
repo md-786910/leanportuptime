@@ -350,64 +350,79 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
-          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">{scoreLabel}</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-headline font-extrabold tabular-nums" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
-              <DeltaChip current={data.domainRank} previous={data.previousDomainRank} direction="higher-better" />
-            </div>
-            <p className="text-[10px] text-brand-outline mt-1 font-medium">{providerDisplay}</p>
-          </div>
-
-          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">Backlinks</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums">{fmt(data.backlinksCount)}</p>
-              <DeltaChip current={data.backlinksCount} previous={data.previousBacklinksCount} direction="higher-better" />
-            </div>
-            <p className="text-[10px] text-brand-outline mt-1 font-medium">Total links</p>
-          </div>
-
-          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">Ref. Domains</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums">{fmt(data.referringDomains)}</p>
-              <DeltaChip current={data.referringDomains} previous={data.previousReferringDomains} direction="higher-better" />
-            </div>
-            <p className="text-[10px] text-brand-outline mt-1 font-medium">Unique sources</p>
-          </div>
-
-          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">New Links</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-headline font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
+          {[
+            {
+              label: scoreLabel,
+              valueNode: (
+                <p className="text-2xl font-headline font-extrabold tabular-nums" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
+              ),
+              delta: <DeltaChip current={data.domainRank} previous={data.previousDomainRank} direction="higher-better" />,
+              desc: providerDisplay,
+              color: 'text-indigo-600 dark:text-indigo-400',
+              bg: 'bg-indigo-50/50 dark:bg-indigo-500/5',
+              border: 'border-indigo-100 dark:border-indigo-500/20',
+            },
+            {
+              label: 'Backlinks',
+              valueNode: (
+                <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums">{fmt(data.backlinksCount)}</p>
+              ),
+              delta: <DeltaChip current={data.backlinksCount} previous={data.previousBacklinksCount} direction="higher-better" />,
+              desc: 'Total links',
+              color: 'text-emerald-600 dark:text-emerald-400',
+              bg: 'bg-emerald-50/50 dark:bg-emerald-500/5',
+              border: 'border-emerald-100 dark:border-emerald-500/20',
+            },
+            {
+              label: 'Ref. Domains',
+              valueNode: (
+                <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums">{fmt(data.referringDomains)}</p>
+              ),
+              delta: <DeltaChip current={data.referringDomains} previous={data.previousReferringDomains} direction="higher-better" />,
+              desc: 'Unique sources',
+              color: 'text-amber-600 dark:text-amber-400',
+              bg: 'bg-amber-50/50 dark:bg-amber-500/5',
+              border: 'border-amber-100 dark:border-amber-500/20',
+            },
+            {
+              label: 'New Links',
+              valueNode: (
+                <p className="text-2xl font-headline font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                  {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
+                </p>
+              ),
+              delta: <DeltaChip current={data.newLinksLast30d} previous={data.previousNewLinksLast30d} direction="higher-better" />,
+              desc: periodLabel,
+              color: 'text-green-600 dark:text-green-400',
+              bg: 'bg-green-50/50 dark:bg-green-500/5',
+              border: 'border-green-100 dark:border-green-500/20',
+            },
+            {
+              label: 'Lost Links',
+              valueNode: (
+                <p className="text-2xl font-headline font-extrabold text-red-600 dark:text-red-400 tabular-nums">
+                  {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
+                </p>
+              ),
+              delta: <DeltaChip current={data.lostLinksLast30d} previous={data.previousLostLinksLast30d} direction="lower-better" />,
+              desc: periodLabel,
+              color: 'text-rose-600 dark:text-rose-400',
+              bg: 'bg-rose-50/50 dark:bg-rose-500/5',
+              border: 'border-rose-100 dark:border-rose-500/20',
+            },
+          ].map((stat, idx) => (
+            <div key={idx} className={`py-3 px-4 rounded-xl border ${stat.border} ${stat.bg} ${stat.color} space-y-2 relative overflow-hidden group`}>
+              <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-current opacity-[0.03] rounded-full group-hover:scale-110 transition-transform duration-500" />
+              <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em]">
+                {stat.label}
               </p>
-              <DeltaChip current={data.newLinksLast30d} previous={data.previousNewLinksLast30d} direction="higher-better" />
+              <div className="flex items-baseline gap-1">
+                {stat.valueNode}
+                {stat.delta}
+              </div>
+              <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-medium font-label">{stat.desc}</p>
             </div>
-            <p className="text-[10px] text-brand-outline mt-1 font-medium">{periodLabel}</p>
-          </div>
-
-          <div className="bg-brand-surface-container-lowest dark:bg-brand-on-surface p-6 rounded-xl shadow-sm transition-all hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
-              <span className="text-sm font-bold font-headline text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">Lost Links</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-headline font-extrabold text-red-600 dark:text-red-400 tabular-nums">
-                {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
-              </p>
-              <DeltaChip current={data.lostLinksLast30d} previous={data.previousLostLinksLast30d} direction="lower-better" />
-            </div>
-            <p className="text-[10px] text-brand-outline mt-1 font-medium">{periodLabel}</p>
-          </div>
+          ))}
         </div>
 
         {data.domainRank === 0 && data.backlinksCount === 0 && data.referringDomains === 0 && (
@@ -554,7 +569,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
           )}
         </div>
       )}
-
+      {/* Individual cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
           <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">{scoreLabel}</span>
