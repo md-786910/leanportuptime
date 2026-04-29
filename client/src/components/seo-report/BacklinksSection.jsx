@@ -349,7 +349,8 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="bg-white dark:bg-brand-surface-container-lowest px-4 py-6 rounded-xl">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
           {[
             {
               label: scoreLabel,
@@ -423,6 +424,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
               <p className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant font-medium font-label">{stat.desc}</p>
             </div>
           ))}
+          </div>
         </div>
 
         {data.domainRank === 0 && data.backlinksCount === 0 && data.referringDomains === 0 && (
