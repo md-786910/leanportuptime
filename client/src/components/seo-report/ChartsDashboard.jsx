@@ -21,6 +21,7 @@ import ReportSection from './ReportSection';
 import NewVsReturningChart from './NewVsReturningChart';
 import { GaugeIcon, SearchIcon, AnalyticsIcon, LinkIcon } from './chartIcons';
 import CompareOrganicModal from './CompareOrganicModal';
+import CompareWebsiteAnalyticsModal from './CompareWebsiteAnalyticsModal';
 
 // ======================== Helpers ========================
 function fmt(n) {
@@ -455,6 +456,7 @@ function GASection({ siteId, themeKey }) {
   useEffect(() => { if (!refreshing) setPendingScope(null); }, [refreshing]);
   const channelsRefreshing = pendingScope === 'channels' && refreshing;
   const pagesRefreshing = pendingScope === 'pages' && refreshing;
+  const [compareOpen, setCompareOpen] = useState(false);
 
   if (!analyticsStatus?.linked) return null;
 
@@ -512,12 +514,31 @@ function GASection({ siteId, themeKey }) {
       accent="emerald"
       icon={AnalyticsIcon}
     >
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} />
-        <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" accent={GA_STAT_ACCENTS[1]} />
-        <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} />
-        <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} />
-        <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} />
+      <div className="bg-white px-4 py-6 rounded-xl">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-medium font-label uppercase">
+            All Traffic
+          </span>
+          <button
+            type="button"
+            onClick={() => setCompareOpen(true)}
+            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1.5 font-label"
+            title="Compare against a past period"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+            </svg>
+            Compare
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* google Analytics */}
+          <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} />
+          <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" accent={GA_STAT_ACCENTS[1]} />
+          <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} />
+          <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} />
+          <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} />
+        </div>
       </div>
 
       {(barData.length > 0 || topPages.length > 0 || (filters.excludedTopPages || []).length > 0) && (
@@ -637,6 +658,14 @@ function GASection({ siteId, themeKey }) {
           )}
         </div>
       )}
+
+      <CompareWebsiteAnalyticsModal
+        isOpen={compareOpen}
+        onClose={() => setCompareOpen(false)}
+        siteId={siteId}
+        currentData={data}
+        currentLabel="Current Period"
+      />
     </ReportSection>
   );
 }
