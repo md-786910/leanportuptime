@@ -376,7 +376,7 @@ export default function TeamPage() {
           </h2>
         </div>
 
-        <Card noPadding className="overflow-hidden">
+        <Card noPadding className="overflow-visible">
           {membersLoading || invLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Spinner size="lg" />

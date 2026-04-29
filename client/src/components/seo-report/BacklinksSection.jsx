@@ -305,29 +305,31 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
                 )}
               </div> */}
 
-              {/* Right: status badges + action buttons */}
-              {!isViewer && (
-                <div className="flex items-center gap-2 ml-auto">
-                  {isStale && (
-                    <span className="text-[9px] font-semibold font-label px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
-                  )}
+              {/* Right: status badges + action buttons. Compare is always visible (read-only); Edit/Refresh + quota are admin-only. */}
+              <div className="flex items-center gap-2 ml-auto">
+                {!isViewer && isStale && (
+                  <span className="text-[9px] font-semibold font-label px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
+                )}
+                {!isViewer && (
                   <span
                     className={`text-[10px] font-semibold px-2 py-1 rounded tabular-nums ${ quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline' } font-label`}
                     title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : `${quota.remaining} refreshes remaining this month`}
                   >
                     {quota.used} / {quota.limit} this month
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setCompareOpen(true)}
-                    className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
-                    title="Compare against a past period"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                    </svg>
-                    Compare
-                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setCompareOpen(true)}
+                  className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
+                  title="Compare against a past period"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                  </svg>
+                  Compare
+                </button>
+                {!isViewer && (
                   <button
                     type="button"
                     onClick={() => setEditDAOpen(true)}
@@ -339,6 +341,8 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
                     </svg>
                     Edit
                   </button>
+                )}
+                {!isViewer && (
                   <button
                     onClick={handleRefresh}
                     disabled={quotaExhausted || refresh.isPending || providerNotConfigured}
@@ -350,8 +354,8 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
                     </svg>
                     {refresh.isPending ? 'Refreshing' : 'Refresh'}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
