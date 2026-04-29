@@ -251,105 +251,109 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
     return (
       <>
       <div>
-        {(hasHistory || !isViewer) && (
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            {/* Left: period chips + custom date picker */}
-            <div className="flex flex-wrap items-center gap-2">
-              {hasHistory && (
-                <>
-                  <div className="flex gap-1.5">
-                    {PERIODS.map((p) => (
-                      <button
-                        key={p.key}
-                        onClick={() => {
-                          if (p.key === 'custom' && !customFrom && historyMonths.length) {
-                            setCustomFrom(monthKeyToDate(historyMonths[0]));
-                            setCustomTo(monthKeyToDate(historyMonths[historyMonths.length - 1], true));
-                          }
-                          setPeriod(p.key);
-                        }}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                  {period === 'custom' && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <DateRangePicker
-                        startDate={customFrom}
-                        endDate={customTo}
-                        onChange={([s, e]) => {
-                          setCustomFrom(s);
-                          setCustomTo(e);
-                        }}
-                        maxDate={new Date()}
-                      />
-                      {periodTotals?.partial && historyMonths.length > 0 && (
-                        <span
-                          className="text-[10px] text-amber-500 font-label"
-                          title={`Stored history covers ${formatMonthKey(historyMonths[0])} – ${formatMonthKey(historyMonths[historyMonths.length - 1])}. Months outside this window contribute 0.`}
+        <div className="bg-white dark:bg-brand-surface-container-lowest px-4 pb-6 pt-3 rounded-xl">
+          {(hasHistory || !isViewer) && (
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-2">
+              {/* Left: period chips + custom date picker */}
+              {/* <div className="flex flex-wrap items-center gap-2">
+                {hasHistory && (
+                  <>
+                    <div className="inline-flex items-center gap-0.5 bg-brand-surface-container-high/70 dark:bg-brand-on-surface/40 rounded-xl p-1 border border-brand-outline-variant/60 dark:border-brand-outline/60 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)]">
+                      {PERIODS.map((p) => (
+                        <button
+                          key={p.key}
+                          type="button"
+                          onClick={() => {
+                            if (p.key === 'custom' && !customFrom && historyMonths.length) {
+                              setCustomFrom(monthKeyToDate(historyMonths[0]));
+                              setCustomTo(monthKeyToDate(historyMonths[historyMonths.length - 1], true));
+                            }
+                            setPeriod(p.key);
+                          }}
+                          className={`px-3.5 py-1.5 text-xs rounded-lg transition-all whitespace-nowrap font-label ${
+                            period === p.key
+                              ? 'bg-white dark:bg-brand-on-surface text-brand-primary dark:text-brand-400 font-bold shadow-sm ring-1 ring-brand-outline-variant/60 dark:ring-brand-outline/60'
+                              : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline-variant font-medium'
+                          }`}
                         >
-                          Partial — history stored from {formatMonthKey(historyMonths[0])}
-                        </span>
-                      )}
+                          {p.label}
+                        </button>
+                      ))}
                     </div>
+                    {period === 'custom' && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <DateRangePicker
+                          startDate={customFrom}
+                          endDate={customTo}
+                          onChange={([s, e]) => {
+                            setCustomFrom(s);
+                            setCustomTo(e);
+                          }}
+                          maxDate={new Date()}
+                        />
+                        {periodTotals?.partial && historyMonths.length > 0 && (
+                          <span
+                            className="text-[10px] text-amber-500 font-label"
+                            title={`Stored history covers ${formatMonthKey(historyMonths[0])} – ${formatMonthKey(historyMonths[historyMonths.length - 1])}. Months outside this window contribute 0.`}
+                          >
+                            Partial — history stored from {formatMonthKey(historyMonths[0])}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div> */}
+
+              {/* Right: status badges + action buttons */}
+              {!isViewer && (
+                <div className="flex items-center gap-2 ml-auto">
+                  {isStale && (
+                    <span className="text-[9px] font-semibold font-label px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
                   )}
-                </>
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-1 rounded tabular-nums ${ quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline' } font-label`}
+                    title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : `${quota.remaining} refreshes remaining this month`}
+                  >
+                    {quota.used} / {quota.limit} this month
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCompareOpen(true)}
+                    className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
+                    title="Compare against a past period"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                    Compare
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditDAOpen(true)}
+                    className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
+                    title="Edit Domain Authority stats"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={quotaExhausted || refresh.isPending || providerNotConfigured}
+                    className={`text-xs font-medium px-3 py-1 rounded transition-colors flex items-center gap-1 ${ quotaExhausted || providerNotConfigured ? 'bg-brand-surface-container-high text-brand-outline cursor-not-allowed dark:bg-brand-on-surface' : 'bg-brand-primary text-white hover:bg-brand-primary' } font-label`}
+                    title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : undefined}
+                  >
+                    <svg className={`w-3 h-3 ${refresh.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {refresh.isPending ? 'Refreshing' : 'Refresh'}
+                  </button>
+                </div>
               )}
             </div>
-
-            {/* Right: status badges + action buttons */}
-            {!isViewer && (
-              <div className="flex items-center gap-2 ml-auto">
-                {isStale && (
-                  <span className="text-[9px] font-semibold font-label px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
-                )}
-                <span
-                  className={`text-[10px] font-semibold px-2 py-1 rounded tabular-nums ${ quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline' } font-label`}
-                  title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : `${quota.remaining} refreshes remaining this month`}
-                >
-                  {quota.used} / {quota.limit} this month
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCompareOpen(true)}
-                  className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
-                  title="Compare against a past period"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                  </svg>
-                  Compare
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditDAOpen(true)}
-                  className="text-xs font-medium px-3 py-1 rounded border border-brand-outline-variant dark:border-brand-outline text-brand-on-surface-variant dark:text-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface transition-colors flex items-center gap-1 font-label"
-                  title="Edit Domain Authority stats"
-                >
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit
-                </button>
-                <button
-                  onClick={handleRefresh}
-                  disabled={quotaExhausted || refresh.isPending || providerNotConfigured}
-                  className={`text-xs font-medium px-3 py-1 rounded transition-colors flex items-center gap-1 ${ quotaExhausted || providerNotConfigured ? 'bg-brand-surface-container-high text-brand-outline cursor-not-allowed dark:bg-brand-on-surface' : 'bg-brand-primary text-white hover:bg-brand-primary' } font-label`}
-                  title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : undefined}
-                >
-                  <svg className={`w-3 h-3 ${refresh.isPending ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  {refresh.isPending ? 'Refreshing' : 'Refresh'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="bg-white dark:bg-brand-surface-container-lowest px-4 py-6 rounded-xl">
+          )}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
           {[
             {
@@ -531,10 +535,11 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
 
       {hasHistory && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <div className="flex gap-1.5">
+          <div className="inline-flex items-center gap-0.5 bg-brand-surface-container-high/70 dark:bg-brand-on-surface/40 rounded-xl p-1 border border-brand-outline-variant/60 dark:border-brand-outline/60 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)]">
             {PERIODS.map((p) => (
               <button
                 key={p.key}
+                type="button"
                 onClick={() => {
                   if (p.key === 'custom' && !customFrom && historyMonths.length) {
                     setCustomFrom(monthKeyToDate(historyMonths[0]));
@@ -542,7 +547,11 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
                   }
                   setPeriod(p.key);
                 }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ period === p.key ? 'bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400' : 'text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface' } font-label`}
+                className={`px-3.5 py-1.5 text-xs rounded-lg transition-all whitespace-nowrap font-label ${
+                  period === p.key
+                    ? 'bg-white dark:bg-brand-on-surface text-brand-primary dark:text-brand-400 font-bold shadow-sm ring-1 ring-brand-outline-variant/60 dark:ring-brand-outline/60'
+                    : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline-variant font-medium'
+                }`}
               >
                 {p.label}
               </button>
