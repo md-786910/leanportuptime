@@ -6,6 +6,7 @@ import ReportPrintLayout from './ReportPrintLayout';
 import { useGscPerformance, useGscInsights, useGscStatus } from '../../hooks/useSearchConsole';
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnalyticsInsights } from '../../hooks/useAnalytics';
 import { useBacklinksStatus } from '../../hooks/useBacklinks';
+import { useKeywordsStatus } from '../../hooks/useKeywords';
 
 export default function GenerateReportButton({ siteId, siteName, siteUrl, scores, strategy, history, themeKey = 'default' }) {
   const [generating, setGenerating] = useState(false);
@@ -21,6 +22,7 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
   const { data: organicOverview } = useAnalyticsOverview(siteId, '28d');
   const { insights: organicInsights } = useAnalyticsInsights(siteId, '28d');
   const { status: backlinksStatus } = useBacklinksStatus(siteId);
+  const { status: keywordsStatus } = useKeywordsStatus(siteId);
 
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
@@ -90,6 +92,7 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
             organicOverview={organicOverview}
             organicInsights={organicInsights}
             backlinks={backlinksStatus?.backlinks}
+            keywords={keywordsStatus?.items}
           />
         </div>,
         document.body
