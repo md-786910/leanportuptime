@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, RadialBarChart, RadialBar,
+  PieChart, Pie, Cell, ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis,
   AreaChart, Area, BarChart, Bar, LineChart, Line, LabelList,
   XAxis, YAxis, CartesianGrid, Legend,
 } from 'recharts';
@@ -91,7 +91,8 @@ function KpiBox({ label, value, hint, accent, accentIndex = 0 }) {
 }
 
 function MiniGaugePrint({ score, label, themeKey }) {
-  const color = gaugeColor(score, themeKey);
+  const rounded = Math.round(score || 0);
+  const color = gaugeColor(rounded, themeKey);
   return (
     <div style={{
       background: '#ffffff',
@@ -106,11 +107,12 @@ function MiniGaugePrint({ score, label, themeKey }) {
       justifyContent: 'flex-start',
     }}>
       <div style={{ fontSize: 10, color: '#475569', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6, lineHeight: 1.2, minHeight: 12 }}>{label}</div>
-      <div style={{ width: 80, height: 80 }}>
+      <div style={{ width: 88, height: 88 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart cx="50%" cy="50%" innerRadius="68%" outerRadius="100%" startAngle={90} endAngle={-270} data={[{ value: score, fill: color }]}>
+          <RadialBarChart cx="50%" cy="50%" innerRadius="72%" outerRadius="100%" startAngle={90} endAngle={-270} data={[{ value: rounded, fill: color }]}>
+            <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
             <RadialBar background={{ fill: '#f1f5f9' }} dataKey="value" cornerRadius={10} />
-            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: 17, fontWeight: 800, fill: '#0f172a' }}>{score}</text>
+            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: 22, fontWeight: 800, fill: color, fontVariantNumeric: 'tabular-nums' }}>{rounded}</text>
           </RadialBarChart>
         </ResponsiveContainer>
       </div>
