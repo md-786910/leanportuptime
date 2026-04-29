@@ -1,16 +1,20 @@
 import { forwardRef } from 'react';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer,
-  AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid,
+  PieChart, Pie, Cell, ResponsiveContainer, RadialBarChart, RadialBar,
+  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Legend,
 } from 'recharts';
-import { themeColor } from './colorThemes';
+import { themeColor, gaugeColor } from './colorThemes';
 
 function fmt(n) {
   if (n == null) return '—';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
+}
+function fmtVal(v, u) {
+  if (u === 'ms') return v >= 1000 ? `${(v / 1000).toFixed(1)}s` : `${Math.round(v)}ms`;
+  return v.toFixed(3);
 }
 function fmtDur(s) {
   if (!s || s <= 0) return '0s';
@@ -49,6 +53,33 @@ function KpiBox({ label, value, color, hint }) {
     </div>
   );
 }
+
+function MiniGaugePrint({ score, label, themeKey }) {
+  const color = gaugeColor(score, themeKey);
+  return (
+    <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+      <div style={{ fontSize: 10, color: '#6b7280', marginBottom: 4 }}>{label}</div>
+      <div style={{ width: 80, height: 80, margin: '0 auto' }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <RadialBarChart cx="50%" cy="50%" innerRadius="65%" outerRadius="100%" startAngle={90} endAngle={-270} data={[{ value: score, fill: color }]}>
+            <RadialBar background={{ fill: '#f3f4f6' }} dataKey="value" cornerRadius={4} />
+            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: 16, fontWeight: 700, fill: '#111827' }}>{score}</text>
+          </RadialBarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+const CWV = [
+  { key: 'fcp', label: 'FCP', unit: 'ms', good: 1800, poor: 3000, max: 6000 },
+  { key: 'lcp', label: 'LCP', unit: 'ms', good: 2500, poor: 4000, max: 8000 },
+  { key: 'tbt', label: 'TBT', unit: 'ms', good: 200, poor: 600, max: 1200 },
+  { key: 'cls', label: 'CLS', unit: '', good: 0.1, poor: 0.25, max: 0.5 },
+  { key: 'si', label: 'SI', unit: 'ms', good: 3400, poor: 5800, max: 10000 },
+];
+
+const SCORE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
 
 const METRIC_LABELS = {
   domain_rank: 'Domain Rank',
@@ -97,9 +128,18 @@ function positionColor(position) {
 const ReportPrintLayout = forwardRef(function ReportPrintLayout({
   siteName, siteUrl, themeKey,
   websiteData, organicOverview, backlinks, keywords,
+  scores, strategy, history,
 }, ref) {
   const tk = themeKey || 'default';
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // ── Site Performance / Score history ───────────────────────────────────────
+  const trendHistory = (history || [])
+    .filter((h) => h.pageSpeed?.[strategy])
+    .map((h) => ({
+      date: new Date(h.scannedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      ...h.pageSpeed[strategy],
+    }));
 
   // ── GA / website data ──────────────────────────────────────────────────────
   const websiteOverview = websiteData?.overview || {};
@@ -404,6 +444,71 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
           <p style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right', marginTop: 6 }}>
             Showing top 10 of {backlinkItems.length} backlinks.
           </p>
+        </Section>
+      )}
+
+      {/* ===== 9. SITE PERFORMANCE ===== */}
+      {scores && (
+        <Section title="9. Site Performance">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            <MiniGaugePrint score={scores.performance || 0} label="Performance" themeKey={tk} />
+            <MiniGaugePrint score={scores.accessibility || 0} label="Accessibility" themeKey={tk} />
+            <MiniGaugePrint score={scores.bestPractices || 0} label="Best Practices" themeKey={tk} />
+            <MiniGaugePrint score={scores.seo || 0} label="SEO Score" themeKey={tk} />
+          </div>
+          {strategy && (
+            <p style={{ fontSize: 9, color: '#9ca3af', textAlign: 'right', marginTop: 6 }}>
+              Lighthouse strategy: {strategy}
+            </p>
+          )}
+        </Section>
+      )}
+
+      {/* ===== 10. SCORE TRENDS ===== */}
+      {trendHistory.length >= 2 && (
+        <Section title="10. Score Trends">
+          <div style={{ width: CONTENT_WIDTH, height: 180 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendHistory} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#6b7280' }} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: '9px' }} />
+                {[
+                  { key: 'performance', label: 'Performance' },
+                  { key: 'accessibility', label: 'Accessibility' },
+                  { key: 'bestPractices', label: 'Best Practices' },
+                  { key: 'seo', label: 'SEO' },
+                ].map((s, i) => (
+                  <Line key={s.key} type="monotone" dataKey={s.key} stroke={SCORE_COLORS[i]} strokeWidth={2} dot={{ r: 2 }} name={s.label} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Section>
+      )}
+
+      {/* ===== 11. CORE WEB VITALS ===== */}
+      {scores && CWV.some((m) => scores[m.key] != null) && (
+        <Section title="11. Core Web Vitals">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+            {CWV.filter((m) => scores[m.key] != null).map((m) => {
+              const val = scores[m.key];
+              const barColor = val <= m.good ? '#10b981' : val <= m.poor ? '#f59e0b' : '#ef4444';
+              const status = val <= m.good ? 'Good' : val <= m.poor ? 'Needs Work' : 'Poor';
+              const pct = Math.min((val / m.max) * 100, 100);
+              return (
+                <div key={m.key} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280' }}>{m.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '4px 0' }}>{fmtVal(val, m.unit)}</div>
+                  <div style={{ height: 4, backgroundColor: '#f3f4f6', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${Math.max(pct, 2)}%`, backgroundColor: barColor, borderRadius: 2 }} />
+                  </div>
+                  <div style={{ fontSize: 9, fontWeight: 600, color: barColor, marginTop: 4 }}>{status}</div>
+                </div>
+              );
+            })}
+          </div>
         </Section>
       )}
 
