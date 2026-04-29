@@ -5,8 +5,17 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import Badge from '../common/Badge';
+import KpiCard from '../common/KpiCard';
+import SectionHeader from '../common/SectionHeader';
 import ScoreBar from '../security/ScoreBar';
 import { formatDate } from '../../utils/formatters';
+
+function scoreAccent(score) {
+  if (score == null) return 'sky';
+  if (score >= 80) return 'emerald';
+  if (score >= 50) return 'amber';
+  return 'rose';
+}
 
 const statusVariant = { pass: 'success', fail: 'danger', warn: 'warning' };
 const severityVariant = { low: 'neutral', medium: 'info', high: 'warning', critical: 'danger' };
@@ -524,50 +533,35 @@ export default function SeoPanel({ siteId }) {
 
       {audit ? (
         <>
-          {/* Overall Score */}
-          <Card>
-            <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Overall SEO Score</h3>
-            <ScoreBar
-              score={audit.score}
-              totalChecks={audit.totalChecks}
-              passedChecks={audit.passedChecks}
-              failedChecks={audit.failedChecks}
-            />
-            {audit.warnChecks > 0 && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-label">{audit.warnChecks} warning(s)</p>
-            )}
-          </Card>
+          {/* KPI strip: overall + 4 category scores */}
+          {(() => {
+            const passOf = (cat) => audit.checks?.filter((c) => c.category === cat && c.status === 'pass').length || 0;
+            const totOf = (cat) => audit.checks?.filter((c) => c.category === cat).length || 0;
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <KpiCard label="Overall SEO" value={audit.score ?? 0} hint={`${audit.passedChecks ?? 0}/${audit.totalChecks ?? 0} passed`} accent={scoreAccent(audit.score)} />
+                <KpiCard label="Meta Tags" value={audit.metaTagsScore ?? 0} hint={`${passOf('meta-tags')}/${totOf('meta-tags')} passed`} accent={scoreAccent(audit.metaTagsScore)} />
+                <KpiCard label="Content" value={audit.contentScore ?? 0} hint={`${passOf('content')}/${totOf('content')} passed`} accent={scoreAccent(audit.contentScore)} />
+                <KpiCard label="Links" value={audit.linksScore ?? 0} hint={`${passOf('links')}/${totOf('links')} passed`} accent={scoreAccent(audit.linksScore)} />
+                <KpiCard label="Performance" value={audit.performanceScore ?? 0} hint={`${passOf('performance')}/${totOf('performance')} passed`} accent={scoreAccent(audit.performanceScore)} />
+              </div>
+            );
+          })()}
 
-          {/* Category Scores */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <CategoryScoreCard
-              label="Meta Tags"
-              icon={categoryConfig['meta-tags'].icon}
-              score={audit.metaTagsScore}
-              passed={audit.checks?.filter((c) => c.category === 'meta-tags' && c.status === 'pass').length || 0}
-              total={audit.checks?.filter((c) => c.category === 'meta-tags').length || 0}
-            />
-            <CategoryScoreCard
-              label="Content"
-              icon={categoryConfig.content.icon}
-              score={audit.contentScore}
-              passed={audit.checks?.filter((c) => c.category === 'content' && c.status === 'pass').length || 0}
-              total={audit.checks?.filter((c) => c.category === 'content').length || 0}
-            />
-            <CategoryScoreCard
-              label="Links"
-              icon={categoryConfig.links.icon}
-              score={audit.linksScore}
-              passed={audit.checks?.filter((c) => c.category === 'links' && c.status === 'pass').length || 0}
-              total={audit.checks?.filter((c) => c.category === 'links').length || 0}
-            />
-            <CategoryScoreCard
-              label="Performance"
-              icon={categoryConfig.performance.icon}
-              score={audit.performanceScore}
-              passed={audit.checks?.filter((c) => c.category === 'performance' && c.status === 'pass').length || 0}
-              total={audit.checks?.filter((c) => c.category === 'performance').length || 0}
-            />
+          {/* Overall Score detail */}
+          <div>
+            <SectionHeader number={1} title="Overall SEO Score" accent={scoreAccent(audit.score)} description="Aggregate score across all SEO checks" />
+            <Card>
+              <ScoreBar
+                score={audit.score}
+                totalChecks={audit.totalChecks}
+                passedChecks={audit.passedChecks}
+                failedChecks={audit.failedChecks}
+              />
+              {audit.warnChecks > 0 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 font-label">{audit.warnChecks} warning(s)</p>
+              )}
+            </Card>
           </div>
 
           {/* PageSpeed Insights — Google-style layout */}

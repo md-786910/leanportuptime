@@ -2,23 +2,54 @@ import { useSSL, useSSLHistory, useSSLCheck } from '../../hooks/useSSL';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
+import KpiCard from '../common/KpiCard';
+import SectionHeader from '../common/SectionHeader';
 import SSLBadge from './SSLBadge';
 import SSLHistoryList from './SSLHistoryList';
 import { formatDate } from '../../utils/formatters';
+
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const ms = new Date(dateStr).getTime() - Date.now();
+  if (Number.isNaN(ms)) return null;
+  return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+
+function expiryAccent(days) {
+  if (days == null) return 'sky';
+  if (days < 0) return 'rose';
+  if (days <= 14) return 'rose';
+  if (days <= 30) return 'amber';
+  return 'emerald';
+}
+
+function expiryText(days) {
+  if (days == null) return '—';
+  if (days < 0) return `Expired ${Math.abs(days)}d ago`;
+  if (days === 0) return 'Expires today';
+  return `${days}d remaining`;
+}
 
 export default function SSLPanel({ siteId }) {
   const { ssl, isLoading } = useSSL(siteId);
   const { history, isLoading: histLoading } = useSSLHistory(siteId);
   const sslCheck = useSSLCheck(siteId);
 
-  if (isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Spinner />
+      </div>
+    );
+  }
+
+  const days = daysUntil(ssl?.validTo);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1">
-          <SSLBadge ssl={ssl} />
-        </div>
+      {/* Status row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <SSLBadge ssl={ssl} />
         <Button
           variant="primary"
           size="sm"
@@ -32,24 +63,78 @@ export default function SSLPanel({ siteId }) {
         </Button>
       </div>
 
-      {ssl && ssl.issuer && (
-        <Card>
-          <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Certificate Details</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Issuer:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{ssl.issuer}</span></div>
-            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Protocol:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{ssl.protocol || '—'}</span></div>
-            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Valid From:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{formatDate(ssl.validFrom)}</span></div>
-            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Valid To:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{formatDate(ssl.validTo)}</span></div>
-            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Cipher:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant">{ssl.cipher || '—'}</span></div>
-            <div><span className="text-brand-on-surface-variant dark:text-brand-outline">Fingerprint:</span> <span className="text-brand-on-surface dark:text-brand-outline-variant text-xs break-all font-label">{ssl.fingerprint || '—'}</span></div>
-          </div>
-        </Card>
+      {/* KPI strip */}
+      {ssl && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="Status"
+            value={ssl.valid === true ? 'Valid' : ssl.valid === false ? 'Invalid' : 'Unknown'}
+            hint={ssl.valid === false ? 'Action required' : 'Certificate active'}
+            accent={ssl.valid === true ? 'emerald' : ssl.valid === false ? 'rose' : 'sky'}
+          />
+          <KpiCard
+            label="Days Remaining"
+            value={days != null ? Math.max(days, 0) : '—'}
+            hint={expiryText(days)}
+            accent={expiryAccent(days)}
+          />
+          <KpiCard
+            label="Issuer"
+            value={ssl.issuer || '—'}
+            hint="Certificate authority"
+            accent="indigo"
+          />
+          <KpiCard
+            label="Protocol"
+            value={ssl.protocol || '—'}
+            hint={ssl.cipher ? ssl.cipher.split('-')[0] : 'TLS version'}
+            accent="violet"
+          />
+        </div>
       )}
 
-      <Card>
-        <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Certificate History</h3>
-        {histLoading ? <Spinner /> : <SSLHistoryList history={history} />}
-      </Card>
+      {/* Certificate Details */}
+      {ssl && ssl.issuer && (
+        <div>
+          <SectionHeader number={1} title="Certificate Details" accent="indigo" description="Issuer, validity window, cipher and fingerprint" />
+          <Card>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-outline dark:text-brand-on-surface-variant">Issuer</dt>
+                <dd className="text-brand-on-surface dark:text-brand-outline-variant font-medium">{ssl.issuer}</dd>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-outline dark:text-brand-on-surface-variant">Protocol</dt>
+                <dd className="text-brand-on-surface dark:text-brand-outline-variant font-medium tabular-nums">{ssl.protocol || '—'}</dd>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-outline dark:text-brand-on-surface-variant">Valid From</dt>
+                <dd className="text-brand-on-surface dark:text-brand-outline-variant font-medium tabular-nums">{formatDate(ssl.validFrom)}</dd>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-outline dark:text-brand-on-surface-variant">Valid To</dt>
+                <dd className="text-brand-on-surface dark:text-brand-outline-variant font-medium tabular-nums">{formatDate(ssl.validTo)}</dd>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-outline dark:text-brand-on-surface-variant">Cipher</dt>
+                <dd className="text-brand-on-surface dark:text-brand-outline-variant font-medium font-mono text-xs">{ssl.cipher || '—'}</dd>
+              </div>
+              <div className="flex flex-col gap-0.5 sm:col-span-2">
+                <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-outline dark:text-brand-on-surface-variant">Fingerprint</dt>
+                <dd className="text-brand-on-surface dark:text-brand-outline-variant font-mono text-xs break-all">{ssl.fingerprint || '—'}</dd>
+              </div>
+            </dl>
+          </Card>
+        </div>
+      )}
+
+      {/* History */}
+      <div>
+        <SectionHeader number={2} title="Certificate History" accent="violet" description="Recent issuance and rotation events" />
+        <Card>
+          {histLoading ? <Spinner /> : <SSLHistoryList history={history} />}
+        </Card>
+      </div>
     </div>
   );
 }

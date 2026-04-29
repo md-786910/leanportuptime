@@ -4,6 +4,8 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import Badge from '../common/Badge';
+import KpiCard from '../common/KpiCard';
+import SectionHeader from '../common/SectionHeader';
 import { formatDate, formatRelative } from '../../utils/formatters';
 
 const statusVariant = { ok: 'success', warn: 'warning', critical: 'danger' };
@@ -128,41 +130,26 @@ export default function PluginPanel({ siteId }) {
 
       {audit ? (
         <>
-          <Card>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">Summary</h3>
-            </div>
-            {(() => {
-              const malwareCount = audit.plugins?.filter(p => p.isMalicious).length || 0;
-              const vulnCount = audit.plugins?.filter(p => p.isVulnerable).length || 0;
-              const cleanCount = audit.totalPlugins - audit.issueCount;
-              return (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-2xl font-bold text-brand-on-surface dark:text-brand-outline-variant font-headline">{audit.totalPlugins}</p>
-                    <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">Total Plugins</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-emerald-600 font-headline">{cleanCount}</p>
-                    <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">Clean</p>
-                  </div>
-                  <div>
-                    <p className={`text-2xl font-bold ${vulnCount > 0 ? 'text-amber-600' : 'text-brand-outline'} font-headline`}>{vulnCount}</p>
-                    <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">Vulnerable</p>
-                  </div>
-                  <div>
-                    <p className={`text-2xl font-bold ${malwareCount > 0 ? 'text-red-600' : 'text-brand-outline'} font-headline`}>{malwareCount}</p>
-                    <p className="text-xs text-brand-on-surface-variant dark:text-brand-outline font-label">Malware</p>
-                  </div>
-                </div>
-              );
-            })()}
-          </Card>
+          {(() => {
+            const malwareCount = audit.plugins?.filter((p) => p.isMalicious).length || 0;
+            const vulnCount = audit.plugins?.filter((p) => p.isVulnerable).length || 0;
+            const cleanCount = audit.totalPlugins - audit.issueCount;
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <KpiCard label="Total Plugins" value={audit.totalPlugins} hint="Detected on site" accent="indigo" />
+                <KpiCard label="Clean" value={cleanCount} hint="No issues found" accent="emerald" />
+                <KpiCard label="Vulnerable" value={vulnCount} hint="Known vulnerabilities" accent={vulnCount > 0 ? 'amber' : 'sky'} />
+                <KpiCard label="Malware" value={malwareCount} hint="Malicious code found" accent={malwareCount > 0 ? 'rose' : 'sky'} />
+              </div>
+            );
+          })()}
 
-          <Card>
-            <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-3">Detected Plugins</h3>
-            <PluginList plugins={audit.plugins} />
-          </Card>
+          <div>
+            <SectionHeader number={1} title="Detected Plugins" accent="indigo" description="Click a plugin with issues to expand details" />
+            <Card>
+              <PluginList plugins={audit.plugins} />
+            </Card>
+          </div>
         </>
       ) : (
         <Card>

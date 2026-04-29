@@ -6,6 +6,8 @@ import { useCheckSummary, useCheckHistory } from "../hooks/useChecks";
 import Badge from "../components/common/Badge";
 import Spinner from "../components/common/Spinner";
 import ConfirmDialog from "../components/common/ConfirmDialog";
+import DataTable from "../components/common/DataTable";
+import PositionPill from "../components/common/PositionPill";
 import SiteHeader from "../components/sites/SiteHeader";
 import SiteDetailTabs from "../components/sites/SiteDetailTabs";
 import SiteOverviewTab from "../components/sites/SiteOverviewTab";
@@ -119,71 +121,46 @@ export default function SiteDetailPage() {
             checks={checks}
             days={period === "24h" ? 1 : period === "7d" ? 7 : 30}
           />
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-brand-outline-variant dark:border-brand-outline">
-                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
-                    Time
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
-                    Status
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
-                    HTTP
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
-                    Response
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
-                    TTFB
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-brand-on-surface-variant">
-                    Location
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {checks.map((c) => (
-                  <tr
-                    key={c._id}
-                    className="border-b border-brand-outline-variant dark:border-brand-outline"
-                  >
-                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline text-xs font-label">
-                      {new Date(c.timestamp).toLocaleString()}
-                    </td>
-                    <td className="py-2 px-3">
-                      <span
-                        className={`text-xs font-medium ${ c.status === "up" ? "text-emerald-600" : c.status === "down" ? "text-red-600" : "text-amber-600" } font-label`}
-                      >
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline">
-                      {c.httpStatus || "—"}
-                    </td>
-                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline">
-                      {c.responseTime ? `${c.responseTime}ms` : "—"}
-                    </td>
-                    <td className="py-2 px-3 text-brand-on-surface dark:text-brand-outline">
-                      {c.ttfb ? `${c.ttfb}ms` : "—"}
-                    </td>
-                    <td className="py-2 px-3">
-                      <Badge
-                        variant={
-                          c.location && c.location !== "local"
-                            ? "info"
-                            : "neutral"
-                        }
-                      >
-                        {c.location || "local"}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            keyField="_id"
+            rows={checks}
+            columns={[
+              {
+                key: 'timestamp',
+                label: 'Time',
+                width: '24%',
+                render: (c) => (
+                  <span className="text-brand-on-surface dark:text-brand-outline-variant">
+                    {new Date(c.timestamp).toLocaleString()}
+                  </span>
+                ),
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                width: '12%',
+                render: (c) => (
+                  <PositionPill
+                    tier={c.status === 'up' ? 'good' : c.status === 'down' ? 'critical' : 'warn'}
+                    value={c.status ? c.status.charAt(0).toUpperCase() + c.status.slice(1) : '—'}
+                  />
+                ),
+              },
+              { key: 'httpStatus', label: 'HTTP', align: 'right', width: '10%', render: (c) => c.httpStatus || '—' },
+              { key: 'responseTime', label: 'Response', align: 'right', width: '14%', render: (c) => (c.responseTime ? `${c.responseTime} ms` : '—') },
+              { key: 'ttfb', label: 'TTFB', align: 'right', width: '14%', render: (c) => (c.ttfb ? `${c.ttfb} ms` : '—') },
+              {
+                key: 'location',
+                label: 'Location',
+                width: '26%',
+                render: (c) => (
+                  <Badge variant={c.location && c.location !== 'local' ? 'info' : 'neutral'}>
+                    {c.location || 'local'}
+                  </Badge>
+                ),
+              },
+            ]}
+          />
         </div>
       )}
 
