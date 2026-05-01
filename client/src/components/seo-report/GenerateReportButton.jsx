@@ -3,24 +3,54 @@ import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import Button from '../common/Button';
 import ReportPrintLayout from './ReportPrintLayout';
+import { computeDateRange } from '../common/SectionDateFilter';
 import { useGscPerformance, useGscInsights, useGscStatus } from '../../hooks/useSearchConsole';
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnalyticsInsights } from '../../hooks/useAnalytics';
 import { useBacklinksStatus } from '../../hooks/useBacklinks';
 import { useKeywordsStatus } from '../../hooks/useKeywords';
+import { useSeoReportStore } from '../../store/seoReportStore';
+
+function normalizeDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function buildPeriodLabel(period, customFrom, customTo) {
+  const from = normalizeDate(customFrom);
+  const to = normalizeDate(customTo);
+
+  if (period === 'custom' && from && to) {
+    return `${from.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${to.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  }
+  if (period === '7d') return 'Last 7 days';
+  if (period === '28d') return 'Last 28 days';
+  if (period === '2m') return 'Last 2 months';
+  if (period === 'thisMonth') return 'This month';
+  return 'Selected period';
+}
 
 export default function GenerateReportButton({ siteId, siteName, siteUrl, scores, strategy, history, themeKey = 'default' }) {
   const [generating, setGenerating] = useState(false);
   const [showLayout, setShowLayout] = useState(false);
   const printRef = useRef(null);
+  const period = useSeoReportStore((s) => s.period);
+  const customFrom = useSeoReportStore((s) => s.customFrom);
+  const customTo = useSeoReportStore((s) => s.customTo);
+  const normalizedCustomFrom = normalizeDate(customFrom);
+  const normalizedCustomTo = normalizeDate(customTo);
+  const dateRange = computeDateRange(period, normalizedCustomFrom, normalizedCustomTo);
+  const periodLabel = buildPeriodLabel(period, normalizedCustomFrom, normalizedCustomTo);
 
   // Pre-fetch all data via hooks (they cache via React Query so no extra requests)
   const { gscStatus } = useGscStatus(siteId);
-  const { performance: gscPerformance } = useGscPerformance(siteId, '28d');
-  const { insights: gscInsights } = useGscInsights(siteId, '28d');
+  const { performance: gscPerformance } = useGscPerformance(siteId, period, dateRange);
+  const { insights: gscInsights } = useGscInsights(siteId, period, dateRange);
   const { analyticsStatus } = useAnalyticsStatus(siteId);
-  const { data: websiteData } = useWebsiteAnalytics(siteId, '28d');
-  const { data: organicOverview } = useAnalyticsOverview(siteId, '28d');
-  const { insights: organicInsights } = useAnalyticsInsights(siteId, '28d');
+  const { data: websiteData } = useWebsiteAnalytics(siteId, period, dateRange);
+  const { data: organicOverview } = useAnalyticsOverview(siteId, period, dateRange);
+  const { insights: organicInsights } = useAnalyticsInsights(siteId, period, dateRange);
   const { status: backlinksStatus } = useBacklinksStatus(siteId);
   const { status: keywordsStatus } = useKeywordsStatus(siteId);
 
@@ -37,7 +67,6 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
       if (!element) throw new Error('Report layout not ready');
 
       const safeName = (siteName || 'site').replace(/[^a-zA-Z0-9-_]/g, '_');
-      const periodLabel = 'Last 28 days';
       const generatedAt = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
       await html2pdf()
@@ -98,7 +127,7 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
       setGenerating(false);
       setShowLayout(false);
     }
-  }, [siteName, siteId, scores, strategy, history]);
+  }, [siteName, siteId, scores, strategy, history, periodLabel]);
 
   return (
     <>
@@ -133,6 +162,7 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
             organicInsights={organicInsights}
             backlinks={backlinksStatus?.backlinks}
             keywords={keywordsStatus?.items}
+            reportPeriodLabel={periodLabel}
           />
         </div>,
         document.body

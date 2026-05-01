@@ -28,6 +28,37 @@ function shortDate(d) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
 }
 
+function rowSortTimestamp(row) {
+  const candidates = [row.updatedAt, row.lastSeen, row.firstSeen];
+  for (const value of candidates) {
+    if (!value) continue;
+    const ts = new Date(value).getTime();
+    if (!Number.isNaN(ts)) return ts;
+  }
+  if (typeof row._id === 'string' && row._id.length >= 8) {
+    const ts = parseInt(row._id.slice(0, 8), 16) * 1000;
+    if (Number.isFinite(ts)) return ts;
+  }
+  return 0;
+}
+
+function sortBacklinkRows(items, { prioritizeManual = false } = {}) {
+  return (items || [])
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      if (prioritizeManual) {
+        const aManual = a.item.source === 'manual' || a.item.isPaid ? 1 : 0;
+        const bManual = b.item.source === 'manual' || b.item.isPaid ? 1 : 0;
+        if (aManual !== bManual) return bManual - aManual;
+      }
+
+      const timeDiff = rowSortTimestamp(b.item) - rowSortTimestamp(a.item);
+      if (timeDiff !== 0) return timeDiff;
+      return b.index - a.index;
+    })
+    .map(({ item }) => item);
+}
+
 const CONTENT_WIDTH = 672;
 const TD_TRUNCATE = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
 
@@ -175,13 +206,72 @@ function positionColor(position) {
 }
 
 const TABLE_HEADER_ROW = { background: 'linear-gradient(to bottom, #f8fafc, #f1f5f9)' };
-const TABLE_HEADER_CELL = { textAlign: 'left', padding: '6px 8px', fontWeight: 700, color: '#475569', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0' };
+const TABLE_HEADER_CELL = { textAlign: 'left', padding: '9px 10px', fontWeight: 700, color: '#475569', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #e2e8f0', lineHeight: 1.25 };
 const TABLE_BODY_ROW_ALT = { backgroundColor: '#fafafa' };
+const PRINT_CARD = { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 12, boxShadow: '0 1px 2px rgba(15,23,42,0.04)', breakInside: 'avoid', pageBreakInside: 'avoid' };
+
+function BacklinksPrintTable({ rows, showFooter = false, footerText = '' }) {
+  if (!rows.length) return null;
+
+  return (
+    <>
+      <div style={{ ...PRINT_CARD, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: '4%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '11%' }} />
+          </colgroup>
+          <thead>
+            <tr style={TABLE_HEADER_ROW}>
+              <th style={{ ...TABLE_HEADER_CELL, fontSize: 9.5 }}>#</th>
+              <th style={{ ...TABLE_HEADER_CELL, fontSize: 9.5 }}>Source</th>
+              <th style={{ ...TABLE_HEADER_CELL, fontSize: 9.5 }}>Anchor</th>
+              <th style={{ ...TABLE_HEADER_CELL, fontSize: 9.5 }}>Target</th>
+              <th style={{ ...TABLE_HEADER_CELL, fontSize: 9.5 }}>Type</th>
+              <th style={{ ...TABLE_HEADER_CELL, fontSize: 9.5 }}>First Seen</th>
+              <th style={{ ...TABLE_HEADER_CELL, fontSize: 9.5 }}>Last Seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={r._id || `${r.sourceUrl}-${i}`} style={i % 2 === 1 ? TABLE_BODY_ROW_ALT : undefined}>
+                <td style={{ padding: '10px 10px', color: '#94a3b8', fontSize: 9.5, fontWeight: 600, fontVariantNumeric: 'tabular-nums', verticalAlign: 'top', lineHeight: 1.35 }}>{i + 1}</td>
+                <td style={{ padding: '10px 10px', color: ACCENTS.indigo.text, fontWeight: 600, verticalAlign: 'top', lineHeight: 1.4, wordBreak: 'break-word' }} title={r.sourceUrl}>{hostOf(r.sourceUrl)} - <span style={{
+                  fontSize: "5px", fontWeight: 500, color: '#475569', marginLeft: 4,
+                }}>(DA{r.domainFromRank})</span> </td>
+                <td style={{ padding: '10px 10px', color: '#0f172a', verticalAlign: 'top', lineHeight: 1.4, wordBreak: 'break-word' }} title={r.anchor || '-'}>{r.anchor || '-'}</td>
+                <td style={{ padding: '10px 10px', fontFamily: 'ui-monospace, monospace', fontSize: 9.25, color: '#475569', verticalAlign: 'top', lineHeight: 1.4, wordBreak: 'break-word' }} title={r.targetUrl}>{pathOf(r.targetUrl)}</td>
+                <td style={{ padding: '10px 10px', verticalAlign: 'top' }} title={r.isPaid ? 'Paid backlink' : (r.linkType || 'anchor')}>
+                  <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 4, background: r.isPaid ? ACCENTS.rose.soft : ACCENTS.amber.soft, color: r.isPaid ? ACCENTS.rose.text : ACCENTS.amber.text, fontSize: 9, fontWeight: 700, textTransform: 'capitalize' }}>
+                    {r.isPaid ? 'PR' : (r.linkType || 'anchor')}
+                  </span>
+                </td>
+                <td style={{ padding: '10px 10px', color: '#64748b', fontSize: 9.5, fontVariantNumeric: 'tabular-nums', verticalAlign: 'top', lineHeight: 1.35 }}>{shortDate(r.firstSeen)}</td>
+                <td style={{ padding: '10px 10px', color: '#64748b', fontSize: 9.5, fontVariantNumeric: 'tabular-nums', verticalAlign: 'top', lineHeight: 1.35 }}>{shortDate(r.lastSeen)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {showFooter && footerText && (
+        <p style={{ fontSize: 9, color: '#94a3b8', textAlign: 'right', marginTop: 8, fontWeight: 500 }}>
+          {footerText}
+        </p>
+      )}
+    </>
+  );
+}
 
 const ReportPrintLayout = forwardRef(function ReportPrintLayout({
   siteName, siteUrl, themeKey,
   websiteData, organicOverview, backlinks, keywords,
   scores, strategy, history,
+  reportPeriodLabel = 'Selected period',
 }, ref) {
   const tk = themeKey || 'default';
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -220,8 +310,13 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
 
   // ── Backlinks data ─────────────────────────────────────────────────────────
   const hasBacklinks = Boolean(backlinks && backlinks.lastFetchedAt);
-  const backlinkItems = Array.isArray(backlinks?.items) ? backlinks.items : [];
-  const topBacklinks = backlinkItems.slice(0, 10);
+  const backlinkItems = sortBacklinkRows(Array.isArray(backlinks?.items) ? backlinks.items : [], { prioritizeManual: true });
+  const paidBacklinkItems = sortBacklinkRows(
+    (Array.isArray(backlinks?.paidItems) ? backlinks.paidItems : []).map((item) => ({ ...item, isPaid: true, source: 'manual' })),
+    { prioritizeManual: true }
+  );
+  const totalBacklinkRows = backlinkItems.length + paidBacklinkItems.length;
+  const topSeoBacklinks = backlinkItems.slice(0, 10);
 
   // ── Keyword rankings ───────────────────────────────────────────────────────
   const sortedKeywords = Array.isArray(keywords)
@@ -261,6 +356,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.16em', fontWeight: 700, marginBottom: 2 }}>Generated</div>
             <div style={{ color: '#ffffff', fontWeight: 800, fontSize: 14 }}>{today}</div>
+            <div style={{ color: 'rgba(255,255,255,0.82)', fontSize: 10.5, fontWeight: 600, marginTop: 4 }}>{reportPeriodLabel}</div>
           </div>
         </div>
       </div>
@@ -282,7 +378,7 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
       {(channels.length > 0 || topPages.length > 0) && (
         <Section number={2} title="Sessions by Channel & Top 5 Pages Visited" accent="emerald">
           {channels.length > 0 && (
-            <div style={{ marginBottom: 12, padding: 14, background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 10, boxShadow: '0 1px 2px rgba(15,23,42,0.04)', breakInside: 'avoid' }}>
+            <div style={{ ...PRINT_CARD, marginBottom: 12, padding: 16 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#334155', letterSpacing: '0.04em' }}>Sessions by Channel</span>
                 <span style={{ fontSize: 9.5, color: '#94a3b8', fontWeight: 600 }}>{fmt(totalChannelSessions)} total sessions</span>
@@ -382,10 +478,10 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
             </div>
           )}
           {totalU > 0 && (
-            <div style={{ padding: 14, background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 10, boxShadow: '0 1px 2px rgba(15,23,42,0.04)', breakInside: 'avoid' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#334155', marginBottom: 8 }}>New vs Returning (Organic)</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                <div style={{ width: 130, height: 130, position: 'relative', flexShrink: 0 }}>
+            <div style={{ ...PRINT_CARD, padding: 18 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', marginBottom: 12 }}>New vs Returning (Organic)</div>
+              <div style={{ display: 'flex', alignItems: 'stretch', gap: 20 }}>
+                <div style={{ width: 144, height: 144, position: 'relative', flexShrink: 0, alignSelf: 'center' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <defs>
@@ -396,33 +492,33 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
                           </linearGradient>
                         ))}
                       </defs>
-                      <Pie data={userDonut} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={4} dataKey="value" stroke="none" cornerRadius={6}>
+                      <Pie data={userDonut} cx="50%" cy="50%" innerRadius={44} outerRadius={66} paddingAngle={4} dataKey="value" stroke="none" cornerRadius={8}>
                         {userDonut.map((_, i) => <Cell key={i} fill={`url(#pdfNvrGrad${i})`} />)}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 9, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.18em', fontWeight: 700, lineHeight: 1 }}>Total</span>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', marginTop: 3 }}>{fmt(totalU)}</span>
+                    <span style={{ fontSize: 9.5, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.18em', fontWeight: 700, lineHeight: 1.1 }}>Total</span>
+                    <span style={{ fontSize: 19, fontWeight: 800, color: '#0f172a', marginTop: 5, lineHeight: 1.1 }}>{fmt(totalU)}</span>
                   </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   {userDonut.map((d) => {
                     const pct = totalU > 0 ? ((d.value / totalU) * 100).toFixed(1) : '0';
                     return (
-                      <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', marginBottom: 5, background: '#fafafa' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                          <span style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: d.color, display: 'inline-block', flexShrink: 0 }} />
-                          <span style={{ fontSize: 11, color: '#334155', fontWeight: 500, ...TD_TRUNCATE }}>{d.name}</span>
+                      <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 10, border: '1px solid #e5e7eb', marginBottom: 10, background: '#fafafa', minHeight: 52 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, paddingRight: 10 }}>
+                          <span style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: d.color, display: 'inline-block', flexShrink: 0 }} />
+                          <span style={{ fontSize: 11.5, color: '#334155', fontWeight: 600, lineHeight: 1.35, whiteSpace: 'normal', wordBreak: 'break-word' }}>{d.name}</span>
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums' }}>{fmt(d.value)}</span>
-                          <span style={{ fontSize: 10, color: '#64748b', width: 38, textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1, minWidth: 32, textAlign: 'right' }}>{fmt(d.value)}</span>
+                          <span style={{ fontSize: 10.5, color: '#64748b', width: 48, textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{pct}%</span>
                         </div>
                       </div>
                     );
                   })}
-                  <div style={{ marginTop: 6, height: 5, borderRadius: 3, overflow: 'hidden', display: 'flex', background: '#f1f5f9' }}>
+                  <div style={{ marginTop: 4, height: 7, borderRadius: 999, overflow: 'hidden', display: 'flex', background: '#f1f5f9' }}>
                     {userDonut.map((d, i) => {
                       const pct = totalU > 0 ? (d.value / totalU) * 100 : 0;
                       return <div key={i} style={{ width: `${pct}%`, background: d.color }} />;
@@ -511,15 +607,18 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
             <KpiBox label="Total Backlinks" value={fmt(backlinks.backlinksCount)} hint="Inbound links" accent="indigo" />
             <KpiBox label="Referring Domains" value={fmt(backlinks.referringDomains)} hint="Unique sources" accent="emerald" />
             <KpiBox label="Net 30-Day Gain" value={`${(((backlinks.newLinksLast30d ?? 0) - (backlinks.lostLinksLast30d ?? 0)) >= 0) ? '+' : ''}${fmt((backlinks.newLinksLast30d ?? 0) - (backlinks.lostLinksLast30d ?? 0))}`} hint="New − lost" accent={((backlinks.newLinksLast30d ?? 0) - (backlinks.lostLinksLast30d ?? 0)) >= 0 ? 'emerald' : 'rose'} />
-            <KpiBox label="Listed Sources" value={fmt(backlinkItems.length)} hint="In source list" accent="violet" />
+            <KpiBox label="Listed Sources" value={fmt(totalBacklinkRows)} hint="SEO + paid rows" accent="violet" />
           </div>
         </Section>
       )}
 
       {/* ===== 8. SEO BACKLINKS — TOP 10 ===== */}
-      {topBacklinks.length > 0 && (
-        <Section number={8} title="SEO Backlinks (Top 10)" accent="amber">
-          <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 2px rgba(15,23,42,0.04)', breakInside: 'avoid' }}>
+      {(topSeoBacklinks.length > 0 || paidBacklinkItems.length > 0) && (
+        <Section number={8} title="Backlinks" accent="amber">
+          {topSeoBacklinks.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#334155', marginBottom: 8 }}>SEO Backlinks (Top 10)</div>
+              <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', boxShadow: '0 1px 2px rgba(15,23,42,0.04)', breakInside: 'avoid' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, tableLayout: 'fixed' }}>
               <colgroup>
                 <col style={{ width: '4%' }} />
@@ -542,14 +641,19 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
                 </tr>
               </thead>
               <tbody>
-                {topBacklinks.map((r, i) => (
+                {topSeoBacklinks.map((r, i) => (
                   <tr key={r._id || `${r.sourceUrl}-${i}`} style={i % 2 === 1 ? TABLE_BODY_ROW_ALT : undefined}>
                     <td style={{ padding: '7px 9px', color: '#94a3b8', fontSize: 9.5, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{i + 1}</td>
-                    <td style={{ padding: '7px 9px', color: ACCENTS.indigo.text, fontWeight: 500, ...TD_TRUNCATE }} title={r.sourceUrl}>{hostOf(r.sourceUrl)}</td>
+                    <td style={{ padding: '7px 9px', color: ACCENTS.indigo.text, fontWeight: 500, ...TD_TRUNCATE }} title={r.sourceUrl}>{hostOf(r.sourceUrl)}-<span style={{
+                  fontSize: "5px", fontWeight: 500, color: '#475569', marginLeft: 4,
+                }}>
+                      (DA{r.domainFromRank})</span> </td>
                     <td style={{ padding: '7px 9px', color: '#0f172a', ...TD_TRUNCATE }} title={r.anchor || '—'}>{r.anchor || '—'}</td>
                     <td style={{ padding: '7px 9px', fontFamily: 'ui-monospace, monospace', fontSize: 9.5, color: '#475569', ...TD_TRUNCATE }} title={r.targetUrl}>{pathOf(r.targetUrl)}</td>
-                    <td style={{ padding: '7px 9px', ...TD_TRUNCATE }} title={r.linkType || 'anchor'}>
-                      <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 4, background: ACCENTS.amber.soft, color: ACCENTS.amber.text, fontSize: 9, fontWeight: 700, textTransform: 'capitalize' }}>{r.linkType || 'anchor'}</span>
+                    <td style={{ padding: '7px 9px', ...TD_TRUNCATE }} title={r.isPaid ? 'Paid backlink' : (r.linkType || 'anchor')}>
+                      <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 4, background: r.isPaid ? ACCENTS.rose.soft : ACCENTS.amber.soft, color: r.isPaid ? ACCENTS.rose.text : ACCENTS.amber.text, fontSize: 9, fontWeight: 700, textTransform: 'capitalize' }}>
+                        {r.isPaid ? 'PR' : (r.linkType || 'anchor')}
+                      </span>
                     </td>
                     <td style={{ padding: '7px 9px', color: '#64748b', fontSize: 9.5, fontVariantNumeric: 'tabular-nums', ...TD_TRUNCATE }}>{shortDate(r.firstSeen)}</td>
                     <td style={{ padding: '7px 9px', color: '#64748b', fontSize: 9.5, fontVariantNumeric: 'tabular-nums', ...TD_TRUNCATE }}>{shortDate(r.lastSeen)}</td>
@@ -557,10 +661,18 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
                 ))}
               </tbody>
             </table>
-          </div>
-          <p style={{ fontSize: 9, color: '#94a3b8', textAlign: 'right', marginTop: 8, fontWeight: 500 }}>
-            Showing top 10 of {backlinkItems.length} backlinks.
-          </p>
+              </div>
+              <p style={{ fontSize: 9, color: '#94a3b8', textAlign: 'right', marginTop: 8, fontWeight: 500 }}>
+                Showing top 10 of {backlinkItems.length} backlinks.
+              </p>
+            </div>
+          )}
+          {paidBacklinkItems.length > 0 && (
+            <div style={{ marginTop: topSeoBacklinks.length > 0 ? 14 : 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#334155', marginBottom: 8 }}>Paid Backlinks</div>
+              <BacklinksPrintTable rows={paidBacklinkItems} />
+            </div>
+          )}
         </Section>
       )}
 

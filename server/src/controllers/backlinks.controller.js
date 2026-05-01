@@ -98,6 +98,7 @@ function serializePaidItem(it) {
     firstSeen: o.firstSeen || null,
     lastSeen: o.lastSeen || null,
     linkType: o.linkType || null,
+    domainFromRank: typeof o.domainFromRank === 'number' ? o.domainFromRank : null,
     addedBy: o.addedBy ? String(o.addedBy) : null,
     updatedAt: o.updatedAt || null,
     updatedBy: o.updatedBy ? String(o.updatedBy) : null,
@@ -696,7 +697,7 @@ exports.removeItem = async (req, res, next) => {
 
 // ===== Paid backlinks (manual-only) =====
 
-const PAID_EDITABLE_FIELDS = ['sourceUrl', 'targetUrl', 'anchor', 'doFollow', 'linkType', 'firstSeen', 'lastSeen'];
+const PAID_EDITABLE_FIELDS = ['sourceUrl', 'targetUrl', 'anchor', 'doFollow', 'linkType', 'firstSeen', 'lastSeen', 'domainFromRank'];
 
 exports.addPaidItem = async (req, res, next) => {
   try {
@@ -705,7 +706,7 @@ exports.addPaidItem = async (req, res, next) => {
     const bl = site.backlinks;
     if (!Array.isArray(bl.paidItems)) bl.paidItems = [];
 
-    const { sourceUrl, targetUrl, anchor, doFollow, linkType, firstSeen, lastSeen } = req.body || {};
+    const { sourceUrl, targetUrl, anchor, doFollow, linkType, firstSeen, lastSeen, domainFromRank } = req.body || {};
     if (!sourceUrl || typeof sourceUrl !== 'string') {
       return res.status(400).json({ success: false, error: { code: 'SOURCE_URL_REQUIRED', message: 'sourceUrl is required' } });
     }
@@ -714,6 +715,14 @@ exports.addPaidItem = async (req, res, next) => {
     const dup = bl.paidItems.find((it) => (it.sourceUrl || '').toLowerCase() === normalized.toLowerCase());
     if (dup) {
       return res.status(409).json({ success: false, error: { code: 'DUPLICATE_SOURCE_URL', message: 'A paid backlink with this sourceUrl already exists' } });
+    }
+
+    let parsedDomainFromRank;
+    if (domainFromRank != null && domainFromRank !== '') {
+      parsedDomainFromRank = Number(domainFromRank);
+      if (!Number.isFinite(parsedDomainFromRank)) {
+        return res.status(400).json({ success: false, error: { code: 'INVALID_VALUE', message: 'domainFromRank must be a number' } });
+      }
     }
 
     const now = new Date();
@@ -725,6 +734,7 @@ exports.addPaidItem = async (req, res, next) => {
       linkType: linkType || null,
       firstSeen: firstSeen ? new Date(firstSeen) : null,
       lastSeen: lastSeen ? new Date(lastSeen) : null,
+      domainFromRank: parsedDomainFromRank,
       addedBy: req.user?._id || null,
       updatedAt: null,
       updatedBy: null,
@@ -777,6 +787,13 @@ exports.updatePaidItem = async (req, res, next) => {
         item.doFollow = typeof v === 'boolean' ? v : (v === 'true' || v === 1);
       } else if (k === 'firstSeen' || k === 'lastSeen') {
         item[k] = v ? new Date(v) : null;
+      } else if (k === 'domainFromRank') {
+        if (v === null || v === '') item.domainFromRank = undefined;
+        else {
+          const n = Number(v);
+          if (!Number.isFinite(n)) return res.status(400).json({ success: false, error: { code: 'INVALID_VALUE', message: 'domainFromRank must be a number' } });
+          item.domainFromRank = n;
+        }
       } else {
         item[k] = v == null ? null : String(v);
       }

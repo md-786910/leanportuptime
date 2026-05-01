@@ -7,6 +7,37 @@ import EditBacklinkItemModal from './EditBacklinkItemModal';
 
 const PAGE_SIZES = [10, 25, 50];
 
+function getRowSortTimestamp(row) {
+  const candidates = [row.updatedAt, row.lastSeen, row.firstSeen];
+  for (const value of candidates) {
+    if (!value) continue;
+    const ts = new Date(value).getTime();
+    if (!Number.isNaN(ts)) return ts;
+  }
+  if (typeof row._id === 'string' && row._id.length >= 8) {
+    const ts = parseInt(row._id.slice(0, 8), 16) * 1000;
+    if (Number.isFinite(ts)) return ts;
+  }
+  return 0;
+}
+
+function sortBacklinkRows(items, isPaid) {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      if (!isPaid) {
+        const aManual = a.item.source === 'manual' ? 1 : 0;
+        const bManual = b.item.source === 'manual' ? 1 : 0;
+        if (aManual !== bManual) return bManual - aManual;
+      }
+
+      const timeDiff = getRowSortTimestamp(b.item) - getRowSortTimestamp(a.item);
+      if (timeDiff !== 0) return timeDiff;
+      return b.index - a.index;
+    })
+    .map(({ item }) => item);
+}
+
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -100,17 +131,18 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
   const seoRemove = useRemoveBacklinkItem(siteId);
   const paidRemove = useRemovePaidBacklinkItem(siteId);
   const removeMutation = isPaid ? paidRemove : seoRemove;
+  const orderedItems = useMemo(() => sortBacklinkRows(items, isPaid), [items, isPaid]);
 
   // Paid lists are always small and manually maintained — no pagination needed.
-  const showPagination = !isPaid && items.length > pageSize;
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const showPagination = !isPaid && orderedItems.length > pageSize;
+  const totalPages = Math.max(1, Math.ceil(orderedItems.length / pageSize));
   const safePage = Math.min(page, totalPages);
 
   const rows = useMemo(() => {
-    if (isPaid) return items;
+    if (isPaid) return orderedItems;
     const start = (safePage - 1) * pageSize;
-    return items.slice(start, start + pageSize);
-  }, [items, safePage, pageSize, isPaid]);
+    return orderedItems.slice(start, start + pageSize);
+  }, [orderedItems, safePage, pageSize, isPaid]);
 
   if (items.length === 0 && !listFetchError) {
     return (
@@ -156,7 +188,7 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-bold font-headline text-brand-on-surface dark:text-white">{headingLabel}</h3>
           <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant tabular-nums px-1.5 py-0.5 rounded bg-brand-surface-container-high">
-            {items.length}
+            {orderedItems.length}
           </span>
         </div>
         {isAdmin && (
@@ -199,7 +231,7 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
           </thead>
           <tbody className="divide-y divide-brand-surface-container dark:divide-brand-outline/30">
             {rows.map((r, i) => {
-              const index = (safePage - 1) * pageSize + i + 1;
+              const index = isPaid ? i + 1 : ((safePage - 1) * pageSize + i + 1);
               return (
                 <tr key={r._id || `${r.sourceUrl}-${i}`} className="group hover:bg-brand-surface-container-low/50 dark:hover:bg-brand-on-surface/30 transition-colors">
                   <td className="px-6 py-4 text-brand-outline tabular-nums text-xs">{index}</td>
@@ -216,7 +248,7 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
                         <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </a>
-                    {!isPaid && r.domainFromRank > 0 && (
+                    {r.domainFromRank > 0 && (
                       <div className="text-[10px] font-bold text-brand-outline uppercase tracking-wider mt-0.5">
                         DA {r.domainFromRank}
                       </div>
@@ -279,7 +311,6 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
         </table>
       </div>
 
-      {/* Pagination footer */}
       {showPagination && (
         <div className="px-6 py-4 border-t border-brand-surface-container flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-bold text-brand-on-surface-variant uppercase tracking-wider">

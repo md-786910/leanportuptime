@@ -61,7 +61,7 @@ export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item, k
       firstSeen: form.firstSeen || null,
       lastSeen: form.lastSeen || null,
     };
-    if (!isPaid) payload.domainFromRank = form.domainFromRank === '' ? null : drNum;
+    payload.domainFromRank = form.domainFromRank === '' ? null : drNum;
     await update.mutateAsync({ itemId: item._id, payload });
     onClose();
   };
@@ -90,7 +90,7 @@ export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item, k
           value={form.anchor ?? ''}
           onChange={setField('anchor')}
         />
-        <div className={isPaid ? '' : 'grid grid-cols-2 gap-3'}>
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label className="block text-sm font-medium font-label text-brand-on-surface dark:text-brand-outline">Link type</label>
             <select
@@ -103,17 +103,15 @@ export default function EditBacklinkItemModal({ isOpen, onClose, siteId, item, k
               ))}
             </select>
           </div>
-          {!isPaid && (
-            <Input
-              label="DA (domainFromRank)"
-              id="ebl-domainFromRank"
-              type="number"
-              inputMode="numeric"
-              value={form.domainFromRank ?? ''}
-              onChange={setField('domainFromRank')}
-              error={errors.domainFromRank}
-            />
-          )}
+          <Input
+            label="DA (domainFromRank)"
+            id="ebl-domainFromRank"
+            type="number"
+            inputMode="numeric"
+            value={form.domainFromRank ?? ''}
+            onChange={setField('domainFromRank')}
+            error={errors.domainFromRank}
+          />
         </div>
         <label className="flex items-center gap-2 text-sm text-brand-on-surface dark:text-brand-outline cursor-pointer">
           <input

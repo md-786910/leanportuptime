@@ -14,7 +14,7 @@ export default function ViewModeToggle() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13h4v8H3zM10 9h4v12h-4zM17 5h4v16h-4z" />
           </svg>
-          Charts
+        Summary
         </button>
         <button
           onClick={() => setViewMode('details')}

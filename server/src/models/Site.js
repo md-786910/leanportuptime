@@ -140,6 +140,7 @@ const siteSchema = new mongoose.Schema(
         firstSeen: { type: Date },
         lastSeen: { type: Date },
         linkType: { type: String },
+        domainFromRank: { type: Number },
         addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
         updatedAt: { type: Date, default: null },
         updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
