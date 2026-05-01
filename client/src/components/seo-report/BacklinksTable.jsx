@@ -266,10 +266,10 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {isPaid && <PrBadge />}
+                      {/* {isPaid && <PrBadge />} */}
                       <TypeBadge type={r.linkType} />
                       <FollowBadge doFollow={r.doFollow} />
-                      {!isPaid && r.source === 'manual' && <ManualBadge />}
+                      {/* {!isPaid && r.source === 'manual' && <ManualBadge />} */}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right text-xs font-medium text-brand-on-surface-variant dark:text-brand-outline hidden sm:table-cell tabular-nums">
