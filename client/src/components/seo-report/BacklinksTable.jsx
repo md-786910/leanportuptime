@@ -249,7 +249,7 @@ export default function BacklinksTable({ items = [], listFetchedAt, listFetchErr
                       </svg>
                     </a>
                     {r.domainFromRank > 0 && (
-                      <div className="text-[10px] font-bold text-brand-outline uppercase tracking-wider mt-0.5">
+                      <div className="text-[10px] font-bold text-brand-outline tracking-wider mt-0.5">
                         Domain Authority {r.domainFromRank}
                       </div>
                     )}
