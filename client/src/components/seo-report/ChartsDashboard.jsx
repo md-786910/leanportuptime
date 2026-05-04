@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, RadialBarChart, RadialBar,
   AreaChart, Area, LineChart, Line, BarChart, Bar, LabelList,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend,
 } from 'recharts';
+import { Tooltip as InfoTooltip } from '../common/Tooltip';
 import Spinner from '../common/Spinner';
 import { Sk } from '../common/Skeleton';
 import { computeDateRange } from '../common/SectionDateFilter';
@@ -125,15 +126,22 @@ function MiniSparkline({ data, dataKey, color, height = 36 }) {
   );
 }
 
-function StatCard({ label, value, delta, sparkline, hint, accent }) {
+function StatCard({ label, value, delta, sparkline, hint, accent, tooltip }) {
   if (accent) {
+    const labelEl = (
+      <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em] truncate">
+        {label}
+      </p>
+    );
     return (
       <div className={`py-3 px-4 rounded-xl border ${accent.border} ${accent.bg} ${accent.color} space-y-2 relative overflow-hidden group`}>
         <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-current opacity-[0.03] rounded-full group-hover:scale-110 transition-transform duration-500" />
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em] truncate">
-            {label}
-          </p>
+          {tooltip ? (
+            <InfoTooltip content={tooltip} placement="top">
+              <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{labelEl}</span>
+            </InfoTooltip>
+          ) : labelEl}
           <DeltaChip delta={delta} />
         </div>
         <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-tight">
@@ -146,12 +154,19 @@ function StatCard({ label, value, delta, sparkline, hint, accent }) {
       </div>
     );
   }
+  const plainLabelEl = (
+    <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider truncate">
+      {label}
+    </span>
+  );
   return (
     <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface/40 p-3 flex flex-col gap-1.5 hover:border-brand-outline-variant dark:hover:border-brand-outline transition-colors">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider truncate">
-          {label}
-        </span>
+        {tooltip ? (
+          <InfoTooltip content={tooltip} placement="top">
+            <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{plainLabelEl}</span>
+          </InfoTooltip>
+        ) : plainLabelEl}
         <DeltaChip delta={delta} />
       </div>
       <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums leading-tight">
@@ -378,7 +393,7 @@ function GSCSection({ siteId, themeKey }) {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
                   <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} tickLine={false} />
                   <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
                   <Area type="monotone" dataKey="clicks" stroke={themeColor(themeKey, 0)} strokeWidth={2} fill="url(#gscClicksDash)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -536,11 +551,11 @@ function GASection({ siteId, themeKey }) {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* google Analytics */}
-          <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} />
-          <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" accent={GA_STAT_ACCENTS[1]} />
-          <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} />
-          <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} />
-          <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} />
+          <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} tooltip="Files downloaded (PDFs, etc.)." />
+          <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" accent={GA_STAT_ACCENTS[1]} tooltip="Completed form submissions (lead, contact, etc.)." />
+          <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} tooltip="Distinct people who visited the site during this period." />
+          <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} tooltip="Share of visits where someone left without engaging — lower is better." />
+          <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} tooltip="Average time users spent on a page during a session." />
         </div>
       </div>
 
@@ -628,7 +643,7 @@ function GASection({ siteId, themeKey }) {
                         tickFormatter={(v) => fmt(v)}
                         width={45}
                       />
-                      <Tooltip
+                      <RechartsTooltip
                         cursor={{ fill: 'rgba(99, 102, 241, 0.06)' }}
                         contentStyle={{
                           backgroundColor: 'rgba(255,255,255,0.98)',
@@ -796,6 +811,7 @@ function OrganicSection({ siteId, themeKey }) {
             label: 'Organic Sessions',
             value: fmt(ov.sessions),
             delta: sessionsDelta,
+            tooltip: 'Number of visits coming from search engines (like Google).',
             sparkline: trend.length > 1 ? { data: trend, dataKey: 'sessions', color: themeColor(themeKey, 0) } : null,
             bar: 'bg-[#6366F1] dark:bg-[#818CF8]',
           },
@@ -803,18 +819,21 @@ function OrganicSection({ siteId, themeKey }) {
             label: 'Engagement Rate',
             value: ov.engagementRate != null ? `${(ov.engagementRate * 100).toFixed(1)}%` : '—',
             hint: 'Engaged / total sessions',
+            tooltip: 'Percentage of visitors who actively interact (scroll, click, stay longer).',
             bar: 'bg-[#10B981] dark:bg-[#34D399]',
           },
           {
             label: 'Avg. Engagement',
             value: fmtDur(ov.avgEngagementTime),
             hint: 'Per engaged session',
+            tooltip: 'Average time users spend actively engaging on your site.',
             bar: 'bg-[#F59E0B] dark:bg-[#FBBF24]',
           },
           {
             label: 'Conversions',
             value: fmt(ov.conversions),
             hint: 'Key events fired',
+            tooltip: 'Goal completions (purchases, sign-ups, etc.) attributed to organic search visits.',
             bar: 'bg-[#8B5CF6] dark:bg-[#A78BFA]',
           },
         ].map((stat, idx) => (
@@ -824,9 +843,17 @@ function OrganicSection({ siteId, themeKey }) {
           >
             <div className={`absolute top-0 left-0 right-0 h-[1px] ${stat.bar}`} />
             <div className="flex items-center justify-between gap-2 mb-1.5">
-              <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] truncate">
-                {stat.label}
-              </p>
+              {stat.tooltip ? (
+                <InfoTooltip content={stat.tooltip} placement="top">
+                  <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] truncate cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">
+                    {stat.label}
+                  </p>
+                </InfoTooltip>
+              ) : (
+                <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] truncate">
+                  {stat.label}
+                </p>
+              )}
               <DeltaChip delta={stat.delta} />
             </div>
             <p className="text-[26px] font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-none mb-1">
@@ -869,7 +896,7 @@ function OrganicSection({ siteId, themeKey }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
                     <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })} tickLine={false} />
                     <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
+                    <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
                     <Area type="monotone" dataKey="sessions" stroke={themeColor(themeKey, 0)} strokeWidth={2} fill="url(#orgTrendGrad)" name="Sessions" />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -1010,7 +1037,7 @@ function ScoreTrendSection({ history, historyLoading, strategy }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={{ stroke: '#e5e7eb' }} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
+              <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '11px' }} />
               <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: '10px' }} />
               {SCORE_KEYS.map((s, i) => (
                 <Line key={s.key} type="monotone" dataKey={s.key} stroke={SCORE_COLORS[i]} strokeWidth={2} dot={{ r: 3 }} name={s.label} />

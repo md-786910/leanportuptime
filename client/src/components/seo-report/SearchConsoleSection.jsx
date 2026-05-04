@@ -3,8 +3,9 @@ import { computeDateRange } from '../common/SectionDateFilter';
 import { useSeoReportStore } from '../../store/seoReportStore';
 import { useSearchParams } from 'react-router-dom';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+import { Tooltip as InfoTooltip } from '../common/Tooltip';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
@@ -47,14 +48,21 @@ function formatNumber(n) {
   return n.toLocaleString();
 }
 
-function KpiCard({ label, value, color, icon }) {
+function KpiCard({ label, value, color, tooltip }) {
+  const labelEl = (
+    <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
+      {label}
+    </span>
+  );
   return (
     <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-1">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
-          {label}
-        </span>
+        {tooltip ? (
+          <InfoTooltip content={tooltip} placement="top">
+            <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{labelEl}</span>
+          </InfoTooltip>
+        ) : labelEl}
       </div>
       <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums">{value}</span>
     </div>
@@ -272,21 +280,25 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
             label="Total Clicks"
             value={formatNumber(totals.clicks)}
             color={themeColor(themeKey, 0)}
+            tooltip="Times someone clicked through to your site from a Google search result."
           />
           <KpiCard
             label="Total Impressions"
             value={formatNumber(totals.impressions)}
             color={themeColor(themeKey, 1)}
+            tooltip="Times any of your pages appeared in Google search results."
           />
           <KpiCard
             label="Average CTR"
             value={`${(totals.ctr * 100).toFixed(2)}%`}
             color={themeColor(themeKey, 2)}
+            tooltip="Click-through rate: clicks ÷ impressions. Higher = your snippets are more compelling."
           />
           <KpiCard
             label="Average Position"
             value={totals.position ? totals.position.toFixed(1) : '—'}
             color={themeColor(themeKey, 3)}
+            tooltip="Average rank of your pages in search results. Lower = better."
           />
         </div>
       </Card>
@@ -334,7 +346,7 @@ function PerformanceDashboard({ siteId, themeKey, viewMode }) {
                   axisLine={false}
                   tickLine={false}
                 />
-                <Tooltip
+                <RechartsTooltip
                   contentStyle={{
                     backgroundColor: 'rgba(255,255,255,0.95)',
                     border: '1px solid #e5e7eb',

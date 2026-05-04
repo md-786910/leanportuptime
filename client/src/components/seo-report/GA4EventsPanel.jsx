@@ -1,6 +1,19 @@
 import { useState, useMemo } from 'react';
 import { themeColor } from './colorThemes';
+import { Tooltip } from '../common/Tooltip';
 import CompareEventsModal from './CompareEventsModal';
+
+export const EVENT_TOOLTIPS = {
+  page_view: 'Number of pages viewed.',
+  user_engagement: 'Time users actively interacted with your site.',
+  session_start: 'When a user starts a visit/session.',
+  first_visit: 'New users visiting for the first time.',
+  scroll: 'Users scrolling down the page.',
+  form_start: 'Users started filling a form.',
+  file_download: 'Files downloaded (PDFs, etc.).',
+  click: 'Clicks on links/buttons.',
+  form_submit: 'Completed form submissions.',
+};
 
 const FORM_EVENT_NAMES = new Set([
   'generate_lead',
@@ -129,9 +142,17 @@ export default function GA4EventsPanel({ events, themeKey, siteId }) {
                     <td className="py-2 px-3 text-brand-outline dark:text-brand-on-surface-variant tabular-nums">{i + 1}</td>
                     <td className="py-2 px-3 max-w-[260px]">
                       <div className="flex items-center gap-2">
-                        <span className=" text-xs text-brand-on-surface dark:text-brand-outline-variant truncate font-label" title={e.eventName}>
-                          {e.eventName}
-                        </span>
+                        {EVENT_TOOLTIPS[e.eventName] ? (
+                          <Tooltip content={EVENT_TOOLTIPS[e.eventName]} placement="top">
+                            <span className="text-xs text-brand-on-surface dark:text-brand-outline-variant truncate font-label cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">
+                              {e.eventName}
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-xs text-brand-on-surface dark:text-brand-outline-variant truncate font-label" title={e.eventName}>
+                            {e.eventName}
+                          </span>
+                        )}
                         {badge && (
                           <span className={`text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 ${badge.classes} font-label`}>
                             {badge.label}

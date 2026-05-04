@@ -69,7 +69,7 @@ function DeltaCell({ current, previous, lowerIsBetter, available, isRate }) {
   const sign = isUp ? '+' : '−';
   const absDelta = Math.abs(delta);
   const pct = prev === 0 ? null : Math.abs((delta / prev) * 100);
-  const deltaDisplay = isRate ? `${(absDelta * 100).toFixed(1)}pp` : fmtNumber(absDelta);
+  const deltaDisplay = isRate ? `${(absDelta * 100).toFixed(1)}%` : fmtNumber(absDelta);
 
   return (
     <div className={`flex flex-col items-end gap-0 leading-tight ${colorCls}`}>

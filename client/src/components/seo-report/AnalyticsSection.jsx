@@ -24,6 +24,7 @@ import NewVsReturningChart from './NewVsReturningChart';
 import OrganicDeviceBreakdown from './OrganicDeviceBreakdown';
 import OrganicCountryBreakdown from './OrganicCountryBreakdown';
 import CompareOrganicModal from './CompareOrganicModal';
+import { Tooltip } from '../common/Tooltip';
 
 function formatNumber(n) {
   if (n == null) return '—';
@@ -52,14 +53,21 @@ function timeAgo(dateStr) {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
-function KpiCard({ label, value, color }) {
+function KpiCard({ label, value, color, tooltip }) {
+  const labelEl = (
+    <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
+      {label}
+    </span>
+  );
   return (
     <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4 flex flex-col gap-1">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-xs font-medium font-label text-brand-on-surface-variant dark:text-brand-outline uppercase tracking-wider">
-          {label}
-        </span>
+        {tooltip ? (
+          <Tooltip content={tooltip} placement="top">
+            <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{labelEl}</span>
+          </Tooltip>
+        ) : labelEl}
       </div>
       <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white tabular-nums">{value}</span>
     </div>
@@ -292,10 +300,30 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <KpiCard label="Organic Sessions" value={formatNumber(overview.sessions)} color={themeColor(themeKey, 0)} />
-          <KpiCard label="Engagement Rate" value={overview.engagementRate != null ? `${(overview.engagementRate * 100).toFixed(1)}%` : '—'} color={themeColor(themeKey, 1)} />
-          <KpiCard label="Avg. Engagement Time" value={formatDuration(overview.avgEngagementTime)} color={themeColor(themeKey, 2)} />
-          <KpiCard label="Organic Conversions" value={formatNumber(overview.conversions)} color={themeColor(themeKey, 3)} />
+          <KpiCard
+            label="Organic Sessions"
+            value={formatNumber(overview.sessions)}
+            color={themeColor(themeKey, 0)}
+            tooltip="Number of visits coming from search engines (like Google)."
+          />
+          <KpiCard
+            label="Engagement Rate"
+            value={overview.engagementRate != null ? `${(overview.engagementRate * 100).toFixed(1)}%` : '—'}
+            color={themeColor(themeKey, 1)}
+            tooltip="Percentage of visitors who actively interact (scroll, click, stay longer)."
+          />
+          <KpiCard
+            label="Avg. Engagement Time"
+            value={formatDuration(overview.avgEngagementTime)}
+            color={themeColor(themeKey, 2)}
+            tooltip="Average time users spend actively engaging on your site."
+          />
+          <KpiCard
+            label="Organic Conversions"
+            value={formatNumber(overview.conversions)}
+            color={themeColor(themeKey, 3)}
+            tooltip="Goal completions (purchases, sign-ups, etc.) attributed to organic search visits."
+          />
         </div>
       </BentoCard>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ReferenceLine, ResponsiveContainer, Cell } from 'recharts';
 import { metricBarColor } from './colorThemes';
+import { Tooltip } from '../common/Tooltip';
 
 function dotColor(value, good, poor) {
   if (value <= good) return 'bg-emerald-500';
@@ -28,21 +29,21 @@ function formatValue(value, unit) {
 }
 
 const CORE_METRICS = [
-  { key: 'fcp', label: 'First Contentful Paint', unit: 'ms', good: 1800, poor: 3000, max: 6000, desc: 'Time until the first text or image is painted.' },
-  { key: 'lcp', label: 'Largest Contentful Paint', unit: 'ms', good: 2500, poor: 4000, max: 8000, desc: 'Time until the largest content element is visible.' },
-  { key: 'tbt', label: 'Total Blocking Time', unit: 'ms', good: 200, poor: 600, max: 1200, desc: 'Total time the main thread was blocked, preventing input responsiveness.' },
-  { key: 'cls', label: 'Cumulative Layout Shift', unit: '', good: 0.1, poor: 0.25, max: 0.5, desc: 'Measures visual stability — how much the page layout shifts during loading.' },
-  { key: 'si', label: 'Speed Index', unit: 'ms', good: 3400, poor: 5800, max: 10000, desc: 'How quickly the contents of a page are visibly populated.' },
+  { key: 'fcp', label: 'First Contentful Paint', unit: 'ms', good: 1800, poor: 3000, max: 6000, desc: 'Time until the first text or image is painted.', tooltip: 'When the first text/image appears. Good ≤ 1.8 s.' },
+  { key: 'lcp', label: 'Largest Contentful Paint', unit: 'ms', good: 2500, poor: 4000, max: 8000, desc: 'Time until the largest content element is visible.', tooltip: 'When the largest visible element finishes loading. Good ≤ 2.5 s.' },
+  { key: 'tbt', label: 'Total Blocking Time', unit: 'ms', good: 200, poor: 600, max: 1200, desc: 'Total time the main thread was blocked, preventing input responsiveness.', tooltip: 'How long the main thread was busy and unable to respond to clicks/taps. Good ≤ 200 ms.' },
+  { key: 'cls', label: 'Cumulative Layout Shift', unit: '', good: 0.1, poor: 0.25, max: 0.5, desc: 'Measures visual stability — how much the page layout shifts during loading.', tooltip: 'Visual stability — how much elements jump around as the page loads. Good ≤ 0.1.' },
+  { key: 'si', label: 'Speed Index', unit: 'ms', good: 3400, poor: 5800, max: 10000, desc: 'How quickly the contents of a page are visibly populated.', tooltip: 'How quickly the visible page fills in. Lower is better. Good ≤ 3.4 s.' },
 ];
 
 const ADDITIONAL_METRICS = [
-  { key: 'inp', label: 'Interaction to Next Paint', unit: 'ms', good: 200, poor: 500, max: 1000, desc: 'Responsiveness to user interactions.' },
-  { key: 'ttfb', label: 'Time to First Byte', unit: 'ms', good: 800, poor: 1800, max: 3000, desc: 'Time for the server to send the first byte of the response.' },
-  { key: 'fid', label: 'Max Potential FID', unit: 'ms', good: 100, poor: 300, max: 600, desc: 'Worst-case first input delay.' },
+  { key: 'inp', label: 'Interaction to Next Paint', unit: 'ms', good: 200, poor: 500, max: 1000, desc: 'Responsiveness to user interactions.', tooltip: 'How fast the page reacts to clicks/taps. Good ≤ 200 ms.' },
+  { key: 'ttfb', label: 'Time to First Byte', unit: 'ms', good: 800, poor: 1800, max: 3000, desc: 'Time for the server to send the first byte of the response.', tooltip: 'How long the server took to start sending data. Good ≤ 0.8 s.' },
+  { key: 'fid', label: 'Max Potential FID', unit: 'ms', good: 100, poor: 300, max: 600, desc: 'Worst-case first input delay.', tooltip: 'Worst-case delay before the page reacts to the first user input.' },
 ];
 
 function MetricBarRow({ metric, value, themeKey, index, expanded }) {
-  const { label, unit, good, poor, max, desc } = metric;
+  const { label, unit, good, poor, max, desc, tooltip } = metric;
   const color = metricBarColor(value, good, poor, themeKey, index);
   const barMax = Math.max(max, value * 1.2);
   const data = [{ name: label, value }];
@@ -52,7 +53,13 @@ function MetricBarRow({ metric, value, themeKey, index, expanded }) {
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dotColor(value, good, poor)}`} />
-          <span className="text-sm text-brand-on-surface dark:text-brand-outline">{label}</span>
+          {tooltip ? (
+            <Tooltip content={tooltip} placement="top">
+              <span className="text-sm text-brand-on-surface dark:text-brand-outline cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{label}</span>
+            </Tooltip>
+          ) : (
+            <span className="text-sm text-brand-on-surface dark:text-brand-outline">{label}</span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <span className={`text-xs font-medium ${statusTextColor(value, good, poor)} font-label`}>

@@ -9,6 +9,7 @@ import ChannelBreakdownChart from './ChannelBreakdownChart';
 import TopPagesVisitedTable from './TopPagesVisitedTable';
 import GA4EventsPanel from './GA4EventsPanel';
 import CompareWebsiteAnalyticsModal from './CompareWebsiteAnalyticsModal';
+import { Tooltip } from '../common/Tooltip';
 
 function formatNumber(n) {
   if (n == null) return '—';
@@ -45,13 +46,20 @@ function sumEventUsersByName(allEvents, matcher) {
   );
 }
 
-function KpiCard({ label, value, subtitle, accent }) {
+function KpiCard({ label, value, subtitle, accent, tooltip }) {
+  const labelEl = (
+    <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] mb-1.5">
+      {label}
+    </p>
+  );
   return (
     <div className="relative rounded-xl bg-white dark:bg-brand-surface-container-lowest border border-brand-outline-variant/70 dark:border-brand-outline/60 px-4 pt-4 pb-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] hover:border-brand-outline-variant dark:hover:border-brand-outline transition-all overflow-hidden group">
       <div className={`absolute top-0 left-0 right-0 h-[1px] ${accent.bar}`} />
-      <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] mb-1.5">
-        {label}
-      </p>
+      {tooltip ? (
+        <Tooltip content={tooltip} placement="top">
+          <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{labelEl}</span>
+        </Tooltip>
+      ) : labelEl}
       <p className="text-[26px] font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-none mb-1">
         {value}
       </p>
@@ -184,12 +192,44 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
           </button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <KpiCard label="Total Users" value={formatNumber(overview.uniqueVisitors)} accent={KPI_ACCENTS[0]} />
-          <KpiCard label="New Users" value={formatNumber(overview.newUsers)} accent={KPI_ACCENTS[1]} />
-          <KpiCard label="Bounce Rate" value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'} accent={KPI_ACCENTS[2]} />
-          <KpiCard label="Avg. Time" value={formatDuration(overview.avgTimeOnPage)} accent={KPI_ACCENTS[3]} />
-          <KpiCard label="File Downloads" value={formatNumber(fileDownloadUsers)} subtitle="Users who downloaded a file" accent={KPI_ACCENTS[4]} />
-          <KpiCard label="Form Submitted" value={formatNumber(formSubmitUsers)} subtitle="Users who completed a form" accent={KPI_ACCENTS[5]} />
+          <KpiCard
+            label="Total Users"
+            value={formatNumber(overview.uniqueVisitors)}
+            accent={KPI_ACCENTS[0]}
+            tooltip="Distinct people who visited the site during this period."
+          />
+          <KpiCard
+            label="New Users"
+            value={formatNumber(overview.newUsers)}
+            accent={KPI_ACCENTS[1]}
+            tooltip="Visitors landing on your site for the first time within this period."
+          />
+          <KpiCard
+            label="Bounce Rate"
+            value={overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—'}
+            accent={KPI_ACCENTS[2]}
+            tooltip="Share of visits where someone left without engaging — lower is better."
+          />
+          <KpiCard
+            label="Avg. Time"
+            value={formatDuration(overview.avgTimeOnPage)}
+            accent={KPI_ACCENTS[3]}
+            tooltip="Average time users spent on a page during a session."
+          />
+          <KpiCard
+            label="File Downloads"
+            value={formatNumber(fileDownloadUsers)}
+            subtitle="Users who downloaded a file"
+            accent={KPI_ACCENTS[4]}
+            tooltip="Files downloaded (PDFs, etc.)."
+          />
+          <KpiCard
+            label="Form Submitted"
+            value={formatNumber(formSubmitUsers)}
+            subtitle="Users who completed a form"
+            accent={KPI_ACCENTS[5]}
+            tooltip="Completed form submissions (lead, contact, etc.)."
+          />
         </div>
       </BentoCard>
 

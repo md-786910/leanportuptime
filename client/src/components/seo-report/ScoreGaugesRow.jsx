@@ -1,18 +1,26 @@
+import { Tooltip } from '../common/Tooltip';
+
 function scoreTextColorClass(score) {
   if (score >= 90) return 'text-green-500';
   if (score >= 50) return 'text-[#a44100]';
   return 'text-[#ba1a1a]';
 }
 
-function Gauge({ score, label, icon, desc }) {
+function Gauge({ score, label, icon, desc, tooltip }) {
   const textColor = scoreTextColorClass(score);
   const circumference = 251.2;
   const offset = circumference - ((score || 0) / 100) * circumference;
 
+  const labelEl = <span className="text-sm font-bold font-headline text-brand-on-surface-variant">{label}</span>;
+
   return (
     <div className="flex flex-col items-center">
       <div className="flex justify-between items-start mb-2 w-full px-2">
-        <span className="text-sm font-bold font-headline text-brand-on-surface-variant">{label}</span>
+        {tooltip ? (
+          <Tooltip content={tooltip} placement="top">
+            <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{labelEl}</span>
+          </Tooltip>
+        ) : labelEl}
         <span className={`material-symbols-outlined ${textColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon || 'speed'}</span>
       </div>
       <div className="flex items-center justify-center relative py-2">
@@ -33,10 +41,34 @@ export default function ScoreGaugesRow({ scores }) {
   return (
     <div className="py-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <Gauge score={scores.performance} label="Performance" icon="speed" desc={scores.performance >= 90 ? 'Excellent loading speed' : 'Improvements needed for speed'} />
-        <Gauge score={scores.accessibility} label="Accessibility" icon="accessibility_new" desc={scores.accessibility >= 90 ? 'Highly accessible' : 'Fix accessibility issues'} />
-        <Gauge score={scores.bestPractices} label="Best Practices" icon="verified" desc={scores.bestPractices >= 90 ? 'Exceeding web standards' : 'Update modern practices'} />
-        <Gauge score={scores.seo} label="SEO" icon="travel_explore" desc={scores.seo >= 90 ? 'Optimization is within targets' : 'SEO improvements required'} />
+        <Gauge
+          score={scores.performance}
+          label="Performance"
+          icon="speed"
+          desc={scores.performance >= 90 ? 'Excellent loading speed' : 'Improvements needed for speed'}
+          tooltip="Lighthouse performance score (0–100) — measures load speed and runtime responsiveness."
+        />
+        <Gauge
+          score={scores.accessibility}
+          label="Accessibility"
+          icon="accessibility_new"
+          desc={scores.accessibility >= 90 ? 'Highly accessible' : 'Fix accessibility issues'}
+          tooltip="How usable the site is for assistive technologies (screen readers, keyboard nav, color contrast)."
+        />
+        <Gauge
+          score={scores.bestPractices}
+          label="Best Practices"
+          icon="verified"
+          desc={scores.bestPractices >= 90 ? 'Exceeding web standards' : 'Update modern practices'}
+          tooltip="Compliance with modern web standards — HTTPS, console errors, deprecated APIs, etc."
+        />
+        <Gauge
+          score={scores.seo}
+          label="SEO"
+          icon="travel_explore"
+          desc={scores.seo >= 90 ? 'Optimization is within targets' : 'SEO improvements required'}
+          tooltip="Basic on-page SEO checks — meta tags, robots.txt, link text, mobile-friendliness."
+        />
       </div>
     </div>
   );

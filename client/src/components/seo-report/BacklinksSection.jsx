@@ -8,6 +8,7 @@ import BacklinksTable from './BacklinksTable';
 import EditDomainAuthorityModal from './EditDomainAuthorityModal';
 import BacklinksChangelogDrawer from './BacklinksChangelogDrawer';
 import CompareDomainAuthorityModal from './CompareDomainAuthorityModal';
+import { Tooltip } from '../common/Tooltip';
 
 // Small delta chip — renders current vs. previous for aggregate stats.
 // `direction` flips the good/bad colour: 'higher-better' (default) means ↑ is good.
@@ -367,6 +368,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
               ),
               delta: <DeltaChip current={data.domainRank} previous={data.previousDomainRank} direction="higher-better" />,
               desc: providerDisplay,
+              tooltip: 'A score (0–100) that predicts how well your site can rank on Google. Higher = stronger website.',
               color: 'text-indigo-600 dark:text-indigo-400',
               bg: 'bg-indigo-50/50 dark:bg-indigo-500/5',
               border: 'border-indigo-100 dark:border-indigo-500/20',
@@ -378,6 +380,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
               ),
               delta: <DeltaChip current={data.backlinksCount} previous={data.previousBacklinksCount} direction="higher-better" />,
               desc: 'Total links',
+              tooltip: 'Total number of links pointing to your site from other websites.',
               color: 'text-emerald-600 dark:text-emerald-400',
               bg: 'bg-emerald-50/50 dark:bg-emerald-500/5',
               border: 'border-emerald-100 dark:border-emerald-500/20',
@@ -389,6 +392,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
               ),
               delta: <DeltaChip current={data.referringDomains} previous={data.previousReferringDomains} direction="higher-better" />,
               desc: 'Unique sources',
+              tooltip: 'Number of unique websites linking to you (more important than total backlinks).',
               color: 'text-amber-600 dark:text-amber-400',
               bg: 'bg-amber-50/50 dark:bg-amber-500/5',
               border: 'border-amber-100 dark:border-amber-500/20',
@@ -402,6 +406,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
               ),
               delta: <DeltaChip current={data.newLinksLast30d} previous={data.previousNewLinksLast30d} direction="higher-better" />,
               desc: periodLabel,
+              tooltip: 'New backlinks gained in the last 30 days.',
               color: 'text-green-600 dark:text-green-400',
               bg: 'bg-green-50/50 dark:bg-green-500/5',
               border: 'border-green-100 dark:border-green-500/20',
@@ -415,6 +420,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
               ),
               delta: <DeltaChip current={data.lostLinksLast30d} previous={data.previousLostLinksLast30d} direction="lower-better" />,
               desc: periodLabel,
+              tooltip: 'Backlinks you lost in the last 30 days.',
               color: 'text-rose-600 dark:text-rose-400',
               bg: 'bg-rose-50/50 dark:bg-rose-500/5',
               border: 'border-rose-100 dark:border-rose-500/20',
@@ -422,9 +428,17 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
           ].map((stat, idx) => (
             <div key={idx} className={`py-3 px-4 rounded-xl border ${stat.border} ${stat.bg} ${stat.color} space-y-2 relative overflow-hidden group`}>
               <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-current opacity-[0.03] rounded-full group-hover:scale-110 transition-transform duration-500" />
-              <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em]">
-                {stat.label}
-              </p>
+              {stat.tooltip ? (
+                <Tooltip content={stat.tooltip} placement="top">
+                  <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em] cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60 inline-block">
+                    {stat.label}
+                  </p>
+                </Tooltip>
+              ) : (
+                <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em]">
+                  {stat.label}
+                </p>
+              )}
               <div className="flex items-baseline gap-1">
                 {stat.valueNode}
                 {stat.delta}
@@ -587,29 +601,39 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
       {/* Individual cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">{scoreLabel}</span>
+          <Tooltip content="A score (0–100) that predicts how well your site can rank on Google. Higher = stronger website." placement="top">
+            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{scoreLabel}</span>
+          </Tooltip>
           <p className="text-2xl font-bold my-1 tabular-nums font-headline" style={{ color: themeColor(themeKey, 0) }}>{data.domainRank || 0}</p>
           <span className="text-[9px] text-brand-outline">{providerDisplay}</span>
         </div>
         <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Backlinks</span>
+          <Tooltip content="Total number of links pointing to your site from other websites." placement="top">
+            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">Backlinks</span>
+          </Tooltip>
           <p className="text-2xl font-bold text-brand-on-surface dark:text-white my-1 tabular-nums font-headline">{fmt(data.backlinksCount)}</p>
           <span className="text-[9px] text-brand-outline">Total links</span>
         </div>
         <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Ref. Domains</span>
+          <Tooltip content="Number of unique websites linking to you (more important than total backlinks)." placement="top">
+            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">Ref. Domains</span>
+          </Tooltip>
           <p className="text-2xl font-bold text-brand-on-surface dark:text-white my-1 tabular-nums font-headline">{fmt(data.referringDomains)}</p>
           <span className="text-[9px] text-brand-outline">Unique sources</span>
         </div>
         <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">New Links</span>
+          <Tooltip content="New backlinks gained in the last 30 days." placement="top">
+            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">New Links</span>
+          </Tooltip>
           <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 my-1 tabular-nums font-headline">
             {displayedNew == null ? '—' : `+${fmt(displayedNew)}`}
           </p>
           <span className="text-[9px] text-brand-outline">{periodLabel}</span>
         </div>
         <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-3 text-center">
-          <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase">Lost Links</span>
+          <Tooltip content="Backlinks you lost in the last 30 days." placement="top">
+            <span className="text-[10px] font-semibold font-label text-brand-on-surface-variant uppercase cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">Lost Links</span>
+          </Tooltip>
           <p className="text-2xl font-bold text-red-600 dark:text-red-400 my-1 tabular-nums font-headline">
             {displayedLost == null ? '—' : `-${fmt(displayedLost)}`}
           </p>
