@@ -1,16 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { useMemo } from 'react';
+import { format, startOfMonth } from 'date-fns';
 import Drawer from '../common/Drawer';
 import Button from '../common/Button';
-import DateRangePicker from '../common/DateRangePicker';
-
-const PRESETS = [
-  { key: '1m',  label: 'Last 1 mo',  months: 1 },
-  { key: '3m',  label: 'Last 3 mo',  months: 3 },
-  { key: '6m',  label: 'Last 6 mo',  months: 6 },
-  { key: '12m', label: 'Last 12 mo', months: 12 },
-  { key: 'custom', label: 'Custom' },
-];
+import ComparePeriodSelector from './compare/ComparePeriodSelector';
+import RangeHeaderButton from './compare/RangeHeaderButton';
+import { useComparePeriods } from './compare/useComparePeriods';
 
 const METRICS = [
   // `aggregate`: 'end' = use end-of-range snapshot; 'sum' = sum across range buckets.
@@ -32,26 +26,6 @@ function monthKeyFromDate(d) {
   return format(d, 'yyyy-MM');
 }
 
-function monthLabel(monthKey) {
-  if (!monthKey) return '';
-  const [y, m] = monthKey.split('-');
-  const d = new Date(Number(y), Number(m) - 1, 1);
-  return format(d, 'MMM yyyy');
-}
-
-function rangeLabel(startKey, endKey) {
-  if (!startKey || !endKey) return '';
-  if (startKey === endKey) return monthLabel(startKey);
-  const [sy, sm] = startKey.split('-').map(Number);
-  const [ey, ey_y] = [Number(endKey.split('-')[0]), Number(endKey.split('-')[1])];
-  const startD = new Date(sy, sm - 1, 1);
-  const endD = new Date(ey, ey_y - 1, 1);
-  const sameYear = sy === ey;
-  return sameYear
-    ? `${format(startD, 'MMM')} – ${format(endD, 'MMM yyyy')}`
-    : `${format(startD, 'MMM yyyy')} – ${format(endD, 'MMM yyyy')}`;
-}
-
 // Enumerate all monthKeys between two Date objects (inclusive of both endpoints' months).
 function enumerateMonthKeys(startDate, endDate) {
   if (!startDate || !endDate) return [];
@@ -63,6 +37,30 @@ function enumerateMonthKeys(startDate, endDate) {
     cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
   }
   return out;
+}
+
+function bucketsForRange(history, startDate, endDate) {
+  if (!startDate || !endDate) return { buckets: [], endBucket: null, available: false };
+  const monthKeys = enumerateMonthKeys(startDate, endDate);
+  const keySet = new Set(monthKeys);
+  const inRange = history.filter((h) => keySet.has(h.monthKey));
+  const endKey = monthKeys[monthKeys.length - 1];
+  const endBucket = history.find((h) => h.monthKey === endKey) || null;
+  return {
+    buckets: inRange,
+    endBucket,
+    available: inRange.length > 0,
+  };
+}
+
+function valueFromBuckets(metric, { buckets, endBucket, available }) {
+  if (!available) return null;
+  if (metric.aggregate === 'sum') {
+    return buckets.reduce((acc, b) => acc + (b[metric.historyKey] || 0), 0);
+  }
+  if (endBucket) return endBucket[metric.historyKey] ?? null;
+  const last = buckets[buckets.length - 1];
+  return last ? (last[metric.historyKey] ?? null) : null;
 }
 
 function DeltaCell({ current, previous, lowerIsBetter, available }) {
@@ -98,62 +96,34 @@ function DeltaCell({ current, previous, lowerIsBetter, available }) {
 }
 
 export default function CompareDomainAuthorityModal({ isOpen, onClose, current, onHistoryClick }) {
-  const [presetKey, setPresetKey] = useState('1m');
-  const [customRange, setCustomRange] = useState(() => {
-    const lastMonth = subMonths(new Date(), 1);
-    return [startOfMonth(lastMonth), endOfMonth(lastMonth)];
-  });
+  const cmp = useComparePeriods({ isOpen });
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setPresetKey('1m');
-    const lastMonth = subMonths(new Date(), 1);
-    setCustomRange([startOfMonth(lastMonth), endOfMonth(lastMonth)]);
-  }, [isOpen]);
+  const history = current?.history || [];
 
-  // Derive [startDate, endDate] for the active selection.
-  const [rangeStart, rangeEnd] = useMemo(() => {
-    if (presetKey === 'custom') return customRange;
-    const preset = PRESETS.find((p) => p.key === presetKey);
-    const months = preset?.months || 1;
-    // Range = the N months immediately preceding the current month.
-    const end = endOfMonth(subMonths(new Date(), 1));
-    const start = startOfMonth(subMonths(new Date(), months));
-    return [start, end];
-  }, [presetKey, customRange]);
+  // Comparison column always derives from history buckets in the compareRange.
+  const compareInfo = useMemo(
+    () => bucketsForRange(history, cmp.compareRange.start, cmp.compareRange.end),
+    [history, cmp.compareRange.start, cmp.compareRange.end],
+  );
 
-  // Buckets in the selected range.
-  const { bucketsInRange, endBucket, available } = useMemo(() => {
-    const history = current?.history || [];
-    if (!rangeStart || !rangeEnd) return { bucketsInRange: [], endBucket: null, available: false };
-    const monthKeys = enumerateMonthKeys(rangeStart, rangeEnd);
-    const keySet = new Set(monthKeys);
-    const inRange = history.filter((h) => keySet.has(h.monthKey));
-    const endKey = monthKeys[monthKeys.length - 1];
-    const end = history.find((h) => h.monthKey === endKey) || null;
-    return {
-      bucketsInRange: inRange,
-      endBucket: end,
-      available: inRange.length > 0,
-    };
-  }, [current?.history, rangeStart, rangeEnd]);
+  // Current column: in custom mode also derives from history; otherwise use the snapshot fields on `current`.
+  const customCurrentInfo = useMemo(
+    () => (cmp.isCustom ? bucketsForRange(history, cmp.currentRange.start, cmp.currentRange.end) : null),
+    [cmp.isCustom, history, cmp.currentRange.start, cmp.currentRange.end],
+  );
 
-  const headerLabel = useMemo(() => {
-    if (!rangeStart || !rangeEnd) return '';
-    return rangeLabel(monthKeyFromDate(rangeStart), monthKeyFromDate(rangeEnd));
-  }, [rangeStart, rangeEnd]);
+  const currentColLabel = cmp.isCustom ? (cmp.currentLabelText || '—') : 'This Month';
+  const compareColLabel = cmp.compareLabelText || '—';
 
-  // Compute the comparison value for a single metric across the range.
-  const compareValueFor = (metric) => {
-    if (!available) return null;
-    if (metric.aggregate === 'sum') {
-      return bucketsInRange.reduce((acc, b) => acc + (b[metric.historyKey] || 0), 0);
-    }
-    // 'end' — use end-of-range snapshot if present, else latest available bucket in range
-    if (endBucket) return endBucket[metric.historyKey] ?? null;
-    const last = bucketsInRange[bucketsInRange.length - 1];
-    return last ? (last[metric.historyKey] ?? null) : null;
+  const compareAvailable = compareInfo.available;
+  const currentAvailable = cmp.isCustom ? !!customCurrentInfo?.available : true;
+  const available = compareAvailable && currentAvailable;
+
+  const valueForCurrent = (metric) => {
+    if (cmp.isCustom) return valueFromBuckets(metric, customCurrentInfo);
+    return current?.[metric.key];
   };
+  const valueForCompare = (metric) => valueFromBuckets(metric, compareInfo);
 
   return (
     <Drawer
@@ -181,41 +151,11 @@ export default function CompareDomainAuthorityModal({ isOpen, onClose, current, 
       }
     >
       <div className="space-y-5">
-        {/* Period selector */}
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-outline dark:text-brand-on-surface-variant font-label ml-0.5">
-            Compare with
-          </p>
-          <div className="flex flex-wrap items-center gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-1">
-            {PRESETS.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPresetKey(p.key)}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-label ${
-                  presetKey === p.key
-                    ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm'
-                    : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          {presetKey === 'custom' && (
-            <div className="pt-1">
-              <DateRangePicker
-                startDate={customRange[0]}
-                endDate={customRange[1]}
-                onChange={(dates) => setCustomRange(dates)}
-                maxDate={new Date()}
-                align="left"
-                placeholderStart="Start month"
-                placeholderEnd="End month"
-              />
-            </div>
-          )}
-        </div>
+        <ComparePeriodSelector
+          presetKey={cmp.presetKey}
+          onPresetChange={cmp.setPresetKey}
+          isCustom={cmp.isCustom}
+        />
 
         {/* Comparison summary chip */}
         <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-brand-surface-container-low dark:bg-brand-on-surface/40 border border-brand-outline-variant dark:border-brand-outline">
@@ -228,19 +168,27 @@ export default function CompareDomainAuthorityModal({ isOpen, onClose, current, 
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Comparing</div>
               <div className="text-sm font-bold text-brand-on-surface dark:text-white font-label truncate">
-                This Month  vs  {headerLabel || '—'}
+                {currentColLabel}  vs  {compareColLabel}
               </div>
             </div>
           </div>
         </div>
 
         {/* Empty-state callout */}
-        {!available && headerLabel && (
+        {!compareAvailable && compareColLabel !== '—' && (
           <div className="flex items-start gap-2 text-[12px] rounded-lg px-3 py-2 font-label bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
             <svg className="w-4 h-4 flex-shrink-0 mt-px" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>No data for {headerLabel}. Use <strong>Edit</strong> → pick a past date to backfill any month in this range.</span>
+            <span>No data for {compareColLabel}. Use <strong>Edit</strong> → pick a past date to backfill any month in this range.</span>
+          </div>
+        )}
+        {cmp.isCustom && !currentAvailable && currentColLabel !== '—' && (
+          <div className="flex items-start gap-2 text-[12px] rounded-lg px-3 py-2 font-label bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+            <svg className="w-4 h-4 flex-shrink-0 mt-px" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>No data for {currentColLabel}. Use <strong>Edit</strong> → pick a past date to backfill any month in this range.</span>
           </div>
         )}
 
@@ -250,15 +198,23 @@ export default function CompareDomainAuthorityModal({ isOpen, onClose, current, 
             <thead>
               <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50">
                 <th className="text-left py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Metric</th>
-                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">This Month</th>
-                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">{headerLabel || '—'}</th>
+                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">
+                  {cmp.isCustom
+                    ? <RangeHeaderButton value={cmp.customCurrentRange} onChange={cmp.setCustomCurrentRange} align="left" />
+                    : 'This Month'}
+                </th>
+                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">
+                  {cmp.isCustom
+                    ? <RangeHeaderButton value={cmp.customCompareRange} onChange={cmp.setCustomCompareRange} />
+                    : compareColLabel}
+                </th>
                 <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Δ</th>
               </tr>
             </thead>
             <tbody>
               {METRICS.map((m, i) => {
-                const cur = current?.[m.key];
-                const prev = compareValueFor(m);
+                const cur = valueForCurrent(m);
+                const prev = valueForCompare(m);
                 return (
                   <tr key={m.key} className={`${i > 0 ? 'border-t border-gray-50 dark:border-brand-outline' : ''} hover:bg-brand-surface-container-low/40 dark:hover:bg-brand-on-surface/20 transition-colors`}>
                     <td className="py-2.5 px-3">
@@ -271,10 +227,10 @@ export default function CompareDomainAuthorityModal({ isOpen, onClose, current, 
                       </div>
                     </td>
                     <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">
-                      {fmtNumber(cur)}
+                      {currentAvailable ? fmtNumber(cur) : '—'}
                     </td>
                     <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">
-                      {available ? fmtNumber(prev) : '—'}
+                      {compareAvailable ? fmtNumber(prev) : '—'}
                     </td>
                     <td className="py-2.5 px-3 text-right whitespace-nowrap">
                       <DeltaCell current={cur} previous={prev} lowerIsBetter={m.lowerIsBetter} available={available} />

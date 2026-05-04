@@ -1,34 +1,17 @@
-import { uscentere, useEffect, useMemo, useState } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { useMemo } from 'react';
 import Drawer from '../common/Drawer';
 import Button from '../common/Button';
-import DateRangePicker from '../common/DateRangePicker';
 import Spinner from '../common/Spinner';
 import { useWebsiteAnalytics } from '../../hooks/useAnalytics';
-
-const PRESETS = [
-  { key: '1m',  label: 'Last 1 mo',  months: 1 },
-  { key: '3m',  label: 'Last 3 mo',  months: 3 },
-  { key: '6m',  label: 'Last 6 mo',  months: 6 },
-  { key: '12m', label: 'Last 12 mo', months: 12 },
-  { key: 'custom', label: 'Custom' },
-];
+import ComparePeriodSelector from './compare/ComparePeriodSelector';
+import RangeHeaderButton from './compare/RangeHeaderButton';
+import { useComparePeriods } from './compare/useComparePeriods';
 
 function fmtNumber(n) {
   if (n == null) return '—';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
-}
-
-function rangeLabel(start, end) {
-  if (!start || !end) return '';
-  const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
-  if (sameMonth) return format(start, 'MMM yyyy');
-  const sameYear = start.getFullYear() === end.getFullYear();
-  return sameYear
-    ? `${format(start, 'MMM')} – ${format(end, 'MMM yyyy')}`
-    : `${format(start, 'MMM yyyy')} – ${format(end, 'MMM yyyy')}`;
 }
 
 function DeltaCell({ current, previous, available }) {
@@ -68,51 +51,43 @@ function TagPill({ tone = 'gain', label }) {
 }
 
 export default function CompareChannelsModal({ isOpen, onClose, siteId, currentChannels = [], currentLabel = 'Current Period' }) {
-  const [presetKey, setPresetKey] = useState('1m');
-  const [customRange, setCustomRange] = useState(() => {
-    const lastMonth = subMonths(new Date(), 1);
-    return [startOfMonth(lastMonth), endOfMonth(lastMonth)];
-  });
+  const cmp = useComparePeriods({ isOpen });
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setPresetKey('1m');
-    const lastMonth = subMonths(new Date(), 1);
-    setCustomRange([startOfMonth(lastMonth), endOfMonth(lastMonth)]);
-  }, [isOpen]);
-
-  const [compareStart, compareEnd] = useMemo(() => {
-    if (presetKey === 'custom') return customRange;
-    const preset = PRESETS.find((p) => p.key === presetKey);
-    const months = preset?.months || 1;
-    const end = endOfMonth(subMonths(new Date(), 1));
-    const start = startOfMonth(subMonths(new Date(), months));
-    return [start, end];
-  }, [presetKey, customRange]);
-
-  const compareDateRange = useMemo(() => {
-    if (!compareStart || !compareEnd) return null;
-    return {
-      from: format(compareStart, 'yyyy-MM-dd'),
-      to: format(compareEnd, 'yyyy-MM-dd'),
-    };
-  }, [compareStart, compareEnd]);
-
-  const enabled = isOpen && !!siteId && !!compareDateRange;
-  const { data: compareData, isLoading, isFetching, error } = useWebsiteAnalytics(
-    enabled ? siteId : null,
+  const compareEnabled = isOpen && !!siteId && !!cmp.compareDateRange;
+  const { data: compareData, isLoading: compareLoading, isFetching: compareFetching, error: compareError } = useWebsiteAnalytics(
+    compareEnabled ? siteId : null,
     'custom',
-    compareDateRange,
+    cmp.compareDateRange,
+  );
+
+  const customCurrentEnabled = isOpen && !!siteId && cmp.isCustom && !!cmp.currentDateRange;
+  const { data: customCurrentData, isLoading: customCurrentLoading, isFetching: customCurrentFetching, error: customCurrentError } = useWebsiteAnalytics(
+    customCurrentEnabled ? siteId : null,
+    'custom',
+    cmp.currentDateRange,
   );
 
   const compareChannels = compareData?.details?.channels || [];
-  const headerLabel = useMemo(() => rangeLabel(compareStart, compareEnd), [compareStart, compareEnd]);
-  const available = !isLoading && !error && !!compareData;
+  const customCurrentChannels = customCurrentData?.details?.channels || [];
+  const effectiveCurrentChannels = cmp.isCustom ? customCurrentChannels : currentChannels;
+
+  const currentColLabel = cmp.isCustom ? (cmp.currentLabelText || '—') : currentLabel;
+  const compareColLabel = cmp.compareLabelText || '—';
+
+  const isLoading = compareLoading || (cmp.isCustom && customCurrentLoading);
+  const isFetching = compareFetching || (cmp.isCustom && customCurrentFetching);
+  const error = compareError || customCurrentError;
+
+  const compareAvailable = !compareLoading && !compareError && !!compareData;
+  const currentAvailable = cmp.isCustom
+    ? (!customCurrentLoading && !customCurrentError && !!customCurrentData)
+    : true;
+  const available = compareAvailable && currentAvailable;
 
   // Merge channel rows by channel name.
   const merged = useMemo(() => {
     const byName = new Map();
-    for (const c of currentChannels) {
+    for (const c of effectiveCurrentChannels) {
       byName.set(c.channel, { name: c.channel, current: c.sessions || 0, previous: 0 });
     }
     for (const c of compareChannels) {
@@ -123,16 +98,19 @@ export default function CompareChannelsModal({ isOpen, onClose, siteId, currentC
     const arr = [...byName.values()];
     arr.sort((a, b) => Math.max(b.current, b.previous) - Math.max(a.current, a.previous));
     return arr;
-  }, [currentChannels, compareChannels]);
+  }, [effectiveCurrentChannels, compareChannels]);
 
   const totalCurrent = useMemo(
-    () => currentChannels.reduce((s, c) => s + (c.sessions || 0), 0),
-    [currentChannels],
+    () => effectiveCurrentChannels.reduce((s, c) => s + (c.sessions || 0), 0),
+    [effectiveCurrentChannels],
   );
   const totalCompare = useMemo(
     () => compareChannels.reduce((s, c) => s + (c.sessions || 0), 0),
     [compareChannels],
   );
+
+  const fmtCurrent = (val) => (currentAvailable ? fmtNumber(val) : (customCurrentLoading ? '…' : '—'));
+  const fmtCompare = (val) => (compareAvailable ? fmtNumber(val) : (compareLoading ? '…' : '—'));
 
   return (
     <Drawer
@@ -147,41 +125,11 @@ export default function CompareChannelsModal({ isOpen, onClose, siteId, currentC
       }
     >
       <div className="space-y-5">
-        {/* Period selector */}
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-outline dark:text-brand-on-surface-variant font-label ml-0.5">
-            Compare with
-          </p>
-          <div className="flex flex-wrap items-center gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-1">
-            {PRESETS.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPresetKey(p.key)}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-label ${
-                  presetKey === p.key
-                    ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm'
-                    : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          {presetKey === 'custom' && (
-            <div className="pt-1">
-              <DateRangePicker
-                startDate={customRange[0]}
-                endDate={customRange[1]}
-                onChange={(dates) => setCustomRange(dates)}
-                maxDate={new Date()}
-                align="left"
-                placeholderStart="Start date"
-                placeholderEnd="End date"
-              />
-            </div>
-          )}
-        </div>
+        <ComparePeriodSelector
+          presetKey={cmp.presetKey}
+          onPresetChange={cmp.setPresetKey}
+          isCustom={cmp.isCustom}
+        />
 
         {/* Comparing chip */}
         <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-brand-surface-container-low dark:bg-brand-on-surface/40 border border-brand-outline-variant dark:border-brand-outline">
@@ -194,7 +142,7 @@ export default function CompareChannelsModal({ isOpen, onClose, siteId, currentC
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Comparing</div>
               <div className="text-sm font-bold text-brand-on-surface dark:text-white font-label truncate">
-                {currentLabel}  vs  {headerLabel || '—'}
+                {currentColLabel}  vs  {compareColLabel}
               </div>
             </div>
           </div>
@@ -204,12 +152,12 @@ export default function CompareChannelsModal({ isOpen, onClose, siteId, currentC
         {/* Total sessions summary */}
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline px-3 py-2.5">
-            <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">{currentLabel}</div>
-            <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{fmtNumber(totalCurrent)}</div>
+            <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label truncate">{currentColLabel}</div>
+            <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{fmtCurrent(totalCurrent)}</div>
           </div>
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline px-3 py-2.5">
-            <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label truncate">{headerLabel || '—'}</div>
-            <div className="text-lg font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline">{available ? fmtNumber(totalCompare) : (isLoading ? '…' : '—')}</div>
+            <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label truncate">{compareColLabel}</div>
+            <div className="text-lg font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline">{fmtCompare(totalCompare)}</div>
           </div>
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline px-3 py-2.5">
             <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Δ Sessions</div>
@@ -238,8 +186,16 @@ export default function CompareChannelsModal({ isOpen, onClose, siteId, currentC
               <thead>
                 <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50">
                   <th className="text-left  py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Channel</th>
-                  <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">{currentLabel}</th>
-                  <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">{headerLabel || '—'}</th>
+                  <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">
+                    {cmp.isCustom
+                      ? <RangeHeaderButton value={cmp.customCurrentRange} onChange={cmp.setCustomCurrentRange} align="left" />
+                      : currentLabel}
+                  </th>
+                  <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">
+                    {cmp.isCustom
+                      ? <RangeHeaderButton value={cmp.customCompareRange} onChange={cmp.setCustomCompareRange} />
+                      : compareColLabel}
+                  </th>
                   <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Δ</th>
                 </tr>
               </thead>
@@ -259,10 +215,10 @@ export default function CompareChannelsModal({ isOpen, onClose, siteId, currentC
                         </div>
                       </td>
                       <td className="py-2 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">
-                        {fmtNumber(row.current)}
+                        {fmtCurrent(row.current)}
                       </td>
                       <td className="py-2 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">
-                        {available ? fmtNumber(row.previous) : (isLoading ? '…' : '—')}
+                        {fmtCompare(row.previous)}
                       </td>
                       <td className="py-2 px-3 text-center whitespace-nowrap">
                         <DeltaCell current={row.current} previous={row.previous} available={available} />

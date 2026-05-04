@@ -1,18 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import Drawer from '../common/Drawer';
 import Button from '../common/Button';
-import DateRangePicker from '../common/DateRangePicker';
 import Spinner from '../common/Spinner';
 import { useAnalyticsOverview } from '../../hooks/useAnalytics';
-
-const PRESETS = [
-  { key: '1m',  label: 'Last 1 mo',  months: 1 },
-  { key: '3m',  label: 'Last 3 mo',  months: 3 },
-  { key: '6m',  label: 'Last 6 mo',  months: 6 },
-  { key: '12m', label: 'Last 12 mo', months: 12 },
-  { key: 'custom', label: 'Custom' },
-];
+import ComparePeriodSelector from './compare/ComparePeriodSelector';
+import RangeHeaderButton from './compare/RangeHeaderButton';
+import { useComparePeriods } from './compare/useComparePeriods';
 
 function fmtNumber(n) {
   if (n == null) return '—';
@@ -24,16 +16,6 @@ function fmtNumber(n) {
 function fmtPercent(v) {
   if (v == null) return '—';
   return `${(v * 100).toFixed(1)}%`;
-}
-
-function rangeLabel(start, end) {
-  if (!start || !end) return '';
-  const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
-  if (sameMonth) return format(start, 'MMM yyyy');
-  const sameYear = start.getFullYear() === end.getFullYear();
-  return sameYear
-    ? `${format(start, 'MMM')} – ${format(end, 'MMM yyyy')}`
-    : `${format(start, 'MMM yyyy')} – ${format(end, 'MMM yyyy')}`;
 }
 
 function DeltaCell({ current, previous, available, isRate }) {
@@ -69,56 +51,54 @@ function ratio(part, total) {
 }
 
 export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, currentNewUsers = 0, currentReturningUsers = 0, currentLabel = 'Current Period' }) {
-  const [presetKey, setPresetKey] = useState('1m');
-  const [customRange, setCustomRange] = useState(() => {
-    const lastMonth = subMonths(new Date(), 1);
-    return [startOfMonth(lastMonth), endOfMonth(lastMonth)];
-  });
+  const cmp = useComparePeriods({ isOpen });
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setPresetKey('1m');
-    const lastMonth = subMonths(new Date(), 1);
-    setCustomRange([startOfMonth(lastMonth), endOfMonth(lastMonth)]);
-  }, [isOpen]);
-
-  const [compareStart, compareEnd] = useMemo(() => {
-    if (presetKey === 'custom') return customRange;
-    const preset = PRESETS.find((p) => p.key === presetKey);
-    const months = preset?.months || 1;
-    const end = endOfMonth(subMonths(new Date(), 1));
-    const start = startOfMonth(subMonths(new Date(), months));
-    return [start, end];
-  }, [presetKey, customRange]);
-
-  const compareDateRange = useMemo(() => {
-    if (!compareStart || !compareEnd) return null;
-    return {
-      from: format(compareStart, 'yyyy-MM-dd'),
-      to: format(compareEnd, 'yyyy-MM-dd'),
-    };
-  }, [compareStart, compareEnd]);
-
-  const enabled = isOpen && !!siteId && !!compareDateRange;
-  const { data: compareData, isLoading, error } = useAnalyticsOverview(
-    enabled ? siteId : null,
+  const compareEnabled = isOpen && !!siteId && !!cmp.compareDateRange;
+  const { data: compareData, isLoading: compareLoading, error: compareError } = useAnalyticsOverview(
+    compareEnabled ? siteId : null,
     'custom',
-    compareDateRange,
+    cmp.compareDateRange,
+  );
+
+  const customCurrentEnabled = isOpen && !!siteId && cmp.isCustom && !!cmp.currentDateRange;
+  const { data: customCurrentData, isLoading: customCurrentLoading, error: customCurrentError } = useAnalyticsOverview(
+    customCurrentEnabled ? siteId : null,
+    'custom',
+    cmp.currentDateRange,
   );
 
   const compareOverview = compareData?.overview || null;
-  const headerLabel = useMemo(() => rangeLabel(compareStart, compareEnd), [compareStart, compareEnd]);
-  const available = !isLoading && !error && !!compareOverview;
+  const customCurrentOverview = customCurrentData?.overview || null;
 
-  const currentTotal = currentNewUsers + currentReturningUsers;
+  const currentColLabel = cmp.isCustom ? (cmp.currentLabelText || '—') : currentLabel;
+  const compareColLabel = cmp.compareLabelText || '—';
+
+  const isLoading = compareLoading || (cmp.isCustom && customCurrentLoading);
+  const error = compareError || customCurrentError;
+
+  const compareAvailable = !compareLoading && !compareError && !!compareOverview;
+  const currentAvailable = cmp.isCustom
+    ? (!customCurrentLoading && !customCurrentError && !!customCurrentOverview)
+    : true;
+  const available = compareAvailable && currentAvailable;
+
+  // Resolve current values: prop-based for presets, fetched for custom.
+  const effCurrentNew = cmp.isCustom ? (customCurrentOverview?.newUsers || 0) : currentNewUsers;
+  const effCurrentReturning = cmp.isCustom ? (customCurrentOverview?.returningUsers || 0) : currentReturningUsers;
+
+  const currentTotal = effCurrentNew + effCurrentReturning;
   const compareNew = compareOverview?.newUsers || 0;
   const compareReturning = compareOverview?.returningUsers || 0;
   const compareTotal = compareNew + compareReturning;
 
-  const currentNewPct = ratio(currentNewUsers, currentTotal);
+  const currentNewPct = ratio(effCurrentNew, currentTotal);
   const compareNewPct = ratio(compareNew, compareTotal);
-  const currentReturningPct = ratio(currentReturningUsers, currentTotal);
+  const currentReturningPct = ratio(effCurrentReturning, currentTotal);
   const compareReturningPct = ratio(compareReturning, compareTotal);
+
+  const showCurrentDash = cmp.isCustom && !currentAvailable;
+  const fmtCurrent = (val, formatter = fmtNumber) => (showCurrentDash ? (customCurrentLoading ? '…' : '—') : formatter(val));
+  const fmtCompare = (val, formatter = fmtNumber) => (compareAvailable ? formatter(val) : (compareLoading ? '…' : '—'));
 
   return (
     <Drawer
@@ -133,41 +113,11 @@ export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, cu
       }
     >
       <div className="space-y-5">
-        {/* Period selector */}
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-outline dark:text-brand-on-surface-variant font-label ml-0.5">
-            Compare with
-          </p>
-          <div className="flex flex-wrap items-center gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-1">
-            {PRESETS.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPresetKey(p.key)}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-label ${
-                  presetKey === p.key
-                    ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm'
-                    : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          {presetKey === 'custom' && (
-            <div className="pt-1">
-              <DateRangePicker
-                startDate={customRange[0]}
-                endDate={customRange[1]}
-                onChange={(dates) => setCustomRange(dates)}
-                maxDate={new Date()}
-                align="left"
-                placeholderStart="Start date"
-                placeholderEnd="End date"
-              />
-            </div>
-          )}
-        </div>
+        <ComparePeriodSelector
+          presetKey={cmp.presetKey}
+          onPresetChange={cmp.setPresetKey}
+          isCustom={cmp.isCustom}
+        />
 
         {/* Comparing chip */}
         <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-brand-surface-container-low dark:bg-brand-on-surface/40 border border-brand-outline-variant dark:border-brand-outline">
@@ -180,7 +130,7 @@ export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, cu
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Comparing</div>
               <div className="text-sm font-bold text-brand-on-surface dark:text-white font-label truncate">
-                {currentLabel}  vs  {headerLabel || '—'}
+                {currentColLabel}  vs  {compareColLabel}
               </div>
             </div>
           </div>
@@ -203,8 +153,16 @@ export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, cu
             <thead>
               <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50">
                 <th className="text-left  py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Metric</th>
-                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">{currentLabel}</th>
-                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">{headerLabel || '—'}</th>
+                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">
+                  {cmp.isCustom
+                    ? <RangeHeaderButton value={cmp.customCurrentRange} onChange={cmp.setCustomCurrentRange} align="left" />
+                    : currentLabel}
+                </th>
+                <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">
+                  {cmp.isCustom
+                    ? <RangeHeaderButton value={cmp.customCompareRange} onChange={cmp.setCustomCompareRange} />
+                    : compareColLabel}
+                </th>
                 <th className="text-right py-2.5 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Δ</th>
               </tr>
             </thead>
@@ -214,26 +172,26 @@ export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, cu
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">New Users</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">First-time visitors</div>
                 </td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtNumber(currentNewUsers)}</td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(compareNew) : (isLoading ? '…' : '—')}</td>
-                <td className="py-2.5 px-3 text-right whitespace-nowrap"><DeltaCell current={currentNewUsers} previous={compareNew} available={available} /></td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(effCurrentNew)}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(compareNew)}</td>
+                <td className="py-2.5 px-3 text-right whitespace-nowrap"><DeltaCell current={effCurrentNew} previous={compareNew} available={available} /></td>
               </tr>
               <tr className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low/40 dark:hover:bg-brand-on-surface/20 transition-colors">
                 <td className="py-2.5 px-3">
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">Returning Users</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">Repeat visitors</div>
                 </td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtNumber(currentReturningUsers)}</td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(compareReturning) : (isLoading ? '…' : '—')}</td>
-                <td className="py-2.5 px-3 text-right whitespace-nowrap"><DeltaCell current={currentReturningUsers} previous={compareReturning} available={available} /></td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(effCurrentReturning)}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(compareReturning)}</td>
+                <td className="py-2.5 px-3 text-right whitespace-nowrap"><DeltaCell current={effCurrentReturning} previous={compareReturning} available={available} /></td>
               </tr>
               <tr className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low/40 dark:hover:bg-brand-on-surface/20 transition-colors">
                 <td className="py-2.5 px-3">
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">Total Users</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">New + returning</div>
                 </td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtNumber(currentTotal)}</td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(compareTotal) : (isLoading ? '…' : '—')}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(currentTotal)}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(compareTotal)}</td>
                 <td className="py-2.5 px-3 text-right whitespace-nowrap"><DeltaCell current={currentTotal} previous={compareTotal} available={available} /></td>
               </tr>
               <tr className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low/40 dark:hover:bg-brand-on-surface/20 transition-colors">
@@ -241,8 +199,8 @@ export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, cu
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">% New</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">Acquisition mix</div>
                 </td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtPercent(currentNewPct)}</td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtPercent(compareNewPct) : (isLoading ? '…' : '—')}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(currentNewPct, fmtPercent)}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(compareNewPct, fmtPercent)}</td>
                 <td className="py-2.5 px-3 text-right whitespace-nowrap"><DeltaCell current={currentNewPct} previous={compareNewPct} available={available} isRate /></td>
               </tr>
               <tr className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low/40 dark:hover:bg-brand-on-surface/20 transition-colors">
@@ -250,8 +208,8 @@ export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, cu
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">% Returning</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">Loyalty mix</div>
                 </td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtPercent(currentReturningPct)}</td>
-                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtPercent(compareReturningPct) : (isLoading ? '…' : '—')}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(currentReturningPct, fmtPercent)}</td>
+                <td className="py-2.5 px-3 text-right text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(compareReturningPct, fmtPercent)}</td>
                 <td className="py-2.5 px-3 text-right whitespace-nowrap"><DeltaCell current={currentReturningPct} previous={compareReturningPct} available={available} isRate /></td>
               </tr>
             </tbody>

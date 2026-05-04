@@ -41,6 +41,7 @@ export default function DateRangePicker({
   placeholderEnd = 'End date',
   className = '',
   align = 'left',
+  showMonthYearDropdown = false,
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
@@ -118,6 +119,9 @@ export default function DateRangePicker({
               monthsShown={2}
               minDate={minDate}
               maxDate={maxDate}
+              showMonthDropdown={showMonthYearDropdown}
+              showYearDropdown={showMonthYearDropdown}
+              dropdownMode={showMonthYearDropdown ? 'select' : undefined}
               inline
             />
           </div>

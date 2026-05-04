@@ -1,37 +1,20 @@
-import { uscentere, useEffect, useMemo, useState } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import Drawer from '../common/Drawer';
 import Button from '../common/Button';
-import DateRangePicker from '../common/DateRangePicker';
 import Spinner from '../common/Spinner';
 import { useAnalyticsOverview } from '../../hooks/useAnalytics';
-
-const PRESETS = [
-  { key: '1m',  label: 'Last 1 mo',  months: 1 },
-  { key: '3m',  label: 'Last 3 mo',  months: 3 },
-  { key: '6m',  label: 'Last 6 mo',  months: 6 },
-  { key: '12m', label: 'Last 12 mo', months: 12 },
-  { key: 'custom', label: 'Custom' },
-];
+import ComparePeriodSelector from './compare/ComparePeriodSelector';
+import RangeHeaderButton from './compare/RangeHeaderButton';
+import { useComparePeriods } from './compare/useComparePeriods';
 
 function fmtNumber(n) {
   if (n == null) return '—';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
-}
-
-function rangeLabel(start, end) {
-  if (!start || !end) return '';
-  const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
-  if (sameMonth) return format(start, 'MMM yyyy');
-  const sameYear = start.getFullYear() === end.getFullYear();
-  return sameYear
-    ? `${format(start, 'MMM')} – ${format(end, 'MMM yyyy')}`
-    : `${format(start, 'MMM yyyy')} – ${format(end, 'MMM yyyy')}`;
 }
 
 function DeltaCell({ current, previous, available }) {
@@ -88,55 +71,49 @@ function alignTrends(currentTrend, compareTrend) {
 }
 
 export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, currentTrend = [], currentLabel = 'Current Period' }) {
-  const [presetKey, setPresetKey] = useState('1m');
-  const [customRange, setCustomRange] = useState(() => {
-    const lastMonth = subMonths(new Date(), 1);
-    return [startOfMonth(lastMonth), endOfMonth(lastMonth)];
-  });
+  const cmp = useComparePeriods({ isOpen });
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setPresetKey('1m');
-    const lastMonth = subMonths(new Date(), 1);
-    setCustomRange([startOfMonth(lastMonth), endOfMonth(lastMonth)]);
-  }, [isOpen]);
-
-  const [compareStart, compareEnd] = useMemo(() => {
-    if (presetKey === 'custom') return customRange;
-    const preset = PRESETS.find((p) => p.key === presetKey);
-    const months = preset?.months || 1;
-    const end = endOfMonth(subMonths(new Date(), 1));
-    const start = startOfMonth(subMonths(new Date(), months));
-    return [start, end];
-  }, [presetKey, customRange]);
-
-  const compareDateRange = useMemo(() => {
-    if (!compareStart || !compareEnd) return null;
-    return {
-      from: format(compareStart, 'yyyy-MM-dd'),
-      to: format(compareEnd, 'yyyy-MM-dd'),
-    };
-  }, [compareStart, compareEnd]);
-
-  const enabled = isOpen && !!siteId && !!compareDateRange;
-  const { data: compareData, isLoading, error } = useAnalyticsOverview(
-    enabled ? siteId : null,
+  const compareEnabled = isOpen && !!siteId && !!cmp.compareDateRange;
+  const { data: compareData, isLoading: compareLoading, error: compareError } = useAnalyticsOverview(
+    compareEnabled ? siteId : null,
     'custom',
-    compareDateRange,
+    cmp.compareDateRange,
+  );
+
+  const customCurrentEnabled = isOpen && !!siteId && cmp.isCustom && !!cmp.currentDateRange;
+  const { data: customCurrentData, isLoading: customCurrentLoading, error: customCurrentError } = useAnalyticsOverview(
+    customCurrentEnabled ? siteId : null,
+    'custom',
+    cmp.currentDateRange,
   );
 
   const compareTrend = compareData?.trend || [];
-  const headerLabel = useMemo(() => rangeLabel(compareStart, compareEnd), [compareStart, compareEnd]);
-  const available = !isLoading && !error && Array.isArray(compareData?.trend);
+  const customCurrentTrend = customCurrentData?.trend || [];
+  const effectiveCurrentTrend = cmp.isCustom ? customCurrentTrend : currentTrend;
 
-  const totalCurrentSessions = useMemo(() => sumTrend(currentTrend, 'sessions'), [currentTrend]);
+  const currentColLabel = cmp.isCustom ? (cmp.currentLabelText || '—') : currentLabel;
+  const compareColLabel = cmp.compareLabelText || '—';
+
+  const isLoading = compareLoading || (cmp.isCustom && customCurrentLoading);
+  const error = compareError || customCurrentError;
+
+  const compareAvailable = !compareLoading && !compareError && Array.isArray(compareData?.trend);
+  const currentAvailable = cmp.isCustom
+    ? (!customCurrentLoading && !customCurrentError && Array.isArray(customCurrentData?.trend))
+    : true;
+  const available = compareAvailable && currentAvailable;
+
+  const totalCurrentSessions = useMemo(() => sumTrend(effectiveCurrentTrend, 'sessions'), [effectiveCurrentTrend]);
   const totalCompareSessions = useMemo(() => sumTrend(compareTrend, 'sessions'), [compareTrend]);
-  const totalCurrentConv = useMemo(() => sumTrend(currentTrend, 'conversions'), [currentTrend]);
+  const totalCurrentConv = useMemo(() => sumTrend(effectiveCurrentTrend, 'conversions'), [effectiveCurrentTrend]);
   const totalCompareConv = useMemo(() => sumTrend(compareTrend, 'conversions'), [compareTrend]);
-  const avgCurrentSessions = useMemo(() => avgTrend(currentTrend, 'sessions'), [currentTrend]);
+  const avgCurrentSessions = useMemo(() => avgTrend(effectiveCurrentTrend, 'sessions'), [effectiveCurrentTrend]);
   const avgCompareSessions = useMemo(() => avgTrend(compareTrend, 'sessions'), [compareTrend]);
 
-  const aligned = useMemo(() => alignTrends(currentTrend, compareTrend), [currentTrend, compareTrend]);
+  const aligned = useMemo(() => alignTrends(effectiveCurrentTrend, compareTrend), [effectiveCurrentTrend, compareTrend]);
+
+  const fmtCurrent = (val) => (currentAvailable ? fmtNumber(val) : (customCurrentLoading ? '…' : '—'));
+  const fmtCompare = (val) => (compareAvailable ? fmtNumber(val) : (compareLoading ? '…' : '—'));
 
   return (
     <Drawer
@@ -151,41 +128,11 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
       }
     >
       <div className="space-y-5">
-        {/* Period selector */}
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-outline dark:text-brand-on-surface-variant font-label ml-0.5">
-            Compare with
-          </p>
-          <div className="flex flex-wrap items-center gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-1">
-            {PRESETS.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPresetKey(p.key)}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-label ${
-                  presetKey === p.key
-                    ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm'
-                    : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          {presetKey === 'custom' && (
-            <div className="pt-1">
-              <DateRangePicker
-                startDate={customRange[0]}
-                endDate={customRange[1]}
-                onChange={(dates) => setCustomRange(dates)}
-                maxDate={new Date()}
-                align="left"
-                placeholderStart="Start date"
-                placeholderEnd="End date"
-              />
-            </div>
-          )}
-        </div>
+        <ComparePeriodSelector
+          presetKey={cmp.presetKey}
+          onPresetChange={cmp.setPresetKey}
+          isCustom={cmp.isCustom}
+        />
 
         {/* Comparing chip */}
         <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-brand-surface-container-low dark:bg-brand-on-surface/40 border border-brand-outline-variant dark:border-brand-outline">
@@ -198,7 +145,7 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Comparing</div>
               <div className="text-sm font-bold text-brand-on-surface dark:text-white font-label truncate">
-                {currentLabel}  vs  {headerLabel || '—'}
+                {currentColLabel}  vs  {compareColLabel}
               </div>
             </div>
           </div>
@@ -221,8 +168,16 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
             <thead>
               <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50">
                 <th className="text-left px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Metric</th>
-                <th className="text-right px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">{currentLabel}</th>
-                <th className="text-right px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">{headerLabel || '—'}</th>
+                <th className="text-right px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">
+                  {cmp.isCustom
+                    ? <RangeHeaderButton value={cmp.customCurrentRange} onChange={cmp.setCustomCurrentRange} align="left" />
+                    : currentLabel}
+                </th>
+                <th className="text-right px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label whitespace-nowrap">
+                  {cmp.isCustom
+                    ? <RangeHeaderButton value={cmp.customCompareRange} onChange={cmp.setCustomCompareRange} />
+                    : compareColLabel}
+                </th>
                 <th className="text-right px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label">Δ</th>
               </tr>
             </thead>
@@ -232,8 +187,8 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">Total Sessions</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">Sum across range</div>
                 </td>
-                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtNumber(totalCurrentSessions)}</td>
-                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(totalCompareSessions) : (isLoading ? '…' : '—')}</td>
+                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(totalCurrentSessions)}</td>
+                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(totalCompareSessions)}</td>
                 <td className="py-2.5 px-3 text-center whitespace-nowrap"><DeltaCell current={totalCurrentSessions} previous={totalCompareSessions} available={available} /></td>
               </tr>
               <tr className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low/40 dark:hover:bg-brand-on-surface/20 transition-colors">
@@ -241,8 +196,8 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">Total Conversions</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">Sum across range</div>
                 </td>
-                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtNumber(totalCurrentConv)}</td>
-                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(totalCompareConv) : (isLoading ? '…' : '—')}</td>
+                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(totalCurrentConv)}</td>
+                <td className="py-2.5 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(totalCompareConv)}</td>
                 <td className="py-2.5 px-3 text-center whitespace-nowrap"><DeltaCell current={totalCurrentConv} previous={totalCompareConv} available={available} /></td>
               </tr>
               <tr className="border-t border-gray-50 dark:border-brand-outline hover:bg-brand-surface-container-low/40 dark:hover:bg-brand-on-surface/20 transition-colors">
@@ -250,8 +205,8 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
                   <div className="text-[13px] font-medium text-brand-on-surface dark:text-brand-outline-variant font-label leading-tight">Avg. Daily Sessions</div>
                   <div className="text-[10px] text-brand-outline font-label mt-0.5">Average per day</div>
                 </td>
-                <td className="py-2 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtNumber(Math.round(avgCurrentSessions))}</td>
-                <td className="py-2 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(Math.round(avgCompareSessions)) : (isLoading ? '…' : '—')}</td>
+                <td className="py-2 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap">{fmtCurrent(Math.round(avgCurrentSessions))}</td>
+                <td className="py-2 px-3 text-center text-sm font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(Math.round(avgCompareSessions))}</td>
                 <td className="py-2 px-3 text-center whitespace-nowrap"><DeltaCell current={Math.round(avgCurrentSessions)} previous={Math.round(avgCompareSessions)} available={available} /></td>
               </tr>
             </tbody>
@@ -259,7 +214,7 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
         </div>
 
         {/* Overlay chart — sessions current vs compare on aligned day index */}
-        {(currentTrend.length > 1 || compareTrend.length > 1) && (
+        {(effectiveCurrentTrend.length > 1 || compareTrend.length > 1) && (
           <div className="rounded-xl border border-brand-outline-variant dark:border-brand-outline p-4">
             <div className="flex items-center justify-between mb-2">
               <h5 className="text-xs font-semibold text-brand-on-surface dark:text-brand-outline-variant uppercase tracking-wider font-label">Sessions overlay</h5>
@@ -287,8 +242,8 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
                     labelFormatter={(d) => `Day ${d}`}
                   />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                  <Area type="monotone" dataKey="currentSessions" stroke="#6366F1" strokeWidth={2} fill="url(#cmpCur)" name={currentLabel} />
-                  <Area type="monotone" dataKey="compareSessions" stroke="#94A3B8" strokeWidth={2} fill="url(#cmpPrev)" name={headerLabel || 'Compare'} />
+                  <Area type="monotone" dataKey="currentSessions" stroke="#6366F1" strokeWidth={2} fill="url(#cmpCur)" name={currentColLabel} />
+                  <Area type="monotone" dataKey="compareSessions" stroke="#94A3B8" strokeWidth={2} fill="url(#cmpPrev)" name={compareColLabel || 'Compare'} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

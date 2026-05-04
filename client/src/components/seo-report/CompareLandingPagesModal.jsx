@@ -1,34 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import Drawer from '../common/Drawer';
 import Button from '../common/Button';
-import DateRangePicker from '../common/DateRangePicker';
 import Spinner from '../common/Spinner';
 import { useAnalyticsInsights } from '../../hooks/useAnalytics';
-
-const PRESETS = [
-  { key: '1m',  label: 'Last 1 mo',  months: 1 },
-  { key: '3m',  label: 'Last 3 mo',  months: 3 },
-  { key: '6m',  label: 'Last 6 mo',  months: 6 },
-  { key: '12m', label: 'Last 12 mo', months: 12 },
-  { key: 'custom', label: 'Custom' },
-];
+import ComparePeriodSelector from './compare/ComparePeriodSelector';
+import RangeHeaderButton from './compare/RangeHeaderButton';
+import { useComparePeriods } from './compare/useComparePeriods';
 
 function fmtNumber(n) {
   if (n == null) return '—';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
-}
-
-function rangeLabel(start, end) {
-  if (!start || !end) return '';
-  const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
-  if (sameMonth) return format(start, 'MMM yyyy');
-  const sameYear = start.getFullYear() === end.getFullYear();
-  return sameYear
-    ? `${format(start, 'MMM')} – ${format(end, 'MMM yyyy')}`
-    : `${format(start, 'MMM yyyy')} – ${format(end, 'MMM yyyy')}`;
 }
 
 function DeltaCell({ current, previous, available }) {
@@ -68,53 +51,48 @@ function TagPill({ tone = 'gain', label }) {
 }
 
 export default function CompareLandingPagesModal({ isOpen, onClose, siteId, currentPages = [], currentLabel = 'Current Period' }) {
-  const [presetKey, setPresetKey] = useState('1m');
-  const [customRange, setCustomRange] = useState(() => {
-    const lastMonth = subMonths(new Date(), 1);
-    return [startOfMonth(lastMonth), endOfMonth(lastMonth)];
-  });
+  const cmp = useComparePeriods({ isOpen });
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
-    setPresetKey('1m');
     setShowAll(false);
-    const lastMonth = subMonths(new Date(), 1);
-    setCustomRange([startOfMonth(lastMonth), endOfMonth(lastMonth)]);
   }, [isOpen]);
 
-  const [compareStart, compareEnd] = useMemo(() => {
-    if (presetKey === 'custom') return customRange;
-    const preset = PRESETS.find((p) => p.key === presetKey);
-    const months = preset?.months || 1;
-    const end = endOfMonth(subMonths(new Date(), 1));
-    const start = startOfMonth(subMonths(new Date(), months));
-    return [start, end];
-  }, [presetKey, customRange]);
-
-  const compareDateRange = useMemo(() => {
-    if (!compareStart || !compareEnd) return null;
-    return {
-      from: format(compareStart, 'yyyy-MM-dd'),
-      to: format(compareEnd, 'yyyy-MM-dd'),
-    };
-  }, [compareStart, compareEnd]);
-
-  const enabled = isOpen && !!siteId && !!compareDateRange;
-  const { insights: compareInsights, isLoading, error } = useAnalyticsInsights(
-    enabled ? siteId : null,
+  const compareEnabled = isOpen && !!siteId && !!cmp.compareDateRange;
+  const { insights: compareInsights, isLoading: compareLoading, error: compareError } = useAnalyticsInsights(
+    compareEnabled ? siteId : null,
     'custom',
-    compareDateRange,
+    cmp.compareDateRange,
+  );
+
+  const customCurrentEnabled = isOpen && !!siteId && cmp.isCustom && !!cmp.currentDateRange;
+  const { insights: customCurrentInsights, isLoading: customCurrentLoading, error: customCurrentError } = useAnalyticsInsights(
+    customCurrentEnabled ? siteId : null,
+    'custom',
+    cmp.currentDateRange,
   );
 
   const comparePages = compareInsights?.landingPages || [];
-  const headerLabel = useMemo(() => rangeLabel(compareStart, compareEnd), [compareStart, compareEnd]);
-  const available = !isLoading && !error && Array.isArray(compareInsights?.landingPages);
+  const customCurrentPages = customCurrentInsights?.landingPages || [];
+  const effectiveCurrentPages = cmp.isCustom ? customCurrentPages : currentPages;
+
+  const currentColLabel = cmp.isCustom ? (cmp.currentLabelText || '—') : currentLabel;
+  const compareColLabel = cmp.compareLabelText || '—';
+
+  const isLoading = compareLoading || (cmp.isCustom && customCurrentLoading);
+  const error = compareError || customCurrentError;
+
+  const compareAvailable = !compareLoading && !compareError && Array.isArray(compareInsights?.landingPages);
+  const currentAvailable = cmp.isCustom
+    ? (!customCurrentLoading && !customCurrentError && Array.isArray(customCurrentInsights?.landingPages))
+    : true;
+  const available = compareAvailable && currentAvailable;
 
   // Merge by page path. Compare sessions + conversions only (rates aren't summable across periods).
   const merged = useMemo(() => {
     const byPath = new Map();
-    for (const p of currentPages) {
+    for (const p of effectiveCurrentPages) {
       byPath.set(p.page, {
         name: p.page,
         currentSessions: p.sessions || 0,
@@ -138,15 +116,18 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
     const arr = [...byPath.values()];
     arr.sort((a, b) => Math.max(b.currentSessions, b.previousSessions) - Math.max(a.currentSessions, a.previousSessions));
     return arr;
-  }, [currentPages, comparePages]);
+  }, [effectiveCurrentPages, comparePages]);
 
-  const totalCurrentSessions = useMemo(() => currentPages.reduce((s, p) => s + (p.sessions || 0), 0), [currentPages]);
+  const totalCurrentSessions = useMemo(() => effectiveCurrentPages.reduce((s, p) => s + (p.sessions || 0), 0), [effectiveCurrentPages]);
   const totalCompareSessions = useMemo(() => comparePages.reduce((s, p) => s + (p.sessions || 0), 0), [comparePages]);
-  const totalCurrentConv = useMemo(() => currentPages.reduce((s, p) => s + (p.conversions || 0), 0), [currentPages]);
+  const totalCurrentConv = useMemo(() => effectiveCurrentPages.reduce((s, p) => s + (p.conversions || 0), 0), [effectiveCurrentPages]);
   const totalCompareConv = useMemo(() => comparePages.reduce((s, p) => s + (p.conversions || 0), 0), [comparePages]);
 
   const visibleRows = showAll ? merged : merged.slice(0, 20);
   const hasMore = merged.length > 20;
+
+  const fmtCurrent = (val) => (currentAvailable ? fmtNumber(val) : (customCurrentLoading ? '…' : '—'));
+  const fmtCompare = (val) => (compareAvailable ? fmtNumber(val) : (compareLoading ? '…' : '—'));
 
   return (
     <Drawer
@@ -161,41 +142,11 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
       }
     >
       <div className="space-y-5">
-        {/* Period selector */}
-        <div className="space-y-2">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-outline dark:text-brand-on-surface-variant font-label ml-0.5">
-            Compare with
-          </p>
-          <div className="flex flex-wrap items-center gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-1">
-            {PRESETS.map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setPresetKey(p.key)}
-                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-label ${
-                  presetKey === p.key
-                    ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm'
-                    : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-          {presetKey === 'custom' && (
-            <div className="pt-1">
-              <DateRangePicker
-                startDate={customRange[0]}
-                endDate={customRange[1]}
-                onChange={(dates) => setCustomRange(dates)}
-                maxDate={new Date()}
-                align="left"
-                placeholderStart="Start date"
-                placeholderEnd="End date"
-              />
-            </div>
-          )}
-        </div>
+        <ComparePeriodSelector
+          presetKey={cmp.presetKey}
+          onPresetChange={cmp.setPresetKey}
+          isCustom={cmp.isCustom}
+        />
 
         {/* Comparing chip */}
         <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-brand-surface-container-low dark:bg-brand-on-surface/40 border border-brand-outline-variant dark:border-brand-outline">
@@ -208,7 +159,7 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Comparing</div>
               <div className="text-sm font-bold text-brand-on-surface dark:text-white font-label truncate">
-                {currentLabel}  vs  {headerLabel || '—'}
+                {currentColLabel}  vs  {compareColLabel}
               </div>
             </div>
           </div>
@@ -221,12 +172,12 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
             <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Sessions</div>
             <div className="flex items-baseline justify-between gap-2 mt-1">
               <div>
-                <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{fmtNumber(totalCurrentSessions)}</div>
-                <div className="text-[10px] text-brand-outline font-label">{currentLabel}</div>
+                <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{fmtCurrent(totalCurrentSessions)}</div>
+                <div className="text-[10px] text-brand-outline font-label truncate max-w-[120px]">{currentColLabel}</div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline">{available ? fmtNumber(totalCompareSessions) : (isLoading ? '…' : '—')}</div>
-                <div className="text-[10px] text-brand-outline font-label truncate max-w-[120px]">{headerLabel || '—'}</div>
+                <div className="text-lg font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline">{fmtCompare(totalCompareSessions)}</div>
+                <div className="text-[10px] text-brand-outline font-label truncate max-w-[120px]">{compareColLabel}</div>
               </div>
             </div>
             <div className="mt-2 pt-2 border-t border-brand-outline-variant/60 dark:border-brand-outline/60 flex items-center justify-between">
@@ -238,12 +189,12 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
             <div className="text-[10px] uppercase tracking-wider text-brand-outline font-label">Conversions</div>
             <div className="flex items-baseline justify-between gap-2 mt-1">
               <div>
-                <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{fmtNumber(totalCurrentConv)}</div>
-                <div className="text-[10px] text-brand-outline font-label">{currentLabel}</div>
+                <div className="text-lg font-bold tabular-nums text-brand-on-surface dark:text-white font-headline">{fmtCurrent(totalCurrentConv)}</div>
+                <div className="text-[10px] text-brand-outline font-label truncate max-w-[120px]">{currentColLabel}</div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline">{available ? fmtNumber(totalCompareConv) : (isLoading ? '…' : '—')}</div>
-                <div className="text-[10px] text-brand-outline font-label truncate max-w-[120px]">{headerLabel || '—'}</div>
+                <div className="text-lg font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline">{fmtCompare(totalCompareConv)}</div>
+                <div className="text-[10px] text-brand-outline font-label truncate max-w-[120px]">{compareColLabel}</div>
               </div>
             </div>
             <div className="mt-2 pt-2 border-t border-brand-outline-variant/60 dark:border-brand-outline/60 flex items-center justify-between">
@@ -278,11 +229,27 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
                   <th colSpan={3} className="text-center py-1 px-3 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[10px] uppercase tracking-wider font-label border-l border-brand-outline-variant/60 dark:border-brand-outline/60">Conversions</th>
                 </tr>
                 <tr className="bg-brand-surface-container-low dark:bg-brand-on-surface/50 border-t border-brand-outline-variant/60 dark:border-brand-outline/60">
-                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">{currentLabel}</th>
-                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap">{headerLabel || '—'}</th>
+                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">
+                    {cmp.isCustom
+                      ? <RangeHeaderButton value={cmp.customCurrentRange} onChange={cmp.setCustomCurrentRange} align="left" />
+                      : currentLabel}
+                  </th>
+                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap">
+                    {cmp.isCustom
+                      ? <RangeHeaderButton value={cmp.customCompareRange} onChange={cmp.setCustomCompareRange} />
+                      : compareColLabel}
+                  </th>
                   <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label">Δ</th>
-                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">{currentLabel}</th>
-                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap">{headerLabel || '—'}</th>
+                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">
+                    {cmp.isCustom
+                      ? <RangeHeaderButton value={cmp.customCurrentRange} onChange={cmp.setCustomCurrentRange} align="left" />
+                      : currentLabel}
+                  </th>
+                  <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label whitespace-nowrap">
+                    {cmp.isCustom
+                      ? <RangeHeaderButton value={cmp.customCompareRange} onChange={cmp.setCustomCompareRange} />
+                      : compareColLabel}
+                  </th>
                   <th className="text-right py-1.5 px-2 font-medium text-brand-on-surface-variant dark:text-brand-outline text-[9px] uppercase tracking-wider font-label">Δ</th>
                 </tr>
               </thead>
@@ -301,11 +268,11 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
                           {onlyPrevious && <TagPill tone="loss" label="Lost" />}
                         </div>
                       </td>
-                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">{fmtNumber(row.currentSessions)}</td>
-                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(row.previousSessions) : (isLoading ? '…' : '—')}</td>
+                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">{fmtCurrent(row.currentSessions)}</td>
+                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(row.previousSessions)}</td>
                       <td className="py-2 px-2 text-center whitespace-nowrap"><DeltaCell current={row.currentSessions} previous={row.previousSessions} available={available} /></td>
-                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">{fmtNumber(row.currentConversions)}</td>
-                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{available ? fmtNumber(row.previousConversions) : (isLoading ? '…' : '—')}</td>
+                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface dark:text-white font-headline whitespace-nowrap border-l border-brand-outline-variant/60 dark:border-brand-outline/60">{fmtCurrent(row.currentConversions)}</td>
+                      <td className="py-2 px-2 text-center text-[13px] font-bold tabular-nums text-brand-on-surface-variant dark:text-brand-outline font-headline whitespace-nowrap">{fmtCompare(row.previousConversions)}</td>
                       <td className="py-2 px-2 text-center whitespace-nowrap"><DeltaCell current={row.currentConversions} previous={row.previousConversions} available={available} /></td>
                     </tr>
                   );
