@@ -9,13 +9,23 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const BLOCKED_CODES = new Set([
   'ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'EHOSTUNREACH',
   'EPIPE', 'EAI_AGAIN',
+  // TLS-level failures should also trigger the Cloudflare proxy fallback —
+  // they mean we couldn't reach or negotiate with the host from this network,
+  // exactly the scenario the proxy exists for.
+  'EPROTO', 'ECONNABORTED', 'ENETUNREACH',
 ]);
 
 function isBlockedError(err) {
   if (!err) return false;
   if (BLOCKED_CODES.has(err.code)) return true;
   const msg = (err.message || '').toLowerCase();
-  return msg.includes('timeout') || msg.includes('socket hang up');
+  return (
+    msg.includes('timeout') ||
+    msg.includes('socket hang up') ||
+    msg.includes('handshake failure') ||
+    msg.includes('ssl alert') ||
+    msg.includes('wrong version number')
+  );
 }
 
 function getProbe() {
@@ -208,9 +218,23 @@ async function proxySSLCheck(siteUrl) {
     const data = await callProxySSL(siteUrl);
     // Handle both new /ssl format (isValid) and legacy /check format (status: 'up')
     const isValid = data.isValid === true || data.status === 'up' || data.status === 'degraded';
-    return { isValid, error: data.error || null, source: 'cloudflare' };
+
+    // The worker now returns cert details from certspotter alongside the live signal.
+    // Surface them so ssl.service can avoid querying CT logs again.
+    const cert = data.validTo
+      ? {
+          issuer: data.issuerO || data.issuer || 'Unknown',
+          subject: data.subject || null,
+          validFrom: data.validFrom ? new Date(data.validFrom) : null,
+          validTo: new Date(data.validTo),
+          serialNumber: data.serialNumber || null,
+          fingerprint: data.fingerprint || null,
+        }
+      : null;
+
+    return { isValid, error: data.error || null, source: 'cloudflare', cert };
   } catch (err) {
-    return { isValid: false, error: `Cloudflare SSL proxy failed: ${err.message}`, source: 'cloudflare' };
+    return { isValid: false, error: `Cloudflare SSL proxy failed: ${err.message}`, source: 'cloudflare', cert: null };
   }
 }
 

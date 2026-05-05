@@ -101,33 +101,124 @@ async function handleFetch(body, env) {
   }
 }
 
-// POST /ssl — HTTPS certificate validity check
-async function handleSSL(body, env) {
-  const { url } = body;
-  if (!url) return Response.json({ error: 'Missing url' }, { status: 400 });
+// Parse "C=US, O=Let's Encrypt, CN=R12" into { O, CN, ... }
+function parseIssuerDN(dn) {
+  if (!dn || typeof dn !== 'string') return {};
+  return dn.split(',').reduce((acc, part) => {
+    const [k, ...v] = part.trim().split('=');
+    if (k && v.length) acc[k.trim()] = v.join('=').trim();
+    return acc;
+  }, {});
+}
 
-  const start = Date.now();
+// SAN match: hostname matches any of the dns_names (handles wildcards)
+function sanCovers(dnsNames, hostname) {
+  if (!Array.isArray(dnsNames)) return false;
+  const host = hostname.toLowerCase();
+  return dnsNames.some((name) => {
+    const n = String(name).toLowerCase();
+    if (n === host) return true;
+    if (n.startsWith('*.')) {
+      const base = n.slice(2);
+      return host.endsWith('.' + base) && host.split('.').length === base.split('.').length + 1;
+    }
+    return false;
+  });
+}
+
+// Query certspotter for cert details. Try the requested hostname first;
+// if no covering cert is found, retry against the apex (strip leading "www.").
+async function fetchCertFromCertspotter(hostname) {
+  const tryHost = async (h) => {
+    const url = `https://api.certspotter.com/v1/issuances?domain=${encodeURIComponent(h)}&include_subdomains=true&expand=dns_names&expand=issuer&expand=cert`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'WP-Sentinel-Probe/2.0', 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const certs = await res.json();
+    if (!Array.isArray(certs) || certs.length === 0) return null;
+
+    const now = new Date();
+    const candidates = certs
+      .filter((c) => c && !c.revoked && c.not_after && new Date(c.not_after) > now)
+      .filter((c) => sanCovers(c.dns_names, hostname))
+      .sort((a, b) => new Date(b.not_before) - new Date(a.not_before));
+
+    return candidates[0] || null;
+  };
+
+  let cert = null;
+  try { cert = await tryHost(hostname); } catch { /* fall through */ }
+  if (!cert && hostname.toLowerCase().startsWith('www.')) {
+    try { cert = await tryHost(hostname.slice(4)); } catch { /* ignore */ }
+  }
+  if (!cert) return null;
+
+  const issuerDN = parseIssuerDN(cert.issuer && cert.issuer.name);
+  return {
+    issuer: issuerDN.CN || (cert.issuer && cert.issuer.friendly_name) || 'Unknown',
+    issuerO: issuerDN.O || (cert.issuer && cert.issuer.friendly_name) || null,
+    subject: (cert.dns_names && cert.dns_names[0]) || hostname,
+    validFrom: cert.not_before || null,
+    validTo: cert.not_after || null,
+    serialNumber: null, // certspotter does not expose serial directly without DER parsing
+    fingerprint: cert.cert_sha256 || null,
+    dnsNames: cert.dns_names || null,
+  };
+}
+
+// Live HEAD over the host's TLS. Cloudflare's fetch validates the cert internally,
+// so a successful HEAD is a reliable "cert is being served and is currently valid"
+// signal. Returns { ok, httpStatus, error }.
+async function liveHttpsHead(url) {
   try {
     const res = await fetch(url, {
       method: 'HEAD',
       headers: defaultHeaders(),
       signal: AbortSignal.timeout(15000),
     });
-    const responseTime = Date.now() - start;
-    return Response.json({
-      isValid: true,
-      httpStatus: res.status,
-      responseTime,
-      error: null,
-    });
+    return { ok: true, httpStatus: res.status, error: null };
   } catch (err) {
-    return Response.json({
-      isValid: false,
-      httpStatus: null,
-      responseTime: Date.now() - start,
-      error: err.message,
-    });
+    return { ok: false, httpStatus: null, error: err.message };
   }
+}
+
+// POST /ssl — HTTPS certificate validity + details
+async function handleSSL(body, env) {
+  const { url } = body;
+  if (!url) return Response.json({ error: 'Missing url' }, { status: 400 });
+
+  let parsed;
+  try { parsed = new URL(url); } catch {
+    return Response.json({ error: 'Invalid url' }, { status: 400 });
+  }
+  if (parsed.protocol !== 'https:') {
+    return Response.json({ isValid: false, error: 'Site does not use HTTPS' });
+  }
+
+  const start = Date.now();
+  const [live, cert] = await Promise.all([
+    liveHttpsHead(url),
+    fetchCertFromCertspotter(parsed.hostname).catch(() => null),
+  ]);
+  const responseTime = Date.now() - start;
+
+  return Response.json({
+    isValid: live.ok,
+    httpStatus: live.httpStatus,
+    responseTime,
+    error: live.error,
+    issuer: cert ? cert.issuer : null,
+    issuerO: cert ? cert.issuerO : null,
+    subject: cert ? cert.subject : null,
+    validFrom: cert ? cert.validFrom : null,
+    validTo: cert ? cert.validTo : null,
+    serialNumber: cert ? cert.serialNumber : null,
+    fingerprint: cert ? cert.fingerprint : null,
+    dnsNames: cert ? cert.dnsNames : null,
+    source: cert ? (live.ok ? 'fetch+certspotter' : 'certspotter') : (live.ok ? 'fetch' : null),
+  });
 }
 
 export default {
