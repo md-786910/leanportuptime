@@ -15,6 +15,7 @@ import {
   useAnalyticsUnlink,
   useAnalyticsOverview,
   useAnalyticsInsights,
+  useAnalyticsFilters,
 } from '../../hooks/useAnalytics';
 import { themeColor } from './colorThemes';
 import { useIsViewer, useIsAdmin } from '../../hooks/useRole';
@@ -187,6 +188,15 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
   const dateRange = computeDateRange(period, customFrom, customTo);
   const { data: overviewData, isLoading, error } = useAnalyticsOverview(siteId, period, dateRange);
   const { insights, isLoading: insightsLoading } = useAnalyticsInsights(siteId, period, dateRange);
+  const { analyticsStatus } = useAnalyticsStatus(siteId);
+  const filters = analyticsStatus?.filters || { excludedCountries: [], excludedTopPages: [], excludedLandingPages: [] };
+  const filtersMutation = useAnalyticsFilters(siteId);
+  const excludeLandingPage = (page) => {
+    filtersMutation.mutate({ excludedLandingPages: [...(filters.excludedLandingPages || []), page] });
+  };
+  const restoreLandingPage = (page) => {
+    filtersMutation.mutate({ excludedLandingPages: (filters.excludedLandingPages || []).filter((p) => p !== page) });
+  };
   const unlinkMutation = useAnalyticsUnlink(siteId);
   const disconnectMutation = useGoogleDisconnect();
   const isViewer = useIsViewer();
@@ -374,7 +384,14 @@ function AnalyticsDashboard({ siteId, themeKey, viewMode }) {
         <>
           {viewMode === 'details' && (
             <BentoCard>
-              <OrganicLandingPagesTable pages={insights.landingPages} themeKey={themeKey} siteId={siteId} />
+              <OrganicLandingPagesTable
+                pages={insights.landingPages}
+                themeKey={themeKey}
+                siteId={siteId}
+                excludedPages={filters.excludedLandingPages || []}
+                onExclude={excludeLandingPage}
+                onRestore={restoreLandingPage}
+              />
             </BentoCard>
           )}
 

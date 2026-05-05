@@ -95,6 +95,7 @@ const siteSchema = new mongoose.Schema(
       filters: {
         excludedCountries: { type: [String], default: [] },
         excludedTopPages: { type: [String], default: [] },
+        excludedLandingPages: { type: [String], default: [] },
       },
     },
     backlinks: {

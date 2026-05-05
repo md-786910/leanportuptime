@@ -9,7 +9,7 @@ function formatNumber(n) {
   return n.toLocaleString();
 }
 
-function PagesFilterDropdown({ visiblePages, excludedPages, onExclude, onRestore, onClearAll }) {
+export function PagesFilterDropdown({ visiblePages, excludedPages, onExclude, onRestore, onClearAll }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 

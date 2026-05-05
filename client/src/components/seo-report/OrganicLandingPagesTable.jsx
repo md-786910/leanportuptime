@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { themeColor } from './colorThemes';
 import CompareLandingPagesModal from './CompareLandingPagesModal';
+import { PagesFilterDropdown } from './TopPagesVisitedTable';
 
 function formatDuration(seconds) {
   if (!seconds || seconds <= 0) return '0s';
@@ -14,27 +15,26 @@ function formatPct(val) {
   return `${(val * 100).toFixed(1)}%`;
 }
 
-export default function OrganicLandingPagesTable({ pages, themeKey, siteId }) {
+export default function OrganicLandingPagesTable({
+  pages,
+  themeKey,
+  siteId,
+  excludedPages = [],
+  onExclude,
+  onRestore,
+}) {
   const [compareOpen, setCompareOpen] = useState(false);
+  const canExclude = typeof onExclude === 'function' && typeof onRestore === 'function';
 
-  if (!pages || pages.length === 0) {
-    return (
-      <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
-        No landing page data available.
-      </p>
-    );
-  }
-
-  return (
-    <div>
-      {/* Organic Landing Pages */}
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant flex items-center gap-2">
-          <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Organic Landing Pages
-        </h4>
+  const Header = () => (
+    <div className="flex items-center justify-between gap-3 mb-3">
+      <h4 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant flex items-center gap-2">
+        <svg className="w-4 h-4 text-brand-outline" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Organic Landing Pages
+      </h4>
+      <div className="flex items-center gap-2 flex-shrink-0">
         {siteId && (
           <button
             type="button"
@@ -48,7 +48,42 @@ export default function OrganicLandingPagesTable({ pages, themeKey, siteId }) {
             Compare
           </button>
         )}
+        {canExclude && (
+          <PagesFilterDropdown
+            visiblePages={pages || []}
+            excludedPages={excludedPages}
+            onExclude={onExclude}
+            onRestore={onRestore}
+            onClearAll={() => excludedPages.forEach((p) => onRestore(p))}
+          />
+        )}
       </div>
+    </div>
+  );
+
+  if (!pages || pages.length === 0) {
+    return (
+      <div>
+        <Header />
+        <p className="text-sm text-brand-outline dark:text-brand-on-surface-variant text-center py-4">
+          {excludedPages.length > 0 ? 'All landing pages are excluded.' : 'No landing page data available.'}
+        </p>
+        {siteId && (
+          <CompareLandingPagesModal
+            isOpen={compareOpen}
+            onClose={() => setCompareOpen(false)}
+            siteId={siteId}
+            currentPages={pages || []}
+            currentLabel="Current Period"
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Header />
       <div className="overflow-x-auto rounded-lg border border-brand-outline-variant dark:border-brand-outline">
         <table className="w-full text-sm">
           <thead>

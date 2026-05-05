@@ -106,6 +106,8 @@ export const useAnalyticsFilters = (siteId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['analyticsStatus', siteId] });
       queryClient.invalidateQueries({ queryKey: ['websiteAnalytics', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['analyticsOverview', siteId] });
+      queryClient.invalidateQueries({ queryKey: ['analyticsInsights', siteId] });
     },
     onError: (err) => toast.error(err.response?.data?.error?.message || 'Failed to save filter'),
   });

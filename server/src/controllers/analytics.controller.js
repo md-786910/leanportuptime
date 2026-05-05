@@ -46,6 +46,7 @@ exports.getStatus = async (req, res, next) => {
         filters: {
           excludedCountries: site.analytics?.filters?.excludedCountries || [],
           excludedTopPages: site.analytics?.filters?.excludedTopPages || [],
+          excludedLandingPages: site.analytics?.filters?.excludedLandingPages || [],
         },
       },
     });
@@ -133,9 +134,10 @@ exports.getOverview = async (req, res, next) => {
       : dateRange(period);
 
     const effectiveUser = await resolveGoogleUser(req);
+    const excludedCountries = site.analytics?.filters?.excludedCountries || [];
     const [overview, trend] = await Promise.all([
-      analyticsService.getOrganicOverview(effectiveUser, propertyId, { startDate, endDate }),
-      analyticsService.getOrganicTrend(effectiveUser, propertyId, { startDate, endDate }),
+      analyticsService.getOrganicOverview(effectiveUser, propertyId, { startDate, endDate, excludedCountries }),
+      analyticsService.getOrganicTrend(effectiveUser, propertyId, { startDate, endDate, excludedCountries }),
     ]);
 
     res.json({
@@ -190,7 +192,7 @@ exports.getWebsite = async (req, res, next) => {
     const excludedCountries = filters.excludedCountries || [];
     const excludedTopPages = filters.excludedTopPages || [];
     const [overview, details] = await Promise.all([
-      analyticsService.getWebsiteOverview(effectiveUser, propertyId, { startDate, endDate }),
+      analyticsService.getWebsiteOverview(effectiveUser, propertyId, { startDate, endDate, excludedCountries }),
       analyticsService.getWebsiteDetails(effectiveUser, propertyId, { startDate, endDate, excludedCountries, excludedTopPages }),
     ]);
 
@@ -235,10 +237,14 @@ exports.getInsights = async (req, res, next) => {
       : dateRange(period);
 
     const effectiveUser = await resolveGoogleUser(req);
+    const excludedCountries = site.analytics?.filters?.excludedCountries || [];
+    const excludedLandingPages = site.analytics?.filters?.excludedLandingPages || [];
     const insights = await analyticsService.getOrganicInsights(effectiveUser, propertyId, {
       startDate,
       endDate,
       rowLimit: 10,
+      excludedCountries,
+      excludedLandingPages,
     });
 
     res.json({
@@ -264,10 +270,11 @@ exports.getInsights = async (req, res, next) => {
 
 exports.updateFilters = async (req, res, next) => {
   try {
-    const { excludedCountries, excludedTopPages } = req.body;
+    const { excludedCountries, excludedTopPages, excludedLandingPages } = req.body;
     const update = {};
     if (Array.isArray(excludedCountries)) update['analytics.filters.excludedCountries'] = excludedCountries;
     if (Array.isArray(excludedTopPages)) update['analytics.filters.excludedTopPages'] = excludedTopPages;
+    if (Array.isArray(excludedLandingPages)) update['analytics.filters.excludedLandingPages'] = excludedLandingPages;
 
     if (Object.keys(update).length === 0) {
       return res.status(400).json({
@@ -282,6 +289,7 @@ exports.updateFilters = async (req, res, next) => {
       data: {
         excludedCountries: update['analytics.filters.excludedCountries'] ?? req.site.analytics?.filters?.excludedCountries ?? [],
         excludedTopPages: update['analytics.filters.excludedTopPages'] ?? req.site.analytics?.filters?.excludedTopPages ?? [],
+        excludedLandingPages: update['analytics.filters.excludedLandingPages'] ?? req.site.analytics?.filters?.excludedLandingPages ?? [],
       },
     });
   } catch (error) {

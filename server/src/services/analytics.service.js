@@ -9,6 +9,14 @@ const ORGANIC_FILTER = {
   },
 };
 
+function buildDimensionFilter({ excludedCountries = [], baseFilter = null } = {}) {
+  const exclude = Array.isArray(excludedCountries) && excludedCountries.length > 0
+    ? { notExpression: { filter: { fieldName: 'country', inListFilter: { values: excludedCountries } } } }
+    : null;
+  if (baseFilter && exclude) return { andGroup: { expressions: [baseFilter, exclude] } };
+  return exclude || baseFilter || undefined;
+}
+
 const FORM_EVENT_NAMES = [
   'generate_lead',
   'form_submit',
@@ -124,7 +132,7 @@ class AnalyticsService {
   /**
    * Fetch organic overview metrics.
    */
-  async getOrganicOverview(user, propertyId, { startDate, endDate }) {
+  async getOrganicOverview(user, propertyId, { startDate, endDate, excludedCountries = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
@@ -142,7 +150,7 @@ class AnalyticsService {
           { name: 'averageSessionDuration' },
           { name: 'conversions' },
         ],
-        dimensionFilter: ORGANIC_FILTER,
+        dimensionFilter: buildDimensionFilter({ excludedCountries, baseFilter: ORGANIC_FILTER }),
       },
     });
 
@@ -180,7 +188,7 @@ class AnalyticsService {
   /**
    * Fetch daily organic trend data.
    */
-  async getOrganicTrend(user, propertyId, { startDate, endDate }) {
+  async getOrganicTrend(user, propertyId, { startDate, endDate, excludedCountries = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
@@ -197,7 +205,7 @@ class AnalyticsService {
           { name: 'conversions' },
           { name: 'engagementRate' },
         ],
-        dimensionFilter: ORGANIC_FILTER,
+        dimensionFilter: buildDimensionFilter({ excludedCountries, baseFilter: ORGANIC_FILTER }),
         orderBys: [{ dimension: { dimensionName: 'date' } }],
       },
     });
@@ -213,10 +221,11 @@ class AnalyticsService {
   /**
    * Fetch organic landing pages.
    */
-  async getOrganicLandingPages(user, propertyId, { startDate, endDate, rowLimit = 10 }) {
+  async getOrganicLandingPages(user, propertyId, { startDate, endDate, rowLimit = 10, excludedCountries = [], excludedLandingPages = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
+    const fetchLimit = rowLimit + (Array.isArray(excludedLandingPages) ? excludedLandingPages.length : 0);
     const { data } = await analyticsData.properties.runReport({
       property: propertyId,
       requestBody: {
@@ -229,26 +238,31 @@ class AnalyticsService {
           { name: 'averageSessionDuration' },
           { name: 'conversions' },
         ],
-        dimensionFilter: ORGANIC_FILTER,
+        dimensionFilter: buildDimensionFilter({ excludedCountries, baseFilter: ORGANIC_FILTER }),
         orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: rowLimit,
+        limit: fetchLimit,
       },
     });
 
-    return (data.rows || []).map((row) => ({
-      page: row.dimensionValues[0].value,
-      sessions: parseFloat(row.metricValues[0].value) || 0,
-      bounceRate: parseFloat(row.metricValues[1].value) || 0,
-      engagementRate: parseFloat(row.metricValues[2].value) || 0,
-      avgDuration: parseFloat(row.metricValues[3].value) || 0,
-      conversions: parseFloat(row.metricValues[4].value) || 0,
-    }));
+    const excludeSet = new Set(excludedLandingPages || []);
+    const rows = (data.rows || [])
+      .map((row) => ({
+        page: row.dimensionValues[0].value,
+        sessions: parseFloat(row.metricValues[0].value) || 0,
+        bounceRate: parseFloat(row.metricValues[1].value) || 0,
+        engagementRate: parseFloat(row.metricValues[2].value) || 0,
+        avgDuration: parseFloat(row.metricValues[3].value) || 0,
+        conversions: parseFloat(row.metricValues[4].value) || 0,
+      }))
+      .filter((r) => !excludeSet.has(r.page));
+
+    return rows.slice(0, rowLimit);
   }
 
   /**
    * Fetch organic device breakdown.
    */
-  async getOrganicByDevice(user, propertyId, { startDate, endDate }) {
+  async getOrganicByDevice(user, propertyId, { startDate, endDate, excludedCountries = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
@@ -261,7 +275,7 @@ class AnalyticsService {
           { name: 'sessions' },
           { name: 'totalUsers' },
         ],
-        dimensionFilter: ORGANIC_FILTER,
+        dimensionFilter: buildDimensionFilter({ excludedCountries, baseFilter: ORGANIC_FILTER }),
         orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
       },
     });
@@ -276,7 +290,7 @@ class AnalyticsService {
   /**
    * Fetch organic country breakdown.
    */
-  async getOrganicByCountry(user, propertyId, { startDate, endDate, rowLimit = 10 }) {
+  async getOrganicByCountry(user, propertyId, { startDate, endDate, rowLimit = 10, excludedCountries = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
@@ -290,7 +304,7 @@ class AnalyticsService {
           { name: 'totalUsers' },
           { name: 'engagementRate' },
         ],
-        dimensionFilter: ORGANIC_FILTER,
+        dimensionFilter: buildDimensionFilter({ excludedCountries, baseFilter: ORGANIC_FILTER }),
         orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
         limit: rowLimit,
       },
@@ -309,7 +323,7 @@ class AnalyticsService {
   /**
    * Fetch all-traffic website overview KPIs.
    */
-  async getWebsiteOverview(user, propertyId, { startDate, endDate }) {
+  async getWebsiteOverview(user, propertyId, { startDate, endDate, excludedCountries = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
@@ -325,6 +339,7 @@ class AnalyticsService {
           { name: 'bounceRate' },
           { name: 'averageSessionDuration' },
         ],
+        dimensionFilter: buildDimensionFilter({ excludedCountries }),
       },
     });
 
@@ -349,7 +364,7 @@ class AnalyticsService {
    * Fetch top pages by page views (all traffic).
    * Over-fetches when `excludedPages` are provided so the caller still gets `rowLimit` rows after exclusion.
    */
-  async getWebsiteTopPages(user, propertyId, { startDate, endDate, rowLimit = 5, excludedPages = [] }) {
+  async getWebsiteTopPages(user, propertyId, { startDate, endDate, rowLimit = 5, excludedPages = [], excludedCountries = [] }) {
     const auth = await this._getAuthClient(user);
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
@@ -362,6 +377,7 @@ class AnalyticsService {
         metrics: [{ name: 'screenPageViews' }],
         orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
         limit: fetchLimit,
+        dimensionFilter: buildDimensionFilter({ excludedCountries }),
       },
     });
 
@@ -419,6 +435,7 @@ class AnalyticsService {
           ],
           orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
           limit: 50,
+          dimensionFilter: buildDimensionFilter({ excludedCountries }),
         },
       });
 
@@ -468,30 +485,18 @@ class AnalyticsService {
       const auth = await this._getAuthClient(user);
       const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
-      const requestBody = {
-        dateRanges: [{ startDate, endDate }],
-        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-        metrics: [
-          { name: 'sessions' },
-          { name: 'totalUsers' },
-        ],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-      };
-
-      if (Array.isArray(excludedCountries) && excludedCountries.length > 0) {
-        requestBody.dimensionFilter = {
-          notExpression: {
-            filter: {
-              fieldName: 'country',
-              inListFilter: { values: excludedCountries },
-            },
-          },
-        };
-      }
-
       const { data } = await analyticsData.properties.runReport({
         property: propertyId,
-        requestBody,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+          metrics: [
+            { name: 'sessions' },
+            { name: 'totalUsers' },
+          ],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          dimensionFilter: buildDimensionFilter({ excludedCountries }),
+        },
       });
 
       return (data.rows || []).map((row) => ({
@@ -504,7 +509,7 @@ class AnalyticsService {
     const [events, channels, topPages] = await Promise.allSettled([
       fetchEvents(),
       fetchChannels(),
-      this.getWebsiteTopPages(user, propertyId, { startDate, endDate, excludedPages: excludedTopPages }),
+      this.getWebsiteTopPages(user, propertyId, { startDate, endDate, excludedPages: excludedTopPages, excludedCountries }),
     ]);
 
     return {
@@ -518,11 +523,11 @@ class AnalyticsService {
   /**
    * Fetch all organic insights in parallel.
    */
-  async getOrganicInsights(user, propertyId, { startDate, endDate, rowLimit = 10 }) {
+  async getOrganicInsights(user, propertyId, { startDate, endDate, rowLimit = 10, excludedCountries = [], excludedLandingPages = [] }) {
     const [landingPages, devices, countries] = await Promise.allSettled([
-      this.getOrganicLandingPages(user, propertyId, { startDate, endDate, rowLimit }),
-      this.getOrganicByDevice(user, propertyId, { startDate, endDate }),
-      this.getOrganicByCountry(user, propertyId, { startDate, endDate, rowLimit }),
+      this.getOrganicLandingPages(user, propertyId, { startDate, endDate, rowLimit, excludedCountries, excludedLandingPages }),
+      this.getOrganicByDevice(user, propertyId, { startDate, endDate, excludedCountries }),
+      this.getOrganicByCountry(user, propertyId, { startDate, endDate, rowLimit, excludedCountries }),
     ]);
 
     return {
