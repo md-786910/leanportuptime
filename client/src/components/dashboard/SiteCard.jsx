@@ -50,7 +50,7 @@ export default function SiteCard({ site }) {
           className={`p-2 rounded-xl transition-all duration-200 ${ site.isFavorite ? 'bg-amber-50 dark:bg-amber-400/10 text-amber-500 shadow-sm' : 'text-brand-outline dark:text-brand-on-surface-variant hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface' }`}
         >
           <svg
-            className={`w-4.5 h-4.5 ${site.isFavorite ? 'fill-current' : ''}`}
+            className={`w-5 h-5 ${site.isFavorite ? 'fill-current' : ''}`}
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
