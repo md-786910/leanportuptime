@@ -490,7 +490,7 @@ exports.refresh = async (req, res, next) => {
 };
 
 // PATCH /:keyword — admin-only manual override of a single keyword.
-const KEYWORD_EDITABLE_FIELDS = ['position', 'url', 'searchVolume', 'keywordDifficulty', 'cpc'];
+const KEYWORD_EDITABLE_FIELDS = ['position', 'url', 'searchVolume', 'keywordDifficulty', 'cpc', 'locationCode', 'languageCode'];
 
 exports.manualOverrideKeyword = async (req, res, next) => {
   try {
@@ -549,6 +549,8 @@ exports.manualOverrideKeyword = async (req, res, next) => {
 
     const positionProvided = Object.prototype.hasOwnProperty.call(body, 'position');
     const urlProvided = Object.prototype.hasOwnProperty.call(body, 'url');
+    const locationProvided = Object.prototype.hasOwnProperty.call(body, 'locationCode')
+      || Object.prototype.hasOwnProperty.call(body, 'languageCode');
 
     let nextPosition = item.position ?? null;
     let nextUrl = item.url || null;
@@ -564,6 +566,42 @@ exports.manualOverrideKeyword = async (req, res, next) => {
         return res.status(400).json({ success: false, error: { code: 'INVALID_VALUE', message: err.message } });
       }
       throw err;
+    }
+
+    // Country re-assignment. Validates against the catalogue and rejects if
+    // moving the keyword would collide with another tracked (keyword, country)
+    // pair on this site.
+    if (locationProvided) {
+      const candidate = normalizeLocation({
+        locationCode: body.locationCode != null ? body.locationCode : item.locationCode,
+        languageCode: body.languageCode != null ? body.languageCode : item.languageCode,
+      });
+      if (!candidate) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'INVALID_LOCATION', message: 'Unsupported locationCode/languageCode' },
+        });
+      }
+      const currentLoc = item.locationCode ?? config.keywords.defaultLocationCode;
+      if (candidate.locationCode !== currentLoc) {
+        const collides = items.some((it) => it !== item
+          && normalizeKw(it.keyword) === normalizeKw(item.keyword)
+          && (it.locationCode ?? config.keywords.defaultLocationCode) === candidate.locationCode);
+        if (collides) {
+          return res.status(409).json({
+            success: false,
+            error: { code: 'DUPLICATE', message: 'This keyword is already tracked in the selected country' },
+          });
+        }
+      }
+      item.locationCode = candidate.locationCode;
+      item.languageCode = candidate.languageCode;
+      // Country change invalidates the previous SERP position — clear it so the
+      // next refresh fetches the new SERP cleanly.
+      item.previousPosition = item.position ?? null;
+      item.position = null;
+      item.url = null;
+      item.lastCheckError = null;
     }
 
     const now = new Date();
@@ -596,6 +634,82 @@ exports.manualOverrideKeyword = async (req, res, next) => {
     await site.save();
 
     res.json({ success: true, data: { item: serializeItem(item) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /move-all — admin-only bulk reassignment: every tracked keyword moves
+// to the supplied country in one shot. Same-string collisions after the move
+// are collapsed (first occurrence wins) and SERP-specific fields are cleared
+// since rankings differ per country.
+exports.moveAllToCountry = async (req, res, next) => {
+  try {
+    const site = req.site;
+    const target = normalizeLocation({
+      locationCode: req.body?.locationCode,
+      languageCode: req.body?.languageCode,
+    });
+    if (!target) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_LOCATION', message: 'locationCode is required and must be a supported value' },
+      });
+    }
+
+    const items = site.keywords?.items || [];
+    if (items.length === 0) {
+      return res.json({
+        success: true,
+        data: { items: [], summary: { moved: 0, mergedDuplicates: 0 } },
+      });
+    }
+
+    const seen = new Set();
+    const next = [];
+    let moved = 0;
+    let mergedDuplicates = 0;
+
+    for (const item of items) {
+      const key = normalizeKw(item.keyword);
+      if (seen.has(key)) {
+        mergedDuplicates += 1;
+        continue;
+      }
+      seen.add(key);
+      const previousLoc = item.locationCode ?? config.keywords.defaultLocationCode;
+      const changed = previousLoc !== target.locationCode;
+      if (changed) {
+        item.previousPosition = item.position ?? null;
+        item.position = null;
+        item.url = null;
+        item.lastCheckError = null;
+        item.locationCode = target.locationCode;
+        item.languageCode = target.languageCode;
+        moved += 1;
+      } else {
+        // Already in the target country — make sure languageCode is in sync.
+        item.languageCode = target.languageCode;
+      }
+      next.push(item);
+    }
+
+    site.keywords.items = next;
+    site.markModified('keywords');
+    await site.save();
+
+    res.json({
+      success: true,
+      data: {
+        items: next.map(serializeItem),
+        summary: {
+          moved,
+          mergedDuplicates,
+          locationCode: target.locationCode,
+          languageCode: target.languageCode,
+        },
+      },
+    });
   } catch (error) {
     next(error);
   }

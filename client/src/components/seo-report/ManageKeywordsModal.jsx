@@ -1,7 +1,7 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
-import { useAddKeywordsBulk, useRemoveKeyword } from '../../hooks/useKeywords';
+import { useAddKeywordsBulk, useRemoveKeyword, useMoveAllKeywordsToCountry } from '../../hooks/useKeywords';
 import { KEYWORD_LOCATIONS, DEFAULT_LOCATION_CODE, locationLabel } from './keywordLocations';
 
 const MAX_LEN = 80;
@@ -66,7 +66,7 @@ function TrackedRow({ item, onRemove, removing }) {
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span className="text-sm text-brand-on-surface dark:text-brand-outline-variant truncate">{item.keyword}</span>
         <span className="flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold font-label bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline">
-          {locationLabel(item.locationCode, item.languageCode)}
+          {locationLabel(item.locationCode ?? DEFAULT_LOCATION_CODE, item.languageCode)}
         </span>
       </div>
       {confirming ? (
@@ -111,17 +111,30 @@ export default function ManageKeywordsModal({
   maxKeywords,
 }) {
   const [text, setText] = useState('');
-  const [selectedCodes, setSelectedCodes] = useState([DEFAULT_LOCATION_CODE]);
+  const [selectedCode, setSelectedCode] = useState(DEFAULT_LOCATION_CODE);
   const [lastResult, setLastResult] = useState(null);
   const textareaRef = useRef(null);
 
   const addBulk = useAddKeywordsBulk(siteId);
   const removeKw = useRemoveKeyword(siteId);
+  const moveAll = useMoveAllKeywordsToCountry(siteId);
+
+  // Distinct countries currently used by tracked rows. When everything sits in
+  // one country we use that as the picker's initial value so the chip honestly
+  // reflects "this site's country"; mixed states fall back to DE.
+  const trackedCountries = useMemo(() => {
+    const set = new Set();
+    for (const it of items || []) {
+      set.add(it.locationCode ?? DEFAULT_LOCATION_CODE);
+    }
+    return set;
+  }, [items]);
+  const singleTrackedCode = trackedCountries.size === 1 ? [...trackedCountries][0] : null;
 
   useEffect(() => {
     if (isOpen) {
       setText('');
-      setSelectedCodes([DEFAULT_LOCATION_CODE]);
+      setSelectedCode(singleTrackedCode ?? DEFAULT_LOCATION_CODE);
       setLastResult(null);
       setTimeout(() => textareaRef.current?.focus(), 50);
     }
@@ -139,51 +152,43 @@ export default function ManageKeywordsModal({
     return set;
   }, [items]);
 
-  const selectedLocations = useMemo(
-    () => KEYWORD_LOCATIONS.filter((l) => selectedCodes.includes(l.code)),
-    [selectedCodes],
+  const selectedLocation = useMemo(
+    () => KEYWORD_LOCATIONS.find((l) => l.code === selectedCode) || KEYWORD_LOCATIONS[0],
+    [selectedCode],
   );
 
-  // Project the input × locations cross-product through the duplicate set and slot
-  // limit so the user sees an honest preview before submitting.
+  // Project the input keywords against the chosen country through the duplicate
+  // set and slot limit so the user sees an honest preview before submitting.
   const projection = useMemo(() => {
     let newCount = 0;
     let duplicateCount = 0;
     let overLimitCount = 0;
     let slotsLeft = slotsRemaining;
     for (const kw of parsed.valid) {
-      for (const loc of selectedLocations) {
-        const key = `${kw.toLowerCase()}|${loc.code}`;
-        if (existingPairs.has(key)) {
-          duplicateCount += 1;
-          continue;
-        }
-        if (slotsLeft <= 0) {
-          overLimitCount += 1;
-          continue;
-        }
-        newCount += 1;
-        slotsLeft -= 1;
+      const key = `${kw.toLowerCase()}|${selectedLocation.code}`;
+      if (existingPairs.has(key)) {
+        duplicateCount += 1;
+        continue;
       }
+      if (slotsLeft <= 0) {
+        overLimitCount += 1;
+        continue;
+      }
+      newCount += 1;
+      slotsLeft -= 1;
     }
     return { newCount, duplicateCount, overLimitCount };
-  }, [parsed.valid, selectedLocations, existingPairs, slotsRemaining]);
-
-  const toggleLocation = (code) => {
-    setSelectedCodes((prev) =>
-      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
-    );
-  };
+  }, [parsed.valid, selectedLocation, existingPairs, slotsRemaining]);
 
   const handleAdd = () => {
-    if (parsed.valid.length === 0 || selectedLocations.length === 0) return;
+    if (parsed.valid.length === 0) return;
     addBulk.mutate(
       {
         keywords: parsed.valid,
-        locations: selectedLocations.map((l) => ({
-          locationCode: l.code,
-          languageCode: l.language,
-        })),
+        locations: [{
+          locationCode: selectedLocation.code,
+          languageCode: selectedLocation.language,
+        }],
       },
       {
         onSuccess: (data) => {
@@ -198,8 +203,20 @@ export default function ManageKeywordsModal({
     removeKw.mutate({ keyword: item.keyword, locationCode: item.locationCode ?? DEFAULT_LOCATION_CODE });
   };
 
-  const noLocations = selectedLocations.length === 0;
-  const addDisabled = parsed.valid.length === 0 || noLocations || projection.newCount === 0;
+  // Unified country picker: sets the destination for new adds and, if there are
+  // tracked rows in a different country, sweeps them all to the new pick in one
+  // request. Same-string collisions are merged server-side.
+  const handlePickCountry = (code) => {
+    setSelectedCode(code);
+    if (!items || items.length === 0) return;
+    const allAlreadyHere = trackedCountries.size === 1 && trackedCountries.has(code);
+    if (allAlreadyHere) return;
+    const loc = KEYWORD_LOCATIONS.find((l) => l.code === code);
+    if (!loc) return;
+    moveAll.mutate({ locationCode: loc.code, languageCode: loc.language });
+  };
+
+  const addDisabled = parsed.valid.length === 0 || projection.newCount === 0;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Manage Keywords" size="lg">
@@ -232,15 +249,20 @@ export default function ManageKeywordsModal({
             <span>One per line, or separate with comma / tab / semicolon.</span>
           </div>
 
-          {/* Country multi-select */}
+          {/* Country picker — drives both the destination for new adds and a
+              bulk reassignment of existing tracked rows. Picking a chip while
+              tracked rows live in a different country sweeps them all over in
+              one request; same-string duplicates are merged server-side. */}
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-semibold font-label text-brand-on-surface dark:text-brand-outline-variant">
-                Countries
+                Country
               </label>
-              <span className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline tabular-nums font-label">
-                {selectedLocations.length} selected
-              </span>
+              {trackedCountries.size > 1 && (
+                <span className="text-[10px] text-amber-600 dark:text-amber-500 font-label">
+                  Mixed — {trackedCountries.size} countries in use
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {KEYWORD_LOCATIONS.map((l) => (
@@ -248,31 +270,28 @@ export default function ManageKeywordsModal({
                   key={l.code}
                   code={l.code}
                   language={l.language}
-                  selected={selectedCodes.includes(l.code)}
-                  onToggle={toggleLocation}
-                  disabled={addBulk.isPending}
+                  selected={selectedCode === l.code}
+                  onToggle={handlePickCountry}
+                  disabled={addBulk.isPending || moveAll.isPending}
                 />
               ))}
             </div>
             <p className="mt-2 text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label">
-              Each keyword is tracked per country. Default is Germany (DE) when nothing is changed here.
+              Default is Germany (DE). New keywords are added here, and any existing tracked keywords are moved to the same country (SERP positions reset on move).
             </p>
           </div>
 
           {/* Projection summary */}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label">
-            {parsed.valid.length > 0 && selectedLocations.length > 0 && (
+            {parsed.valid.length > 0 && (
               <span className="tabular-nums">
-                {parsed.valid.length} keyword{parsed.valid.length === 1 ? '' : 's'} × {selectedLocations.length} countr{selectedLocations.length === 1 ? 'y' : 'ies'} ={' '}
+                {parsed.valid.length} keyword{parsed.valid.length === 1 ? '' : 's'} → {selectedLocation.label} ={' '}
                 <strong className="text-brand-on-surface dark:text-brand-outline-variant">{projection.newCount}</strong> new
               </span>
             )}
             <PillCount label="duplicate" n={projection.duplicateCount} tone="gray" />
             <PillCount label="over limit" n={projection.overLimitCount} tone="red" />
             <PillCount label="too long" n={parsed.tooLong.length} tone="amber" />
-            {noLocations && (
-              <span className="text-red-600 dark:text-red-400">Pick at least one country.</span>
-            )}
           </div>
 
           {/* Post-submit summary */}
@@ -328,20 +347,25 @@ export default function ManageKeywordsModal({
               {(items?.length || 0)}
             </span>
           </div>
+
           {(!items || items.length === 0) ? (
             <div className="text-xs text-brand-outline dark:text-brand-on-surface-variant text-center py-6 rounded-lg border border-dashed border-brand-outline-variant dark:border-brand-outline font-label">
               No keywords tracked yet. Add some above.
             </div>
           ) : (
             <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-              {items.map((it) => (
-                <TrackedRow
-                  key={`${it.keyword}-${it.locationCode ?? DEFAULT_LOCATION_CODE}`}
-                  item={it}
-                  onRemove={handleRemove}
-                  removing={removeKw.isPending}
-                />
-              ))}
+              {items.map((it) => {
+                const code = it.locationCode ?? DEFAULT_LOCATION_CODE;
+                const rowKey = `${it.keyword}|${code}`;
+                return (
+                  <TrackedRow
+                    key={rowKey}
+                    item={it}
+                    onRemove={handleRemove}
+                    removing={removeKw.isPending}
+                  />
+                );
+              })}
             </div>
           )}
         </section>

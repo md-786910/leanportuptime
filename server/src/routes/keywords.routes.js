@@ -6,6 +6,7 @@ router.get('/status', kw.getStatus);
 router.post('/', adminOnly, kw.addKeyword);
 router.post('/bulk', adminOnly, kw.addKeywordsBulk);
 router.post('/refresh', adminOnly, kw.refresh);
+router.patch('/move-all', adminOnly, kw.moveAllToCountry);
 router.patch('/:keyword', adminOnly, kw.manualOverrideKeyword);
 router.delete('/:keyword', adminOnly, kw.removeKeyword);
 

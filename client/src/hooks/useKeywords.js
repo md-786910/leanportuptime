@@ -7,6 +7,7 @@ import {
   removeKeyword,
   refreshKeywords,
   manualOverrideKeyword,
+  moveAllKeywordsToCountry,
 } from '../api/keywords.api';
 
 export const useKeywordsStatus = (siteId) => {
@@ -89,6 +90,28 @@ export const useKeywordManualOverride = (siteId) => {
     onError: (err) => {
       const errData = err.response?.data?.error;
       toast.error(errData?.message || 'Failed to update keyword');
+    },
+  });
+};
+
+export const useMoveAllKeywordsToCountry = (siteId) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => moveAllKeywordsToCountry(siteId, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['keywordsStatus', siteId] });
+      const { moved = 0, mergedDuplicates = 0 } = data?.summary || {};
+      if (moved === 0 && mergedDuplicates === 0) {
+        toast.success('Country already set');
+      } else if (mergedDuplicates > 0) {
+        toast.success(`Moved ${moved}; merged ${mergedDuplicates} duplicate${mergedDuplicates === 1 ? '' : 's'}`);
+      } else {
+        toast.success(`Moved ${moved} keyword${moved === 1 ? '' : 's'}`);
+      }
+    },
+    onError: (err) => {
+      const errData = err.response?.data?.error;
+      toast.error(errData?.message || 'Failed to move keywords');
     },
   });
 };

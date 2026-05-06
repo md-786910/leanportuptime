@@ -36,3 +36,8 @@ export const manualOverrideKeyword = async (siteId, keyword, payload, locationCo
   const { data } = await api.patch(url, payload, config);
   return data.data;
 };
+
+export const moveAllKeywordsToCountry = async (siteId, { locationCode, languageCode }) => {
+  const { data } = await api.patch(`/api/sites/${siteId}/keywords/move-all`, { locationCode, languageCode });
+  return data.data;
+};
