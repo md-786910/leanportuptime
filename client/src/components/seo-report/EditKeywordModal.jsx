@@ -70,7 +70,11 @@ export default function EditKeywordModal({ isOpen, onClose, siteId, item }) {
       onClose();
       return;
     }
-    await override.mutateAsync({ keyword: item.keyword, payload });
+    await override.mutateAsync({
+      keyword: item.keyword,
+      locationCode: item.locationCode ?? null,
+      payload,
+    });
     onClose();
   };
 

@@ -2,18 +2,17 @@ import { useMemo, useRef, useEffect, useState } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import { useAddKeywordsBulk, useRemoveKeyword } from '../../hooks/useKeywords';
+import { KEYWORD_LOCATIONS, DEFAULT_LOCATION_CODE, locationLabel } from './keywordLocations';
 
 const MAX_LEN = 80;
 
-function parseBulk(text, existing, maxKeywords) {
-  const existingSet = new Set((existing || []).map((k) => k.toLowerCase()));
+// Parses raw textarea input into a list of trimmed, deduped keyword strings.
+// Duplicate detection against existing rows happens server-side per (keyword,
+// locationCode) pair — here we only dedupe within the batch and trim length.
+function parseInput(text) {
   const valid = [];
-  const duplicates = [];
   const tooLong = [];
-  const overLimit = [];
   const seen = new Set();
-  let slotsLeft = maxKeywords - existing.length;
-
   const chunks = (text || '').split(/[\n,;\t]+/).map((s) => s.trim()).filter(Boolean);
   for (const kw of chunks) {
     if (kw.length > MAX_LEN) {
@@ -21,19 +20,11 @@ function parseBulk(text, existing, maxKeywords) {
       continue;
     }
     const lower = kw.toLowerCase();
-    if (existingSet.has(lower) || seen.has(lower)) {
-      duplicates.push(kw);
-      continue;
-    }
-    if (slotsLeft <= 0) {
-      overLimit.push(kw);
-      continue;
-    }
+    if (seen.has(lower)) continue;
     seen.add(lower);
     valid.push(kw);
-    slotsLeft -= 1;
   }
-  return { valid, duplicates, tooLong, overLimit };
+  return { valid, tooLong };
 }
 
 function PillCount({ label, n, tone = 'gray' }) {
@@ -51,16 +42,38 @@ function PillCount({ label, n, tone = 'gray' }) {
   );
 }
 
-function TrackedRow({ keyword, onRemove, removing }) {
+function LocationChip({ code, language, selected, onToggle, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(code)}
+      disabled={disabled}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold font-label border transition-colors ${
+        selected
+          ? 'bg-brand-primary/10 dark:bg-brand-primary/20 text-brand-primary border-brand-primary/40'
+          : 'bg-brand-surface-container-low dark:bg-brand-on-surface text-brand-on-surface-variant dark:text-brand-outline border-brand-outline-variant dark:border-brand-outline hover:border-brand-outline'
+      } disabled:opacity-50 disabled:cursor-not-allowed`}
+    >
+      <span>{locationLabel(code, language)}</span>
+    </button>
+  );
+}
+
+function TrackedRow({ item, onRemove, removing }) {
   const [confirming, setConfirming] = useState(false);
   return (
     <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-brand-outline-variant dark:border-brand-outline hover:border-brand-outline-variant dark:hover:border-brand-outline hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/40 transition-colors">
-      <span className="text-sm text-brand-on-surface dark:text-brand-outline-variant truncate">{keyword}</span>
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <span className="text-sm text-brand-on-surface dark:text-brand-outline-variant truncate">{item.keyword}</span>
+        <span className="flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold font-label bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline">
+          {locationLabel(item.locationCode, item.languageCode)}
+        </span>
+      </div>
       {confirming ? (
         <div className="flex items-center gap-1 flex-shrink-0 ml-3">
           <button
             onClick={() => {
-              onRemove(keyword);
+              onRemove(item);
               setConfirming(false);
             }}
             disabled={removing}
@@ -98,6 +111,7 @@ export default function ManageKeywordsModal({
   maxKeywords,
 }) {
   const [text, setText] = useState('');
+  const [selectedCodes, setSelectedCodes] = useState([DEFAULT_LOCATION_CODE]);
   const [lastResult, setLastResult] = useState(null);
   const textareaRef = useRef(null);
 
@@ -107,30 +121,85 @@ export default function ManageKeywordsModal({
   useEffect(() => {
     if (isOpen) {
       setText('');
+      setSelectedCodes([DEFAULT_LOCATION_CODE]);
       setLastResult(null);
-      // focus textarea on open
       setTimeout(() => textareaRef.current?.focus(), 50);
     }
   }, [isOpen]);
 
-  const existingKeywords = useMemo(() => (items || []).map((it) => it.keyword), [items]);
-  const parsed = useMemo(() => parseBulk(text, existingKeywords, maxKeywords), [text, existingKeywords, maxKeywords]);
+  const parsed = useMemo(() => parseInput(text), [text]);
+  const slotsRemaining = Math.max(0, maxKeywords - (items?.length || 0));
 
-  const slotsRemaining = Math.max(0, maxKeywords - existingKeywords.length);
+  // Existing (keyword, locationCode) pairs — for live duplicate hinting.
+  const existingPairs = useMemo(() => {
+    const set = new Set();
+    for (const it of items || []) {
+      set.add(`${(it.keyword || '').toLowerCase()}|${it.locationCode ?? DEFAULT_LOCATION_CODE}`);
+    }
+    return set;
+  }, [items]);
+
+  const selectedLocations = useMemo(
+    () => KEYWORD_LOCATIONS.filter((l) => selectedCodes.includes(l.code)),
+    [selectedCodes],
+  );
+
+  // Project the input × locations cross-product through the duplicate set and slot
+  // limit so the user sees an honest preview before submitting.
+  const projection = useMemo(() => {
+    let newCount = 0;
+    let duplicateCount = 0;
+    let overLimitCount = 0;
+    let slotsLeft = slotsRemaining;
+    for (const kw of parsed.valid) {
+      for (const loc of selectedLocations) {
+        const key = `${kw.toLowerCase()}|${loc.code}`;
+        if (existingPairs.has(key)) {
+          duplicateCount += 1;
+          continue;
+        }
+        if (slotsLeft <= 0) {
+          overLimitCount += 1;
+          continue;
+        }
+        newCount += 1;
+        slotsLeft -= 1;
+      }
+    }
+    return { newCount, duplicateCount, overLimitCount };
+  }, [parsed.valid, selectedLocations, existingPairs, slotsRemaining]);
+
+  const toggleLocation = (code) => {
+    setSelectedCodes((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
+    );
+  };
 
   const handleAdd = () => {
-    if (parsed.valid.length === 0) return;
-    addBulk.mutate(parsed.valid, {
-      onSuccess: (data) => {
-        setLastResult(data);
-        setText('');
+    if (parsed.valid.length === 0 || selectedLocations.length === 0) return;
+    addBulk.mutate(
+      {
+        keywords: parsed.valid,
+        locations: selectedLocations.map((l) => ({
+          locationCode: l.code,
+          languageCode: l.language,
+        })),
       },
-    });
+      {
+        onSuccess: (data) => {
+          setLastResult(data);
+          setText('');
+        },
+      },
+    );
   };
 
-  const handleRemove = (keyword) => {
-    removeKw.mutate(keyword);
+  const handleRemove = (item) => {
+    removeKw.mutate({ keyword: item.keyword, locationCode: item.locationCode ?? DEFAULT_LOCATION_CODE });
   };
+
+  const noLocations = selectedLocations.length === 0;
+  const addDisabled = parsed.valid.length === 0 || noLocations || projection.newCount === 0;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Manage Keywords" size="lg">
@@ -142,7 +211,7 @@ export default function ManageKeywordsModal({
               Add keywords
             </label>
             <span className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline tabular-nums font-label">
-              {existingKeywords.length} / {maxKeywords} used · {slotsRemaining} slot{slotsRemaining === 1 ? '' : 's'} left
+              {(items?.length || 0)} / {maxKeywords} used · {slotsRemaining} slot{slotsRemaining === 1 ? '' : 's'} left
             </span>
           </div>
           <textarea
@@ -161,11 +230,49 @@ export default function ManageKeywordsModal({
           />
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label">
             <span>One per line, or separate with comma / tab / semicolon.</span>
-            <span className="text-brand-outline dark:text-brand-on-surface-variant">·</span>
-            <PillCount label="valid" n={parsed.valid.length} tone="emerald" />
-            <PillCount label="duplicate" n={parsed.duplicates.length} tone="gray" />
+          </div>
+
+          {/* Country multi-select */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold font-label text-brand-on-surface dark:text-brand-outline-variant">
+                Countries
+              </label>
+              <span className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline tabular-nums font-label">
+                {selectedLocations.length} selected
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {KEYWORD_LOCATIONS.map((l) => (
+                <LocationChip
+                  key={l.code}
+                  code={l.code}
+                  language={l.language}
+                  selected={selectedCodes.includes(l.code)}
+                  onToggle={toggleLocation}
+                  disabled={addBulk.isPending}
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label">
+              Each keyword is tracked per country. Default is Germany (DE) when nothing is changed here.
+            </p>
+          </div>
+
+          {/* Projection summary */}
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-label">
+            {parsed.valid.length > 0 && selectedLocations.length > 0 && (
+              <span className="tabular-nums">
+                {parsed.valid.length} keyword{parsed.valid.length === 1 ? '' : 's'} × {selectedLocations.length} countr{selectedLocations.length === 1 ? 'y' : 'ies'} ={' '}
+                <strong className="text-brand-on-surface dark:text-brand-outline-variant">{projection.newCount}</strong> new
+              </span>
+            )}
+            <PillCount label="duplicate" n={projection.duplicateCount} tone="gray" />
+            <PillCount label="over limit" n={projection.overLimitCount} tone="red" />
             <PillCount label="too long" n={parsed.tooLong.length} tone="amber" />
-            <PillCount label="over limit" n={parsed.overLimit.length} tone="red" />
+            {noLocations && (
+              <span className="text-red-600 dark:text-red-400">Pick at least one country.</span>
+            )}
           </div>
 
           {/* Post-submit summary */}
@@ -178,8 +285,13 @@ export default function ManageKeywordsModal({
               {lastResult.skipped?.length > 0 && (
                 <ul className="space-y-0.5 text-brand-on-surface-variant dark:text-brand-outline">
                   {lastResult.skipped.slice(0, 8).map((s, i) => (
-                    <li key={`${s.keyword}-${i}`} className="flex items-center gap-2">
+                    <li key={`${s.keyword}-${s.locationCode || ''}-${i}`} className="flex items-center gap-2">
                       <span className="truncate">{s.keyword || '(empty)'}</span>
+                      {s.locationCode && (
+                        <span className="text-[10px] text-brand-on-surface-variant dark:text-brand-outline">
+                          {locationLabel(s.locationCode)}
+                        </span>
+                      )}
                       <span className="text-[10px] text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-wider font-label">{s.reason.replace('_', ' ')}</span>
                     </li>
                   ))}
@@ -199,9 +311,9 @@ export default function ManageKeywordsModal({
               size="sm"
               onClick={handleAdd}
               isLoading={addBulk.isPending}
-              disabled={parsed.valid.length === 0}
+              disabled={addDisabled}
             >
-              Add {parsed.valid.length > 0 ? `${parsed.valid.length} keyword${parsed.valid.length === 1 ? '' : 's'}` : 'keywords'}
+              Add {projection.newCount > 0 ? `${projection.newCount} entr${projection.newCount === 1 ? 'y' : 'ies'}` : 'keywords'}
             </Button>
           </div>
         </section>
@@ -213,19 +325,19 @@ export default function ManageKeywordsModal({
               Tracked keywords
             </h4>
             <span className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline tabular-nums font-label">
-              {existingKeywords.length}
+              {(items?.length || 0)}
             </span>
           </div>
-          {existingKeywords.length === 0 ? (
+          {(!items || items.length === 0) ? (
             <div className="text-xs text-brand-outline dark:text-brand-on-surface-variant text-center py-6 rounded-lg border border-dashed border-brand-outline-variant dark:border-brand-outline font-label">
               No keywords tracked yet. Add some above.
             </div>
           ) : (
             <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
-              {existingKeywords.map((kw) => (
+              {items.map((it) => (
                 <TrackedRow
-                  key={kw}
-                  keyword={kw}
+                  key={`${it.keyword}-${it.locationCode ?? DEFAULT_LOCATION_CODE}`}
+                  item={it}
                   onRemove={handleRemove}
                   removing={removeKw.isPending}
                 />

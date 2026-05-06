@@ -2,6 +2,36 @@ const Site = require('../models/Site');
 const AppSettings = require('../models/AppSettings');
 const config = require('../config');
 const keywordsService = require('../services/keywords/keywords.service');
+const { normalizeLocation } = require('../services/keywords/locations');
+
+// Build the list of (locationCode, languageCode) pairs to use when adding keywords.
+// Falls back to the configured default if the caller didn't pass any.
+function resolveLocations(rawLocations) {
+  const fallback = {
+    locationCode: config.keywords.defaultLocationCode,
+    languageCode: config.keywords.defaultLanguageCode,
+  };
+  if (!Array.isArray(rawLocations) || rawLocations.length === 0) {
+    return { locations: [fallback], rejected: [] };
+  }
+  const locations = [];
+  const rejected = [];
+  const seen = new Set();
+  for (const entry of rawLocations) {
+    const norm = normalizeLocation(entry);
+    if (!norm) {
+      rejected.push(entry);
+      continue;
+    }
+    if (seen.has(norm.locationCode)) continue;
+    seen.add(norm.locationCode);
+    locations.push(norm);
+  }
+  if (locations.length === 0) {
+    return { locations: [fallback], rejected };
+  }
+  return { locations, rejected };
+}
 
 function buildQuotaInfo(site, limit, currentMonthKey) {
   const used = site.keywords?.monthKey === currentMonthKey
@@ -99,12 +129,22 @@ exports.addKeyword = async (req, res, next) => {
       });
     }
 
+    const { locations } = resolveLocations(
+      req.body?.locationCode != null
+        ? [{ locationCode: req.body.locationCode, languageCode: req.body.languageCode }]
+        : null,
+    );
+    const target = locations[0];
+
     const normalized = normalizeKw(raw);
-    const duplicate = items.some((it) => normalizeKw(it.keyword) === normalized);
+    const duplicate = items.some(
+      (it) => normalizeKw(it.keyword) === normalized
+        && (it.locationCode ?? config.keywords.defaultLocationCode) === target.locationCode,
+    );
     if (duplicate) {
       return res.status(409).json({
         success: false,
-        error: { code: 'DUPLICATE', message: 'This keyword is already tracked for this site' },
+        error: { code: 'DUPLICATE', message: 'This keyword is already tracked for this site in the selected country' },
       });
     }
 
@@ -118,8 +158,8 @@ exports.addKeyword = async (req, res, next) => {
       cpc: null,
       competition: null,
       monthlySearches: [],
-      locationCode: config.keywords.defaultLocationCode,
-      languageCode: config.keywords.defaultLanguageCode,
+      locationCode: target.locationCode,
+      languageCode: target.languageCode,
       addedAt: new Date(),
       addedBy: req.user?.email || req.user?.id || null,
       lastCheckedAt: null,
@@ -150,8 +190,14 @@ exports.addKeywordsBulk = async (req, res, next) => {
       });
     }
 
+    const { locations: targetLocations, rejected: rejectedLocations } = resolveLocations(req.body?.locations);
+
     const existing = site.keywords?.items || [];
-    const existingSet = new Set(existing.map((it) => normalizeKw(it.keyword)));
+    // Duplicate set keys on (normalized keyword, locationCode) so the same keyword
+    // can be tracked across multiple countries.
+    const existingPairs = new Set(
+      existing.map((it) => `${normalizeKw(it.keyword)}|${it.locationCode ?? config.keywords.defaultLocationCode}`),
+    );
     const seenInBatch = new Set();
 
     const added = [];
@@ -169,34 +215,38 @@ exports.addKeywordsBulk = async (req, res, next) => {
         continue;
       }
       const normalized = normalizeKw(trimmed);
-      if (existingSet.has(normalized) || seenInBatch.has(normalized)) {
-        skipped.push({ keyword: trimmed, reason: 'duplicate' });
-        continue;
+
+      for (const loc of targetLocations) {
+        const pairKey = `${normalized}|${loc.locationCode}`;
+        if (existingPairs.has(pairKey) || seenInBatch.has(pairKey)) {
+          skipped.push({ keyword: trimmed, locationCode: loc.locationCode, reason: 'duplicate' });
+          continue;
+        }
+        if (slotsLeft <= 0) {
+          skipped.push({ keyword: trimmed, locationCode: loc.locationCode, reason: 'limit_reached' });
+          continue;
+        }
+        seenInBatch.add(pairKey);
+        added.push({
+          keyword: trimmed,
+          position: null,
+          previousPosition: null,
+          url: null,
+          searchVolume: null,
+          keywordDifficulty: null,
+          cpc: null,
+          competition: null,
+          monthlySearches: [],
+          locationCode: loc.locationCode,
+          languageCode: loc.languageCode,
+          addedAt: new Date(),
+          addedBy: req.user?.email || req.user?.id || null,
+          lastCheckedAt: null,
+          lastCheckError: null,
+          history: [],
+        });
+        slotsLeft -= 1;
       }
-      if (slotsLeft <= 0) {
-        skipped.push({ keyword: trimmed, reason: 'limit_reached' });
-        continue;
-      }
-      seenInBatch.add(normalized);
-      added.push({
-        keyword: trimmed,
-        position: null,
-        previousPosition: null,
-        url: null,
-        searchVolume: null,
-        keywordDifficulty: null,
-        cpc: null,
-        competition: null,
-        monthlySearches: [],
-        locationCode: config.keywords.defaultLocationCode,
-        languageCode: config.keywords.defaultLanguageCode,
-        addedAt: new Date(),
-        addedBy: req.user?.email || req.user?.id || null,
-        lastCheckedAt: null,
-        lastCheckError: null,
-        history: [],
-      });
-      slotsLeft -= 1;
     }
 
     if (added.length > 0) {
@@ -210,8 +260,10 @@ exports.addKeywordsBulk = async (req, res, next) => {
       data: {
         added: added.map(serializeItem),
         skipped,
+        rejectedLocations,
         summary: {
           requested: raw.length,
+          locations: targetLocations.length,
           addedCount: added.length,
           skippedCount: skipped.length,
         },
@@ -233,20 +285,48 @@ exports.removeKeyword = async (req, res, next) => {
       });
     }
 
+    // Optional `?locationCode=2276` narrows removal to a single (keyword, country)
+    // pair. Without it we remove every country instance of the keyword.
+    const locationCodeRaw = req.query?.locationCode;
+    const locationCode = locationCodeRaw != null && locationCodeRaw !== ''
+      ? Number(locationCodeRaw)
+      : null;
+    if (locationCodeRaw != null && locationCodeRaw !== '' && !Number.isFinite(locationCode)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_LOCATION', message: 'locationCode must be a number' },
+      });
+    }
+
     const items = site.keywords?.items || [];
-    const match = items.find((it) => normalizeKw(it.keyword) === target);
-    if (!match) {
+    const matches = items.filter((it) => {
+      if (normalizeKw(it.keyword) !== target) return false;
+      if (locationCode == null) return true;
+      const itemLoc = it.locationCode ?? config.keywords.defaultLocationCode;
+      return itemLoc === locationCode;
+    });
+    if (matches.length === 0) {
       return res.status(404).json({
         success: false,
         error: { code: 'NOT_FOUND', message: 'Keyword not found for this site' },
       });
     }
 
+    const pullCriteria = { keyword: matches[0].keyword };
+    if (locationCode != null) pullCriteria.locationCode = locationCode;
+
     await Site.findByIdAndUpdate(site._id, {
-      $pull: { 'keywords.items': { keyword: match.keyword } },
+      $pull: { 'keywords.items': pullCriteria },
     });
 
-    res.json({ success: true, data: { removed: match.keyword } });
+    res.json({
+      success: true,
+      data: {
+        removed: matches[0].keyword,
+        removedCount: matches.length,
+        locationCode: locationCode ?? null,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -424,7 +504,22 @@ exports.manualOverrideKeyword = async (req, res, next) => {
     }
 
     const items = site.keywords?.items || [];
-    const item = items.find((it) => normalizeKw(it.keyword) === normalizeKw(target));
+    const locationCodeRaw = req.query?.locationCode;
+    const scopedLocation = locationCodeRaw != null && locationCodeRaw !== ''
+      ? Number(locationCodeRaw)
+      : null;
+    if (locationCodeRaw != null && locationCodeRaw !== '' && !Number.isFinite(scopedLocation)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_LOCATION', message: 'locationCode must be a number' },
+      });
+    }
+    const item = items.find((it) => {
+      if (normalizeKw(it.keyword) !== normalizeKw(target)) return false;
+      if (scopedLocation == null) return true;
+      const itemLoc = it.locationCode ?? config.keywords.defaultLocationCode;
+      return itemLoc === scopedLocation;
+    });
     if (!item) {
       return res.status(404).json({
         success: false,

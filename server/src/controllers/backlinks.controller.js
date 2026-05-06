@@ -38,6 +38,21 @@ function snapshotStats(bl) {
   }, {});
 }
 
+// `hasData` drives whether the SEO Report renders the populated layout or the
+// "Fetch Backlinks Data" empty state. Treat any manual content (stats or items)
+// as data so admins keep seeing the editable view after manual fill-up, even
+// when DataForSEO credits are exhausted and `lastFetchedAt` is still null.
+function hasAnyContent(bl) {
+  if (!bl) return false;
+  if (bl.lastFetchedAt) return true;
+  if ((bl.domainRank || 0) > 0) return true;
+  if ((bl.backlinksCount || 0) > 0) return true;
+  if ((bl.referringDomains || 0) > 0) return true;
+  if (Array.isArray(bl.items) && bl.items.length > 0) return true;
+  if (Array.isArray(bl.paidItems) && bl.paidItems.length > 0) return true;
+  return false;
+}
+
 function statsEqual(a, b) {
   return STATS_FIELDS.every((k) => (a?.[k] ?? null) === (b?.[k] ?? null));
 }
@@ -193,7 +208,7 @@ exports.getStatus = async (req, res, next) => {
       data: {
         backlinks: serializeBacklinks(bl),
         isStale: backlinksService.isStale(lastFetchedAt),
-        hasData: !!lastFetchedAt,
+        hasData: hasAnyContent(bl),
         quota: buildQuotaInfo(site, settings.backlinksMonthlyLimit, currentMonthKey),
         providerInfo: backlinksService.getProviderInfo(),
       },
@@ -520,7 +535,7 @@ exports.manualOverride = async (req, res, next) => {
       data: {
         backlinks: serializeBacklinks(bl),
         isStale: backlinksService.isStale(bl.lastFetchedAt),
-        hasData: !!bl.lastFetchedAt,
+        hasData: hasAnyContent(bl),
         quota: buildQuotaInfo(site, (await AppSettings.getSingleton()).backlinksMonthlyLimit, backlinksService.currentMonthKey()),
         providerInfo: backlinksService.getProviderInfo(),
       },

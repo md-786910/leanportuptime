@@ -4,6 +4,12 @@ import Badge from '../common/Badge';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { themeColor } from './colorThemes';
 import EditKeywordModal from './EditKeywordModal';
+import { locationLabel, DEFAULT_LOCATION_CODE } from './keywordLocations';
+
+// Row keys still include locationCode so the same keyword tracked in two
+// countries doesn't collide on React keys; the per-row location pill is
+// suppressed because the section header already shows which countries are
+// active (one chip each).
 
 export function fmt(n) {
   if (n == null) return '—';
@@ -147,7 +153,7 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
           </thead>
           <tbody className="divide-y divide-brand-surface-container dark:divide-brand-outline/30">
             {sortedItems.map((it, idx) => (
-              <tr key={it.keyword} className="group hover:bg-brand-surface-container-low/50 dark:hover:bg-brand-on-surface/30 transition-colors">
+              <tr key={`${it.keyword}|${it.locationCode ?? DEFAULT_LOCATION_CODE}`} className="group hover:bg-brand-surface-container-low/50 dark:hover:bg-brand-on-surface/30 transition-colors">
                 <td className="px-6 py-4 text-brand-outline tabular-nums text-xs">{idx + 1}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
@@ -215,7 +221,7 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
                         </svg>
                       </button>
                       <button
-                        onClick={() => setPendingRemove(it.keyword)}
+                        onClick={() => setPendingRemove(it)}
                         title="Remove keyword"
                         className="p-1.5 rounded-lg text-brand-outline hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
@@ -236,11 +242,13 @@ export default function KeywordRankingsTable({ items, isViewer, onRemove, remove
         isOpen={!!pendingRemove}
         onClose={() => setPendingRemove(null)}
         onConfirm={() => {
-          onRemove?.(pendingRemove);
+          if (pendingRemove) onRemove?.(pendingRemove);
           setPendingRemove(null);
         }}
         title="Remove keyword"
-        message={`Stop tracking "${pendingRemove}"? This also clears its position history.`}
+        message={pendingRemove
+          ? `Stop tracking "${pendingRemove.keyword}" in ${locationLabel(pendingRemove.locationCode ?? DEFAULT_LOCATION_CODE, pendingRemove.languageCode)}? This also clears its position history.`
+          : ''}
         confirmText="Remove"
         isLoading={removePending}
       />

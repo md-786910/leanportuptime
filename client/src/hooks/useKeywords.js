@@ -37,7 +37,8 @@ export const useAddKeyword = (siteId) => {
 export const useAddKeywordsBulk = (siteId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (keywords) => addKeywordsBulk(siteId, keywords),
+    // Accepts either a plain string[] (legacy) or { keywords, locations }.
+    mutationFn: (payload) => addKeywordsBulk(siteId, payload),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['keywordsStatus', siteId] });
       const { addedCount = 0, skippedCount = 0 } = data?.summary || {};
@@ -59,7 +60,12 @@ export const useAddKeywordsBulk = (siteId) => {
 export const useRemoveKeyword = (siteId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (keyword) => removeKeyword(siteId, keyword),
+    // Accepts a plain string (legacy) or { keyword, locationCode } to scope removal
+    // to a single (keyword, country) pair.
+    mutationFn: (payload) => {
+      if (typeof payload === 'string') return removeKeyword(siteId, payload);
+      return removeKeyword(siteId, payload.keyword, payload.locationCode ?? null);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['keywordsStatus', siteId] });
       toast.success('Keyword removed');
@@ -74,7 +80,8 @@ export const useRemoveKeyword = (siteId) => {
 export const useKeywordManualOverride = (siteId) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ keyword, payload }) => manualOverrideKeyword(siteId, keyword, payload),
+    mutationFn: ({ keyword, payload, locationCode }) =>
+      manualOverrideKeyword(siteId, keyword, payload, locationCode ?? null),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['keywordsStatus', siteId] });
       toast.success('Keyword updated');

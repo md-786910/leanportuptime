@@ -189,58 +189,19 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
       ? (customFrom && customTo ? `${formatDayDate(customFrom)} → ${formatDayDate(customTo)}` : 'Pick a range')
       : (PERIODS.find((p) => p.key === period)?.label || '');
 
-  // Empty state — never fetched
-  if (!hasData) {
-    // Domain-authority split variant stays silent when there is no data — the
-    // Backlinks section below owns the "Fetch" call-to-action.
+  // Empty state — never fetched. Viewers see a static "no data" message;
+  // admins fall through to the editable layout below so they can manually
+  // populate DA stats and backlinks even when DataForSEO credits are exhausted.
+  if (!hasData && isViewer) {
     if (variant === 'domain-authority') return null;
-
     return (
       <div>
-        {variant === 'full' && (
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-brand-outline-variant dark:border-brand-outline">
-            {Title}
-            {!isViewer && (
-              <span className={`text-[10px] font-semibold font-label px-2 py-1 rounded ${quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline'} tabular-nums`}>
-                {quota.used} / {quota.limit} this month
-              </span>
-            )}
-          </div>
-        )}
-        {variant === 'backlinks' && !isViewer && (
-          <div className="flex justify-end mb-3">
-            <span className={`text-[10px] font-semibold font-label px-2 py-1 rounded ${quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline'} tabular-nums`}>
-              {quota.used} / {quota.limit} this month
-            </span>
-          </div>
-        )}
         <div className="flex flex-col items-center justify-center py-8 rounded-xl border border-brand-outline-variant dark:border-brand-outline">
           <svg className="w-10 h-10 text-brand-outline dark:text-brand-on-surface-variant mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
-          {isViewer ? (
-            <>
-              <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">No backlinks data available</p>
-              <p className="text-[10px] text-brand-outline text-center max-w-[240px] font-label">Contact the site owner to fetch backlinks data.</p>
-            </>
-          ) : providerNotConfigured ? (
-            <>
-              <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">Provider Not Configured</p>
-              <p className="text-[10px] text-brand-outline text-center max-w-[240px] font-label">Set BACKLINKS_PROVIDER and credentials in server environment</p>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleRefresh}
-                disabled={quotaExhausted || refresh.isPending}
-                className={`text-xs font-medium px-4 py-2 rounded-lg transition-colors ${ quotaExhausted ? 'bg-brand-surface-container-high text-brand-outline cursor-not-allowed dark:bg-brand-on-surface' : 'bg-brand-primary text-white hover:bg-brand-primary' } font-label`}
-                title={quotaExhausted ? 'Monthly limit reached. Raise in Settings.' : undefined}
-              >
-                {refresh.isPending ? 'Fetching...' : 'Fetch Backlinks Data'}
-              </button>
-              <p className="text-[10px] text-brand-outline mt-2 font-label">Uses 1 of {quota.remaining} remaining refreshes this month</p>
-            </>
-          )}
+          <p className="text-xs font-semibold text-brand-on-surface-variant mb-1 font-label">No backlinks data available</p>
+          <p className="text-[10px] text-brand-outline text-center max-w-[240px] font-label">Contact the site owner to fetch backlinks data.</p>
         </div>
       </div>
     );
@@ -308,9 +269,6 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
 
               {/* Right: status badges + action buttons. Compare is always visible (read-only); Edit/Refresh + quota are admin-only. */}
               <div className="flex items-center gap-2 ml-auto">
-                {!isViewer && isStale && (
-                  <span className="text-[9px] font-semibold font-label px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
-                )}
                 {!isViewer && (
                   <span
                     className={`text-[10px] font-semibold px-2 py-1 rounded tabular-nums ${ quotaExhausted ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-brand-surface-container-high text-brand-on-surface-variant dark:bg-brand-on-surface dark:text-brand-outline' } font-label`}
@@ -449,7 +407,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
           </div>
         </div>
 
-        {data.domainRank === 0 && data.backlinksCount === 0 && data.referringDomains === 0 && (
+        {hasData && data.domainRank === 0 && data.backlinksCount === 0 && data.referringDomains === 0 && (
           <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
             <div className="flex items-start gap-2">
               <svg className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -524,9 +482,6 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-brand-outline-variant dark:border-brand-outline">
         <div className="flex items-center gap-2">
           {Title}
-          {isStale && (
-            <span className="text-[9px] font-semibold font-label px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Stale</span>
-          )}
         </div>
         {!isViewer && (
           <div className="flex items-center gap-2">
@@ -642,7 +597,7 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
       </div>
 
       {/* "No data found" notice when provider returned zeros */}
-      {data.domainRank === 0 && data.backlinksCount === 0 && data.referringDomains === 0 && (
+      {hasData && data.domainRank === 0 && data.backlinksCount === 0 && data.referringDomains === 0 && (
         <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
           <div className="flex items-start gap-2">
             <svg className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
