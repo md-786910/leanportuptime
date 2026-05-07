@@ -1,5 +1,18 @@
 const User = require('../models/User');
 const Site = require('../models/Site');
+const { SITE_TABS_SET } = require('../constants/tabs');
+
+function sanitizeSiteTabs(siteTabs = {}, siteIds = []) {
+  const allowed = new Set(siteIds.map(String));
+  const out = {};
+  for (const [siteId, tabs] of Object.entries(siteTabs || {})) {
+    if (!allowed.has(siteId)) continue;
+    if (!Array.isArray(tabs) || !tabs.length) continue;
+    const filtered = tabs.filter((t) => SITE_TABS_SET.has(t));
+    if (filtered.length) out[siteId] = filtered;
+  }
+  return out;
+}
 
 // Resolve the workspace owner id. Invited admins are transparent co-admins
 // of the original owner's workspace, so every team-scoped query uses this.
@@ -42,7 +55,7 @@ exports.update = async (req, res, next) => {
       });
     }
 
-    const { role, sharedSites } = req.body;
+    const { role, sharedSites, siteTabs } = req.body;
     if (role && role !== member.role) {
       // Promoting to admin is owner-only. Invited admins can demote or edit
       // viewers, but cannot mint new admins.
@@ -66,6 +79,10 @@ exports.update = async (req, res, next) => {
         });
       }
       member.sharedSites = sharedSites;
+    }
+    if (siteTabs !== undefined) {
+      const effectiveSiteIds = (sharedSites || member.sharedSites || []).map((id) => id.toString());
+      member.sharedSiteTabs = sanitizeSiteTabs(siteTabs, effectiveSiteIds);
     }
     await member.save();
 

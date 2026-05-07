@@ -24,6 +24,11 @@ const invitationSchema = new mongoose.Schema(
         ref: 'Site',
       },
     ],
+    sharedSiteTabs: {
+      type: Map,
+      of: [String],
+      default: {},
+    },
     token: {
       type: String,
       required: true,

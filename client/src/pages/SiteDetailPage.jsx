@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useSite } from "../hooks/useSites";
 import { useSiteMutations } from "../hooks/useSiteMutations";
 import { useCheckSummary, useCheckHistory } from "../hooks/useChecks";
+import { useIsViewer } from "../hooks/useRole";
+import { useAllowedTabs } from "../hooks/useAllowedTabs";
 import Badge from "../components/common/Badge";
 import Spinner from "../components/common/Spinner";
 import ConfirmDialog from "../components/common/ConfirmDialog";
@@ -39,6 +41,18 @@ export default function SiteDetailPage() {
 
   const { summary } = useCheckSummary(id, period);
   const { checks } = useCheckHistory(id, { limit: 100 });
+  const isViewer = useIsViewer();
+  const hasChecks = (checks?.length ?? 0) > 0;
+  const hideMonitoringForViewer = isViewer && !hasChecks;
+
+  const allowedTabs = useAllowedTabs(id);
+
+  useEffect(() => {
+    if (!allowedTabs.length) return;
+    if (!allowedTabs.includes(activeTab)) {
+      setActiveTab(allowedTabs[0]);
+    }
+  }, [activeTab, allowedTabs]);
 
   if (isLoading) {
     return (
@@ -71,7 +85,7 @@ export default function SiteDetailPage() {
         {!["seo", "seo-report"].includes(activeTab) && <ExportButton siteId={id} />}
       </div>
 
-      <SiteDetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <SiteDetailTabs activeTab={activeTab} onTabChange={setActiveTab} allowedTabs={allowedTabs} />
 
       {/* Period selector for applicable tabs */}
       {["overview", "performance", "history"].includes(activeTab) && (
@@ -89,7 +103,7 @@ export default function SiteDetailPage() {
       )}
 
       {/* Tab content */}
-      {activeTab === "overview" && (
+      {activeTab === "overview" && !hideMonitoringForViewer && (
         <SiteOverviewTab
           site={site}
           summary={summary}
@@ -98,7 +112,7 @@ export default function SiteDetailPage() {
         />
       )}
 
-      {activeTab === "performance" && (
+      {activeTab === "performance" && !hideMonitoringForViewer && (
         <div className="space-y-6">
           <PerformanceMetrics summary={summary} />
           <ResponseChart checks={checks} />
@@ -115,7 +129,7 @@ export default function SiteDetailPage() {
 
       {activeTab === "sitescan" && <SiteScanPanel siteId={id} />}
 
-      {activeTab === "history" && (
+      {activeTab === "history" && !hideMonitoringForViewer && (
         <div className="space-y-6">
           <UptimeBar
             checks={checks}

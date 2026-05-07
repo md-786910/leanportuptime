@@ -5,7 +5,8 @@ const ACCENTS = {
   amber: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',
 };
 
-export default function ReportSection({ title, description, accent = 'violet', icon, actions, children }) {
+export default function ReportSection({ hidden = false, title, description, accent = 'violet', icon, actions, children }) {
+  if (hidden) return null;
   const accentClasses = ACCENTS[accent] || ACCENTS.violet;
 
   return (

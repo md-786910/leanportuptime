@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSeoAudit, useSeoTrigger, usePageSpeedFetch } from '../../hooks/useSeo';
+import { useHideForViewerWhenEmpty } from '../../hooks/useRole';
 import { downloadSeoReport } from '../../api/reports.api';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -486,8 +487,10 @@ export default function SeoPanel({ siteId }) {
   const pageSpeedMutation = usePageSpeedFetch(siteId);
   const [activeStrategy, setActiveStrategy] = useState('mobile');
   const [downloading, setDownloading] = useState(false);
+  const hideForViewer = useHideForViewerWhenEmpty(!audit);
 
   if (isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  if (hideForViewer) return null;
 
   return (
     <div className="space-y-6">

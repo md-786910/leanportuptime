@@ -1,20 +1,13 @@
-const tabs = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'performance', label: 'Performance' },
-  { key: 'ssl', label: 'SSL' },
-  { key: 'seo', label: 'SEO (Lighthouse)' },
-  { key: 'seo-report', label: 'SEO Report' },
-  { key: 'security', label: 'Security' },
-  { key: 'plugins', label: 'Plugins' },
-  { key: 'sitescan', label: 'Site Scan' },
-  { key: 'history', label: 'History' },
-];
+import { SITE_TABS } from '../../constants/tabs';
 
-export default function SiteDetailTabs({ activeTab, onTabChange }) {
+export default function SiteDetailTabs({ activeTab, onTabChange, allowedTabs }) {
+  const visible = allowedTabs
+    ? SITE_TABS.filter((t) => allowedTabs.includes(t.key))
+    : SITE_TABS;
   return (
     <div className="border-b border-brand-outline-variant dark:border-brand-outline">
       <nav className="flex gap-0 -mb-px overflow-x-auto">
-        {tabs.map((tab) => (
+        {visible.map((tab) => (
           <button
             key={tab.key}
             onClick={() => onTabChange(tab.key)}

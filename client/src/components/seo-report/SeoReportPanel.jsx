@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { useSeoAudit, usePageSpeedFetch, useSeoHistory } from '../../hooks/useSeo';
+import { useBacklinksStatus } from '../../hooks/useBacklinks';
+import { useKeywordsStatus } from '../../hooks/useKeywords';
+import { useAnalyticsStatus } from '../../hooks/useAnalytics';
+import { useIsViewer } from '../../hooks/useRole';
 import { useSeoReportStore } from '../../store/seoReportStore';
 import SectionDateFilter from '../common/SectionDateFilter';
 import Card from '../common/Card';
@@ -53,6 +57,19 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
   const setPeriod = useSeoReportStore((s) => s.setPeriod);
   const setCustomFrom = useSeoReportStore((s) => s.setCustomFrom);
   const setCustomTo = useSeoReportStore((s) => s.setCustomTo);
+
+  const isViewer = useIsViewer();
+  const { status: backlinksStatus } = useBacklinksStatus(siteId);
+  const { status: keywordsStatus } = useKeywordsStatus(siteId);
+  const { analyticsStatus } = useAnalyticsStatus(siteId);
+
+  const backlinksData = backlinksStatus?.backlinks || {};
+  const hideAnalyticsForViewer = isViewer && !analyticsStatus?.linked;
+  const hideDomainAuthorityForViewer = isViewer && !backlinksStatus?.hasData;
+  const hideBacklinksAnalysisForViewer = isViewer
+    && !backlinksData.items?.length
+    && !backlinksData.paidItems?.length;
+  const hideKeywordsForViewer = isViewer && !keywordsStatus?.items?.length;
 
   const [activeStrategy, setActiveStrategy] = useState('mobile');
 
@@ -116,6 +133,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
         {/* Organic search performance — GSC + GA4 Organic */}
         <ReportSection
+          hidden={hideAnalyticsForViewer}
           title="Search Performance"
           description="Organic search visibility — impressions, clicks, and queries from Google, combined with engagement and conversions from organic sessions."
           accent="blue"
@@ -127,6 +145,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
         {/* Off-page authority — Domain Authority */}
         <ReportSection
+          hidden={hideDomainAuthorityForViewer}
           title="Domain Authority"
           description="A single trust score summarising your site's overall link authority — higher means stronger off-page reputation."
           accent="amber"
@@ -139,6 +158,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
         {/* Backlinks — volume, growth, and raw list */}
         <ReportSection
+          hidden={hideBacklinksAnalysisForViewer}
           title="Backlinks Analysis"
           description="Total inbound links, unique referring domains, and links gained or lost in the selected window."
           accent="amber"
@@ -149,6 +169,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
         {/* All-site traffic — GA4 all sources */}
         <ReportSection
+          hidden={hideAnalyticsForViewer}
           title="Website Traffic"
           description="All-traffic analytics from GA4 — sessions, users, events, and channels across every source."
           accent="emerald"
@@ -200,6 +221,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
         <>
           {/* All-site traffic — GA4 all sources */}
           <ReportSection
+            hidden={hideAnalyticsForViewer}
             title="Website Traffic"
             description="All-traffic analytics from GA4 — sessions, users, events, and channels across every source."
             accent="emerald"
@@ -223,6 +245,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
           {/* Organic Traffic — GA4 organic sessions, trend, and engagement */}
           <ReportSection
+            hidden={hideAnalyticsForViewer}
             title="Organic Traffic"
             description="GA4 organic-search acquisition — sessions, engagement, and audience breakdown."
             accent="emerald"
@@ -233,6 +256,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
           {/* Off-page authority — Domain Authority */}
           <ReportSection
+            hidden={hideDomainAuthorityForViewer}
             title="Domain Authority"
             description="Trust score, total backlinks, referring domains, and link gains or losses in the selected window."
             accent="amber"
@@ -243,6 +267,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
           {/* Backlinks — volume, growth, and raw list */}
           <ReportSection
+            hidden={hideBacklinksAnalysisForViewer}
             title="Backlinks Analysis"
             description="The list of external sources currently pointing at your site."
             accent="amber"
@@ -253,6 +278,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
 
           {/* Keyword rankings — tracked queries */}
           <ReportSection
+            hidden={hideKeywordsForViewer}
             title="Keyword Rankings"
             description="Positions, movement, and visibility for the keywords you're actively tracking."
             accent="amber"

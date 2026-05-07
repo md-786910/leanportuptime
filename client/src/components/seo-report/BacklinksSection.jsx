@@ -449,23 +449,29 @@ export default function BacklinksSection({ siteId, themeKey, showTitle = true, v
 
   // Backlinks variant — Paid (manual-only) on top, SEO list below.
   if (variant === 'backlinks') {
+    const hidePaidForViewer = isViewer && !data.paidItems?.length;
+    const hideSeoForViewer = isViewer && !data.items?.length;
     return (
       <div className="space-y-8">
-        <BacklinksTable
-          kind="paid"
-          title="Paid Backlinks"
-          items={data.paidItems || []}
-          siteId={siteId}
-        />
+        {!hidePaidForViewer && (
+          <BacklinksTable
+            kind="paid"
+            title="Paid Backlinks"
+            items={data.paidItems || []}
+            siteId={siteId}
+          />
+        )}
 
-        <BacklinksTable
-          kind="seo"
-          title="SEO Backlinks"
-          items={data.items || []}
-          listFetchedAt={data.listFetchedAt}
-          listFetchError={data.listFetchError}
-          siteId={siteId}
-        />
+        {!hideSeoForViewer && (
+          <BacklinksTable
+            kind="seo"
+            title="SEO Backlinks"
+            items={data.items || []}
+            listFetchedAt={data.listFetchedAt}
+            listFetchError={data.listFetchError}
+            siteId={siteId}
+          />
+        )}
 
         {data.lastFetchedAt && (
           <p className="text-[10px] text-brand-outline mt-2 text-center font-label">

@@ -27,3 +27,8 @@ export function useIsOwner() {
   const user = useAuthStore((s) => s.user);
   return user?.role === 'admin' && !user?.invitedBy;
 }
+
+export function useHideForViewerWhenEmpty(isEmpty) {
+  const isViewer = useIsViewer();
+  return isViewer && isEmpty;
+}

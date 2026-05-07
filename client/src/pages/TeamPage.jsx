@@ -8,9 +8,9 @@ import Input from '../components/common/Input';
 import Spinner from '../components/common/Spinner';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import Card from '../components/common/Card';
-import SiteMultiSelect from '../components/team/SiteMultiSelect';
+import SiteTabAccessSelect from '../components/team/SiteTabAccessSelect';
 
-const emptyRow = () => ({ email: '', role: 'viewer', siteIds: [] });
+const emptyRow = () => ({ email: '', role: 'viewer', siteIds: [], siteTabs: {} });
 
 // Simple avatar helper for a modern look
 function UserAvatar({ name, email, className = '' }) {
@@ -104,7 +104,7 @@ export default function TeamPage() {
   const [inviteRows, setInviteRows] = useState([emptyRow()]);
   const [inviteErrors, setInviteErrors] = useState({});
   const [editMemberId, setEditMemberId] = useState(null);
-  const [editForm, setEditForm] = useState({ role: 'viewer', sharedSites: [] });
+  const [editForm, setEditForm] = useState({ role: 'viewer', sharedSites: [], siteTabs: {} });
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmRevoke, setConfirmRevoke] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -166,9 +166,15 @@ export default function TeamPage() {
   // Edit member helpers
   const startEdit = (member) => {
     setEditMemberId(member._id);
+    const tabsRaw = member.sharedSiteTabs || {};
+    // Server may send a Map (toJSON) or a plain object; normalize to object
+    const siteTabs = tabsRaw instanceof Map
+      ? Object.fromEntries(tabsRaw)
+      : { ...tabsRaw };
     setEditForm({
       role: member.role,
       sharedSites: (member.sharedSites || []).map((s) => (typeof s === 'string' ? s : s._id)),
+      siteTabs,
     });
   };
   const cancelEdit = () => setEditMemberId(null);
@@ -269,9 +275,11 @@ export default function TeamPage() {
                       </label>
                     </div>
                     <div className="p-1 bg-brand-surface-container-low dark:bg-brand-on-surface/30 rounded-xl border border-brand-outline-variant dark:border-brand-outline/50 overflow-hidden">
-                      <SiteMultiSelect
-                        selected={row.siteIds}
-                        onChange={(ids) => updateRow(index, 'siteIds', ids)}
+                      <SiteTabAccessSelect
+                        selectedSites={row.siteIds}
+                        siteTabs={row.siteTabs || {}}
+                        onSitesChange={(ids) => updateRow(index, 'siteIds', ids)}
+                        onTabsChange={(tabs) => updateRow(index, 'siteTabs', tabs)}
                       />
                     </div>
                   </div>
@@ -442,9 +450,11 @@ export default function TeamPage() {
                             </label>
                           </div>
                           <div className="p-1 bg-brand-surface-container-low dark:bg-brand-on-surface/30 rounded-xl border border-brand-outline-variant dark:border-brand-outline/50">
-                            <SiteMultiSelect
-                              selected={editForm.sharedSites}
-                              onChange={(ids) => setEditForm({ ...editForm, sharedSites: ids })}
+                            <SiteTabAccessSelect
+                              selectedSites={editForm.sharedSites}
+                              siteTabs={editForm.siteTabs || {}}
+                              onSitesChange={(ids) => setEditForm({ ...editForm, sharedSites: ids })}
+                              onTabsChange={(tabs) => setEditForm({ ...editForm, siteTabs: tabs })}
                             />
                           </div>
                         </div>

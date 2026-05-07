@@ -58,6 +58,11 @@ const userSchema = new mongoose.Schema(
         ref: 'Site',
       },
     ],
+    sharedSiteTabs: {
+      type: Map,
+      of: [String],
+      default: {},
+    },
     google: {
       accessToken: { type: String, default: null },
       refreshToken: { type: String, default: null },

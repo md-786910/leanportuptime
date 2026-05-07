@@ -1,4 +1,5 @@
 import { useSSL, useSSLHistory, useSSLCheck } from '../../hooks/useSSL';
+import { useHideForViewerWhenEmpty } from '../../hooks/useRole';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
@@ -34,6 +35,7 @@ export default function SSLPanel({ siteId }) {
   const { ssl, isLoading } = useSSL(siteId);
   const { history, isLoading: histLoading } = useSSLHistory(siteId);
   const sslCheck = useSSLCheck(siteId);
+  const hideForViewer = useHideForViewerWhenEmpty(!ssl);
 
   if (isLoading) {
     return (
@@ -42,6 +44,8 @@ export default function SSLPanel({ siteId }) {
       </div>
     );
   }
+
+  if (hideForViewer) return null;
 
   const days = daysUntil(ssl?.validTo);
 

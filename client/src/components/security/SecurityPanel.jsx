@@ -1,4 +1,5 @@
 import { useSecurity, useSecurityScan } from '../../hooks/useSecurity';
+import { useHideForViewerWhenEmpty } from '../../hooks/useRole';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
@@ -18,6 +19,7 @@ function scoreAccent(score) {
 export default function SecurityPanel({ siteId }) {
   const { audit, isLoading } = useSecurity(siteId);
   const scanMutation = useSecurityScan(siteId);
+  const hideForViewer = useHideForViewerWhenEmpty(!audit);
 
   if (isLoading) {
     return (
@@ -26,6 +28,8 @@ export default function SecurityPanel({ siteId }) {
       </div>
     );
   }
+
+  if (hideForViewer) return null;
 
   return (
     <div className="space-y-6">

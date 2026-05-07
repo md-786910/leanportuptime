@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSiteScan, useSiteScanTrigger } from '../../hooks/useSiteScan';
+import { useHideForViewerWhenEmpty } from '../../hooks/useRole';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
@@ -127,8 +128,10 @@ function CheckListByCategory({ checks, category }) {
 export default function SiteScanPanel({ siteId }) {
   const { scan, isLoading } = useSiteScan(siteId);
   const scanMutation = useSiteScanTrigger(siteId);
+  const hideForViewer = useHideForViewerWhenEmpty(!scan);
 
   if (isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  if (hideForViewer) return null;
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { usePlugins, usePluginScan } from '../../hooks/usePlugins';
+import { useHideForViewerWhenEmpty } from '../../hooks/useRole';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import Spinner from '../common/Spinner';
@@ -114,8 +115,10 @@ function PluginList({ plugins }) {
 export default function PluginPanel({ siteId }) {
   const { audit, isLoading } = usePlugins(siteId);
   const scanMutation = usePluginScan(siteId);
+  const hideForViewer = useHideForViewerWhenEmpty(!audit);
 
   if (isLoading) return <div className="flex justify-center py-8"><Spinner /></div>;
+  if (hideForViewer) return null;
 
   return (
     <div className="space-y-6">

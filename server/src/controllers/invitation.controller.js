@@ -6,6 +6,22 @@ const Site = require('../models/Site');
 const config = require('../config');
 const notificationService = require('../services/notification.service');
 const logger = require('../utils/logger');
+const { SITE_TABS_SET } = require('../constants/tabs');
+
+// Drop tab maps for sites the invite no longer covers, and filter out
+// any unknown tab keys. The store treats an empty/missing entry as
+// "all tabs", so we don't need to expand the full tab list here.
+function sanitizeSiteTabs(siteTabs = {}, siteIds = []) {
+  const allowed = new Set(siteIds.map(String));
+  const out = {};
+  for (const [siteId, tabs] of Object.entries(siteTabs || {})) {
+    if (!allowed.has(siteId)) continue;
+    if (!Array.isArray(tabs) || !tabs.length) continue;
+    const filtered = tabs.filter((t) => SITE_TABS_SET.has(t));
+    if (filtered.length) out[siteId] = filtered;
+  }
+  return out;
+}
 
 // Invited admins are transparent co-admins of the original owner. Team, invites
 // and workspace-scoped lookups use this helper so everything ties back to the
@@ -34,7 +50,7 @@ exports.create = async (req, res, next) => {
     const results = [];
 
     for (const inv of invitations) {
-      const { email, role = 'viewer', siteIds = [] } = inv;
+      const { email, role = 'viewer', siteIds = [], siteTabs = {} } = inv;
 
       // Only the original owner may mint new admins. Invited admins can
       // invite viewers only to prevent cascading admin sprawl.
@@ -78,12 +94,15 @@ exports.create = async (req, res, next) => {
         continue;
       }
 
+      const sanitizedSiteTabs = sanitizeSiteTabs(siteTabs, siteIds);
+
       const token = crypto.randomBytes(32).toString('hex');
       const invitation = await Invitation.create({
         email,
         invitedBy: adminId,
         role,
         sharedSites: siteIds,
+        sharedSiteTabs: sanitizedSiteTabs,
         token,
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       });
@@ -142,7 +161,7 @@ exports.update = async (req, res, next) => {
       });
     }
 
-    const { role, siteIds } = req.body;
+    const { role, siteIds, siteTabs } = req.body;
     if (role) invitation.role = role;
     if (siteIds) {
       const siteCount = await Site.countDocuments({
@@ -156,6 +175,10 @@ exports.update = async (req, res, next) => {
         });
       }
       invitation.sharedSites = siteIds;
+    }
+    if (siteTabs !== undefined) {
+      const effectiveSiteIds = (siteIds || invitation.sharedSites || []).map((id) => id.toString());
+      invitation.sharedSiteTabs = sanitizeSiteTabs(siteTabs, effectiveSiteIds);
     }
     await invitation.save();
 
@@ -277,6 +300,12 @@ exports.accept = async (req, res, next) => {
         (sId) => !user.sharedSites.some((uId) => uId.equals(sId))
       );
       user.sharedSites.push(...newSites);
+      if (invitation.sharedSiteTabs) {
+        if (!user.sharedSiteTabs) user.sharedSiteTabs = new Map();
+        for (const [sid, tabs] of invitation.sharedSiteTabs.entries()) {
+          user.sharedSiteTabs.set(sid, tabs);
+        }
+      }
       if (!user.invitedBy) user.invitedBy = invitation.invitedBy;
       await user.save();
     } else {
@@ -288,6 +317,7 @@ exports.accept = async (req, res, next) => {
         role: invitation.role,
         invitedBy: invitation.invitedBy,
         sharedSites: invitation.sharedSites,
+        sharedSiteTabs: invitation.sharedSiteTabs,
         emailVerified: true,
       });
     }
