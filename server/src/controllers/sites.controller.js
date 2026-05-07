@@ -17,23 +17,33 @@ function canAccessSite(user, site) {
 exports.list = async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, tag } = req.query;
-    const filter = siteFilter(req.user);
+    const baseFilter = siteFilter(req.user);
+    const filter = { ...baseFilter };
     if (status) filter.currentStatus = status;
     if (tag) filter.tags = tag;
 
-    const [sites, total] = await Promise.all([
+    const [sites, total, statusGroups] = await Promise.all([
       Site.find(filter)
         .sort({ isFavorite: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit, 10))
         .lean(),
       Site.countDocuments(filter),
+      Site.aggregate([
+        { $match: baseFilter },
+        { $group: { _id: '$currentStatus', count: { $sum: 1 } } },
+      ]),
     ]);
+
+    const statusCounts = { up: 0, down: 0, degraded: 0, pending: 0 };
+    statusGroups.forEach((g) => {
+      if (g._id in statusCounts) statusCounts[g._id] = g.count;
+    });
 
     res.json({
       success: true,
       data: sites,
-      meta: { page: parseInt(page, 10), limit: parseInt(limit, 10), total },
+      meta: { page: parseInt(page, 10), limit: parseInt(limit, 10), total, statusCounts },
     });
   } catch (error) {
     next(error);

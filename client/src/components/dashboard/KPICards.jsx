@@ -1,10 +1,8 @@
 import Card from '../common/Card';
 
-export default function KPICards({ sites }) {
-  const total = sites.length;
-  const up = sites.filter((s) => s.currentStatus === 'up').length;
-  const down = sites.filter((s) => s.currentStatus === 'down').length;
-  const degraded = sites.filter((s) => s.currentStatus === 'degraded').length;
+export default function KPICards({ statusCounts = {} }) {
+  const { up = 0, down = 0, degraded = 0, pending = 0 } = statusCounts;
+  const total = up + down + degraded + pending;
 
   const getPercentage = (value) => (total > 0 ? (value / total) * 100 : 0);
 

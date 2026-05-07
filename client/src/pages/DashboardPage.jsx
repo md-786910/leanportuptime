@@ -47,7 +47,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <KPICards sites={sites} />
+      <KPICards statusCounts={meta.statusCounts} />
 
       {/* Main Content Area */}
       <div className="space-y-6">
