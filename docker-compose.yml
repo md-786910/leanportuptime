@@ -51,7 +51,20 @@ services:
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "-u", "wpsentinel", "-p", "Kx9mQ7vLp2wNrT4bZj8X", "--authenticationDatabase", "admin", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "-u",
+          "wpsentinel",
+          "-p",
+          "Kx9mQ7vLp2wNrT4bZj8X",
+          "--authenticationDatabase",
+          "admin",
+          "--quiet",
+          "--eval",
+          "db.runCommand('ping').ok",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -63,7 +76,7 @@ services:
     container_name: wp-sentinel-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "16379:6379"
     command: redis-server --requirepass R3disP4ss8xYq2Wm
     volumes:
       - redis-data:/data
