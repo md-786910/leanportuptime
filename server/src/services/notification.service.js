@@ -106,9 +106,9 @@ class NotificationService {
     await this.transporter.sendMail({
       from: config.smtp.from,
       to: recipients.join(","),
-      subject: `[WP Sentinel]: ${site.name} - ${type.toUpperCase()}`,
+      subject: `[Sitelyze]: ${site.name} - ${type.toUpperCase()}`,
       html: `
-    <h3>WP Sentinel SSL Alert</h3>
+    <h3>Sitelyze SSL Alert</h3>
     <p><strong>${site.name}</strong> (${site.url})</p>
     <p>Status: <strong>${type.toUpperCase()}</strong></p>
     <p>${message}</p>
@@ -124,10 +124,10 @@ class NotificationService {
     await this.transporter.sendMail({
       from: config.smtp.from,
       to: toEmail,
-      subject: `[WP Sentinel] Reset your password`,
+      subject: `[Sitelyze] Reset your password`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4f46e5;">Reset your WP Sentinel password</h2>
+          <h2 style="color: #4f46e5;">Reset your Sitelyze password</h2>
           <p>We received a request to reset the password for this account.</p>
           <p>Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
           <p style="margin: 24px 0;">
@@ -154,11 +154,11 @@ class NotificationService {
     await this.transporter.sendMail({
       from: config.smtp.from,
       to: toEmail,
-      subject: `[WP Sentinel] You've been invited to monitor sites`,
+      subject: `[Sitelyze] You've been invited to monitor sites`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4f46e5;">WP Sentinel Invitation</h2>
-          <p><strong>${inviterName}</strong> has invited you to collaborate on WP Sentinel.</p>
+          <h2 style="color: #4f46e5;">Sitelyze Invitation</h2>
+          <p><strong>${inviterName}</strong> has invited you to collaborate on Sitelyze.</p>
           <p>Shared projects:</p>
           <ul>${siteList}</ul>
           <p>This invitation expires in <strong>10 minutes</strong>.</p>
@@ -179,7 +179,7 @@ class NotificationService {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: `*WP Sentinel Alert*\n*Site:* ${site.name} (${site.url})\n${message}`,
+        text: `*Sitelyze Alert*\n*Site:* ${site.name} (${site.url})\n${message}`,
       }),
     });
   }
@@ -192,7 +192,7 @@ class NotificationService {
       body: JSON.stringify({
         embeds: [
           {
-            title: "WP Sentinel Alert",
+            title: "Sitelyze Alert",
             description: message,
             fields: [
               { name: "Site", value: site.name },

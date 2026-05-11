@@ -9,8 +9,7 @@ export const downloadReport = async (siteId, range = '30d') => {
   const url = window.URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', `wp-sentinel-report-${range}.pdf`);
-  document.body.appendChild(link);
+          link.setAttribute('download', `sitelyze-report-${range}.pdf`);  document.body.appendChild(link);
   link.click();
   link.remove();
   window.URL.revokeObjectURL(url);
@@ -25,8 +24,7 @@ export const downloadSeoReport = async (siteId) => {
   const url = window.URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement('a');
   link.href = url;
-  link.setAttribute('download', `leanport-seo-report.pdf`);
-  document.body.appendChild(link);
+          link.setAttribute('download', `sitelyze-seo-report.pdf`);  document.body.appendChild(link);
   link.click();
   link.remove();
   window.URL.revokeObjectURL(url);

@@ -10,7 +10,7 @@ const start = async () => {
   schedulerService.start();
 
   app.listen(config.port, () => {
-    logger.info(`WP Sentinel API running on port ${config.port} [${config.env}]`);
+    logger.info(`Sitelyze API running on port ${config.port} [${config.env}]`);
   });
 };
 

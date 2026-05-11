@@ -31,6 +31,6 @@ export const useUIStore = create(
         }
       },
     }),
-    { name: 'wp-sentinel-ui' }
+    { name: 'sitelyze-ui' }
   )
 );

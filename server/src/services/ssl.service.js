@@ -179,7 +179,7 @@ class SSLService {
           path: `/?q=${encodeURIComponent(hostname)}&output=json`,
           method: 'GET',
           timeout: 10000,
-          headers: { 'User-Agent': 'WP-Sentinel/2.0', 'Accept': 'application/json' },
+          headers: { 'User-Agent': 'Sitelyze/2.0', 'Accept': 'application/json' },
         },
         (res) => {
           let body = '';
@@ -241,7 +241,7 @@ class SSLService {
           path,
           method: 'GET',
           timeout: 15000,
-          headers: { 'User-Agent': 'WP-Sentinel/2.0', 'Accept': 'application/json' },
+          headers: { 'User-Agent': 'Sitelyze/2.0', 'Accept': 'application/json' },
         },
         (res) => {
           let body = '';

@@ -1,7 +1,7 @@
 {
   "name": "wp-sentinel-server",
   "version": "1.0.0",
-  "description": "WP Sentinel - WordPress Monitoring Service Backend",
+  "description": "Sitelyze - Comprehensive Web Monitoring Service Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

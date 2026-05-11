@@ -111,9 +111,9 @@ export default function AcceptInvitationPage() {
         <div className="w-full max-w-md bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-lg border border-brand-outline-variant dark:border-brand-outline p-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-6">
             <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
-              <span className="text-white font-bold font-label text-sm">WP</span>
+              <span className="text-white font-bold font-label text-sm">S</span>
             </div>
-            <span className="text-lg font-bold font-label text-brand-on-surface dark:text-white">Sentinel</span>
+            <span className="text-lg font-bold font-label text-brand-on-surface dark:text-white">Sitelyze</span>
           </div>
           <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-2">{title}</h2>
           <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline mb-6">{message}</p>
@@ -131,9 +131,9 @@ export default function AcceptInvitationPage() {
       <div className="w-full max-w-md bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-lg border border-brand-outline-variant dark:border-brand-outline p-8">
         <div className="flex items-center gap-2 mb-6">
           <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
-            <span className="text-white font-bold font-label text-sm">WP</span>
+            <span className="text-white font-bold font-label text-sm">S</span>
           </div>
-          <span className="text-lg font-bold font-label text-brand-on-surface dark:text-white">Sentinel</span>
+          <span className="text-lg font-bold font-label text-brand-on-surface dark:text-white">Sitelyze</span>
         </div>
 
         <h2 className="text-xl font-semibold text-brand-on-surface dark:text-white mb-2">Accept Invitation</h2>

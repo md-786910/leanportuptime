@@ -37,7 +37,7 @@ class ReportService {
       doc
         .fontSize(28)
         .font("Helvetica-Bold")
-        .text("WP Sentinel", { align: "center" });
+        .text("Sitelyze", { align: "center" });
       doc.moveDown(0.5);
       doc
         .fontSize(16)

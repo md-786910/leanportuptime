@@ -16,7 +16,7 @@ export const useSeoReportStore = create(
       setCustomTo: (customTo) => set({ customTo }),
     }),
     {
-      name: 'wp-sentinel-seo-report',
+      name: 'sitelyze-seo-report',
       partialize: (state) => ({
         colorTheme: state.colorTheme,
         period: state.period,

@@ -13,7 +13,7 @@ function parseProbes(raw) {
 module.exports = {
   env: process.env.NODE_ENV || "development",
   port: parseInt(process.env.PORT, 10) || 5000,
-  mongoUri: process.env.MONGODB_URI || "mongodb://localhost:27017/wpsentinel",
+  mongoUri: process.env.MONGODB_URI || "mongodb://localhost:27017/sitelyze",
   redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
   jwt: {
     secret: process.env.JWT_SECRET || "dev-jwt-secret",
@@ -26,7 +26,7 @@ module.exports = {
     port: parseInt(process.env.SMTP_PORT, 10) || 587,
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
-    from: process.env.SMTP_FROM || "noreply@wpsentinel.com",
+    from: process.env.SMTP_FROM || "noreply@sitelyze.com",
   },
   sslEmailListToSend: (process.env.SSL_EMAIL_LIST_TO_SEND || "")
     .split(",")

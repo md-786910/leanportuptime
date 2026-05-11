@@ -15,11 +15,11 @@ export default function AuthLayout() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-2">
             <div className="h-10 w-10 rounded-xl bg-brand-primary flex items-center justify-center">
-              <span className="text-white font-bold font-label">WP</span>
+              <span className="text-white font-bold font-label text-xl">S</span>
             </div>
-            <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white">Sentinel</span>
+            <span className="text-2xl font-bold font-label text-brand-on-surface dark:text-white">Sitelyze</span>
           </div>
-          <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline">WordPress Monitoring Service</p>
+          <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline">Intelligent Web Monitoring</p>
         </div>
 
         {/* Auth card */}

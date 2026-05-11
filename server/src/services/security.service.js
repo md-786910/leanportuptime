@@ -282,7 +282,7 @@ class SecurityService {
   async _fetchLatestWpVersion() {
     return new Promise((resolve) => {
       const req = https.request(
-        { hostname: 'api.wordpress.org', path: '/core/version-check/1.7/', method: 'GET', timeout: 10000, headers: { 'User-Agent': 'WP-Sentinel/1.0' } },
+        { hostname: 'api.wordpress.org', path: '/core/version-check/1.7/', method: 'GET', timeout: 10000, headers: { 'User-Agent': 'Sitelyze/2.0' } },
         (res) => {
           let body = '';
           res.on('data', (chunk) => { body += chunk; });

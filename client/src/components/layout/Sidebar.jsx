@@ -84,7 +84,7 @@ export default function Sidebar() {
             </svg>
           </div>
           <div>
-            <span className="text-xl font-bold font-label tracking-tight text-brand-on-surface">Sentinel</span>
+            <span className="text-xl font-bold font-label tracking-tight text-brand-on-surface">Sitelyze</span>
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-secondary animate-pulse"></span>
               <p className="text-[10px] font-bold font-label text-brand-on-surface-variant uppercase tracking-widest">Enterprise</p>

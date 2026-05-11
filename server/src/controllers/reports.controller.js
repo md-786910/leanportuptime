@@ -8,7 +8,7 @@ exports.generatePDF = async (req, res, next) => {
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="wp-sentinel-${site.name}-${range}.pdf"`,
+      'Content-Disposition': `attachment; filename="sitelyze-${site.name}-${range}.pdf"`,
       'Content-Length': pdfBuffer.length,
     });
 
@@ -26,7 +26,7 @@ exports.generateSEOPDF = async (req, res, next) => {
 
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="leanport-seo-report-${safeName}.pdf"`,
+      'Content-Disposition': `attachment; filename="sitelyze-seo-report-${safeName}.pdf"`,
       'Content-Length': pdfBuffer.length,
     });
 

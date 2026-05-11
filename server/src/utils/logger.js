@@ -8,7 +8,7 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'wp-sentinel' },
+  defaultMeta: { service: 'sitelyze' },
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
