@@ -149,22 +149,22 @@ class SSLService {
     });
   }
 
-  // Query Certificate Transparency logs for cert details. Tries crt.sh first,
-  // then certspotter as a secondary source. crt.sh is famously flaky (frequent
-  // 502s); certspotter is more reliable but throttles aggressively.
+  // Query Certificate Transparency logs for cert details. Tries certspotter
+  // first (more reliable), then crt.sh as secondary (famously flaky with
+  // frequent 502s, so avoid it on the hot path).
   async _fetchCertFromCTLog(hostname) {
     const apex = hostname.replace(/^www\./i, '');
     const variants = [hostname, apex].filter((v, i, a) => a.indexOf(v) === i);
 
-    // Try crt.sh per variant with one retry for transient 5xx
+    // Try certspotter per variant first
     for (const host of variants) {
-      const cert = await this._queryCrtSh(host);
+      const cert = await this._queryCertspotter(host);
       if (cert) return cert;
     }
 
-    // Fallback: certspotter
+    // Fallback: crt.sh (flaky, last resort)
     for (const host of variants) {
-      const cert = await this._queryCertspotter(host);
+      const cert = await this._queryCrtSh(host);
       if (cert) return cert;
     }
 
