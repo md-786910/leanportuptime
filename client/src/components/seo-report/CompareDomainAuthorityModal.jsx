@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { format, startOfMonth } from 'date-fns';
 import Drawer from '../common/Drawer';
-import Button from '../common/Button';
 import ComparePeriodSelector from './compare/ComparePeriodSelector';
 import RangeHeaderButton from './compare/RangeHeaderButton';
 import { useComparePeriods } from './compare/useComparePeriods';
@@ -132,8 +131,8 @@ export default function CompareDomainAuthorityModal({ isOpen, onClose, current, 
       title="Compare Domain Authority"
       width="lg"
       footer={
-        <div className="flex items-center justify-between gap-3">
-          {typeof onHistoryClick === 'function' ? (
+        typeof onHistoryClick === 'function' ? (
+          <div className="flex items-center justify-start gap-3">
             <button
               type="button"
               onClick={onHistoryClick}
@@ -145,9 +144,8 @@ export default function CompareDomainAuthorityModal({ isOpen, onClose, current, 
               </svg>
               History
             </button>
-          ) : <span />}
-          <Button type="button" onClick={onClose}>Done</Button>
-        </div>
+          </div>
+        ) : null
       }
     >
       <div className="space-y-5">

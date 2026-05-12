@@ -3,7 +3,6 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import Drawer from '../common/Drawer';
-import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { useAnalyticsOverview } from '../../hooks/useAnalytics';
 import ComparePeriodSelector from './compare/ComparePeriodSelector';
@@ -121,11 +120,6 @@ export default function CompareOrganicTrendModal({ isOpen, onClose, siteId, curr
       onClose={onClose}
       title="Compare Organic Traffic Trend"
       width="lg"
-      footer={
-        <div className="flex items-center justify-end gap-3">
-          <Button type="button" onClick={onClose}>Done</Button>
-        </div>
-      }
     >
       <div className="space-y-5">
         <ComparePeriodSelector

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import Drawer from '../common/Drawer';
-import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { useWebsiteAnalytics } from '../../hooks/useAnalytics';
 import ComparePeriodSelector from './compare/ComparePeriodSelector';
@@ -131,11 +130,6 @@ export default function CompareEventsModal({ isOpen, onClose, siteId, currentEve
       onClose={onClose}
       title="Compare Events & Clicks"
       width="lg"
-      footer={
-        <div className="flex items-center justify-end gap-3">
-          <Button type="button" onClick={onClose}>Done</Button>
-        </div>
-      }
     >
       <div className="space-y-5">
         <ComparePeriodSelector

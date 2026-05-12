@@ -1,5 +1,4 @@
 import Drawer from '../common/Drawer';
-import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { useAnalyticsOverview } from '../../hooks/useAnalytics';
 import ComparePeriodSelector from './compare/ComparePeriodSelector';
@@ -106,11 +105,6 @@ export default function CompareNewVsReturningModal({ isOpen, onClose, siteId, cu
       onClose={onClose}
       title="Compare New vs Returning"
       width="lg"
-      footer={
-        <div className="flex items-center justify-end gap-3">
-          <Button type="button" onClick={onClose}>Done</Button>
-        </div>
-      }
     >
       <div className="space-y-5">
         <ComparePeriodSelector

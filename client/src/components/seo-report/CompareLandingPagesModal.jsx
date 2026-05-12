@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import Drawer from '../common/Drawer';
-import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { useAnalyticsInsights } from '../../hooks/useAnalytics';
 import ComparePeriodSelector from './compare/ComparePeriodSelector';
@@ -135,11 +134,6 @@ export default function CompareLandingPagesModal({ isOpen, onClose, siteId, curr
       onClose={onClose}
       title="Compare Organic Landing Pages"
       width="4xl"
-      footer={
-        <div className="flex items-center justify-end gap-3">
-          <Button type="button" onClick={onClose}>Done</Button>
-        </div>
-      }
     >
       <div className="space-y-5">
         <ComparePeriodSelector

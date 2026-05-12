@@ -1,5 +1,4 @@
 import Drawer from '../common/Drawer';
-import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { useAnalyticsOverview } from '../../hooks/useAnalytics';
 import ComparePeriodSelector from './compare/ComparePeriodSelector';
@@ -102,11 +101,6 @@ export default function CompareOrganicModal({ isOpen, onClose, siteId, currentOv
       onClose={onClose}
       title="Compare Organic Search"
       width="lg"
-      footer={
-        <div className="flex items-center justify-end gap-3">
-          <Button type="button" onClick={onClose}>Done</Button>
-        </div>
-      }
     >
       <div className="space-y-5">
         <ComparePeriodSelector
