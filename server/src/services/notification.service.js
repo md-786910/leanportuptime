@@ -151,6 +151,14 @@ class NotificationService {
         ? siteNames.map((n) => `<li>${n}</li>`).join("")
         : "<li>All projects (admin access)</li>";
 
+    const mins = config.invitationExpiryMinutes;
+    const expiryText =
+      mins % (24 * 60) === 0
+        ? `${mins / (24 * 60)} ${mins / (24 * 60) === 1 ? "day" : "days"}`
+        : mins % 60 === 0
+        ? `${mins / 60} ${mins / 60 === 1 ? "hour" : "hours"}`
+        : `${mins} minutes`;
+
     await this.transporter.sendMail({
       from: config.smtp.from,
       to: toEmail,
@@ -161,7 +169,7 @@ class NotificationService {
           <p><strong>${inviterName}</strong> has invited you to collaborate on Sitelyze.</p>
           <p>Shared projects:</p>
           <ul>${siteList}</ul>
-          <p>This invitation expires in <strong>10 minutes</strong>.</p>
+          <p>This invitation expires in <strong>${expiryText}</strong>.</p>
           <p style="margin: 24px 0;">
             <a href="${acceptUrl}" style="background: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
               Accept Invitation
