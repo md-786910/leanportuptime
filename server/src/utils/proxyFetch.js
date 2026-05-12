@@ -213,6 +213,22 @@ async function httpGetTimed(url, { timeout = 15000 } = {}) {
   }
 }
 
+// Call Cloudflare Worker /check endpoint (uptime check from CF edge)
+async function proxyCheck(siteUrl) {
+  const probe = getProbe();
+  if (!probe) throw new Error('No Cloudflare probe configured for fallback');
+
+  const res = await fetch(`${probe.url}/check`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: siteUrl, secret: probe.secret }),
+    signal: AbortSignal.timeout(20000),
+  });
+
+  if (!res.ok) throw new Error(`Cloudflare probe returned HTTP ${res.status}`);
+  return res.json();
+}
+
 async function proxySSLCheck(siteUrl) {
   try {
     const data = await callProxySSL(siteUrl);
@@ -238,4 +254,4 @@ async function proxySSLCheck(siteUrl) {
   }
 }
 
-module.exports = { httpGet, httpHead, httpRequest, httpGetTimed, proxySSLCheck, isBlockedError, UA };
+module.exports = { httpGet, httpHead, httpRequest, httpGetTimed, proxySSLCheck, proxyCheck, callProxyFetch, isBlockedError, UA };

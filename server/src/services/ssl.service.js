@@ -56,8 +56,8 @@ class SSLService {
         fingerprint: cert.fingerprint || null,
         protocol: null,
         cipher: null,
-        isValid: proxyResult.isValid && daysRemaining > 0,
-        error: proxyResult.isValid ? null : proxyResult.error,
+        isValid: daysRemaining > 0,
+        error: daysRemaining > 0 ? null : `Certificate expired ${Math.abs(daysRemaining)} days ago`,
         checkedAt: new Date(),
       };
     }

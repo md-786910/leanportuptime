@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 const logger = require('../utils/logger');
+const { isBlockedError, proxyCheck, callProxyFetch } = require('../utils/proxyFetch');
 
 class MonitorService {
   /**
@@ -104,23 +105,80 @@ class MonitorService {
         });
       });
 
-      req.on('error', (err) => {
-        resolve({
-          status: 'down',
-          httpStatus: null,
-          responseTime: Math.round(this._hrToMs(process.hrtime.bigint() - startTime)),
-          ttfb: null,
-          dnsTime: null,
-          tlsTime: null,
-          pageSize: null,
-          wpVersion: null,
-          phpVersion: null,
-          error: err.message,
-        });
+      req.on('error', async (err) => {
+        if (!isBlockedError(err)) {
+          return resolve({
+            status: 'down',
+            httpStatus: null,
+            responseTime: Math.round(this._hrToMs(process.hrtime.bigint() - startTime)),
+            ttfb: null,
+            dnsTime: null,
+            tlsTime: null,
+            pageSize: null,
+            wpVersion: null,
+            phpVersion: null,
+            error: err.message,
+          });
+        }
+
+        logger.info(`Direct check to ${siteUrl} blocked (${err.code || err.message}), falling back to Cloudflare probe`);
+        resolve(await this._proxyCheck(siteUrl, expectedKeywords));
       });
 
       req.end();
     });
+  }
+
+  async _proxyCheck(siteUrl, expectedKeywords = []) {
+    try {
+      const data = await proxyCheck(siteUrl);
+      let status = data.status || 'down';
+      let keywordMatch = true;
+      let missingKeywords = [];
+
+      // If there are keywords to verify, fetch body via proxy
+      if (expectedKeywords.length > 0 && status !== 'down') {
+        try {
+          const fetched = await callProxyFetch(siteUrl, { method: 'GET' });
+          const bodyLower = (fetched.body || '').toLowerCase();
+          missingKeywords = expectedKeywords.filter((kw) => !bodyLower.includes(kw.toLowerCase()));
+          keywordMatch = missingKeywords.length === 0;
+          if (!keywordMatch) status = 'degraded';
+        } catch {
+          // keyword check failed — don't demote status, just note it
+          keywordMatch = false;
+        }
+      }
+
+      return {
+        status,
+        httpStatus: data.httpStatus || null,
+        responseTime: data.responseTime || null,
+        ttfb: null,
+        dnsTime: null,
+        tlsTime: null,
+        pageSize: null,
+        wpVersion: null,
+        phpVersion: null,
+        keywordMatch,
+        missingKeywords,
+        error: data.error || null,
+        checkedVia: 'cloudflare',
+      };
+    } catch (err) {
+      return {
+        status: 'down',
+        httpStatus: null,
+        responseTime: null,
+        ttfb: null,
+        dnsTime: null,
+        tlsTime: null,
+        pageSize: null,
+        wpVersion: null,
+        phpVersion: null,
+        error: `Cloudflare probe failed: ${err.message}`,
+      };
+    }
   }
 
   _hrToMs(hrtime) {
