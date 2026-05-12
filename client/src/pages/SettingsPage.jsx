@@ -91,10 +91,6 @@ export default function SettingsPage() {
         <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant mb-4">Plan Details</h3>
         <div className="space-y-3 text-sm">
           <div className="flex justify-between">
-            <span className="text-brand-on-surface-variant dark:text-brand-outline">Max Sites</span>
-            <span className="text-brand-on-surface dark:text-brand-outline-variant">{plan.maxSites === Infinity ? 'Unlimited' : plan.maxSites}</span>
-          </div>
-          <div className="flex justify-between">
             <span className="text-brand-on-surface-variant dark:text-brand-outline">Min Check Interval</span>
             <span className="text-brand-on-surface dark:text-brand-outline-variant">{plan.checkInterval / 1000}s</span>
           </div>

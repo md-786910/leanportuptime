@@ -52,15 +52,9 @@ exports.list = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const siteCount = await Site.countDocuments({ userId: req.user._id });
-    if (siteCount >= req.user.maxSites) {
-      return res.status(403).json({
-        success: false,
-        error: { code: 'LIMIT_REACHED', message: `Plan limit reached (${req.user.maxSites} sites)` },
-      });
-    }
+    const ownerId = req.user.invitedBy || req.user._id;
 
-    const site = await Site.create({ ...req.body, userId: req.user._id });
+    const site = await Site.create({ ...req.body, userId: ownerId });
 
     // Trigger first check immediately
     await uptimeQueue.add(
