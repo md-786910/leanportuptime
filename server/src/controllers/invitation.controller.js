@@ -104,7 +104,7 @@ exports.create = async (req, res, next) => {
         sharedSites: siteIds,
         sharedSiteTabs: sanitizedSiteTabs,
         token,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        expiresAt: new Date(Date.now() + config.invitationExpiryMinutes * 60 * 1000),
       });
 
       // Send invitation email
@@ -223,7 +223,7 @@ exports.resend = async (req, res, next) => {
 
     // Reset token and expiry
     invitation.token = crypto.randomBytes(32).toString('hex');
-    invitation.expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    invitation.expiresAt = new Date(Date.now() + config.invitationExpiryMinutes * 60 * 1000);
     invitation.status = 'pending';
     await invitation.save();
 

@@ -10,9 +10,21 @@ function parseProbes(raw) {
       return { name: name.trim(), url: url.trim() };
     });
 }
+
+function parseTrustProxy(raw) {
+  const value = (raw || "loopback, linklocal, uniquelocal").trim();
+
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (/^\d+$/.test(value)) return parseInt(value, 10);
+
+  return value;
+}
+
 module.exports = {
   env: process.env.NODE_ENV || "development",
   port: parseInt(process.env.PORT, 10) || 5000,
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
   mongoUri: process.env.MONGODB_URI || "mongodb://localhost:27017/sitelyze",
   redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
   jwt: {
@@ -33,6 +45,7 @@ module.exports = {
     .map((email) => email.trim())
     .filter(Boolean),
   clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
+  invitationExpiryMinutes: parseInt(process.env.INVITATION_EXPIRY_MINUTES, 10) || 24 * 60,
   probes: parseProbes(process.env.PROBE_URLS),
   probeSecret: process.env.PROBE_SECRET || "",
   pageSpeedApiKey: process.env.PAGESPEED_API_KEY || "",
