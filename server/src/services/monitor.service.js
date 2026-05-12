@@ -134,11 +134,15 @@ class MonitorService {
       const data = await proxyCheck(siteUrl);
       let status = data.status || 'down';
 
-      // A null httpStatus means the probe couldn't connect at all (network error).
-      // A non-null httpStatus means the site responded — even a 403 from a WAF
-      // means the server is up and running, just blocking datacenter IPs.
-      if (status === 'down' && data.httpStatus !== null && data.httpStatus !== undefined) {
-        status = 'degraded';
+      // Distinguish between "site is broken" and "site is blocking us":
+      //   - httpStatus null         → connection failed, truly down
+      //   - 4xx                     → site responded with client error (likely WAF block) → degraded
+      //   - 5xx (incl. CF 520-530)  → server-side failure or origin unreachable → down
+      //   - 2xx/3xx                 → leave as worker decided (up/degraded by speed)
+      const hs = data.httpStatus;
+      if (status === 'down' && hs !== null && hs !== undefined) {
+        if (hs >= 400 && hs < 500) status = 'degraded';
+        // 5xx stays as 'down' — server is broken
       }
 
       let keywordMatch = true;

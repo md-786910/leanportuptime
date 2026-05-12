@@ -33,27 +33,50 @@ function getProbe() {
   return { url: config.probes[0].url, secret: config.probeSecret };
 }
 
-// Call Cloudflare Worker /fetch endpoint
-async function callProxyFetch(url, { method = 'GET', followRedirects = true } = {}) {
-  const probe = getProbe();
-  if (!probe) throw new Error('No Cloudflare probe configured for fallback');
+// Returns probes ordered so region-matching ones come first.
+// Probe names with a TLD prefix (e.g. "at-vps") are prioritised for that TLD.
+// e.g. hostname "www.example.at" → probes named "at-*" sort to the front.
+function getProbesForHost(hostname) {
+  if (!config.probes || !config.probes.length) return [];
+  const tld = (hostname || '').split('.').pop().toLowerCase();
+  return [...config.probes].sort((a, b) => {
+    const aMatch = a.name.toLowerCase().startsWith(tld + '-') ? -1 : 0;
+    const bMatch = b.name.toLowerCase().startsWith(tld + '-') ? -1 : 0;
+    return aMatch - bMatch;
+  });
+}
 
-  const probeUrl = `${probe.url}/fetch`;
-  const payload = JSON.stringify({ url, method, secret: probe.secret, followRedirects });
-
-  const res = await fetch(probeUrl, {
+// Call a single probe's /fetch endpoint
+async function _callOneProbeFetch(probeUrl, secret, url, { method = 'GET', followRedirects = true } = {}) {
+  const res = await fetch(`${probeUrl}/fetch`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: payload,
+    body: JSON.stringify({ url, method, secret, followRedirects }),
     signal: AbortSignal.timeout(20000),
   });
-
-  if (!res.ok) throw new Error(`Cloudflare proxy returned HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`Probe returned HTTP ${res.status}`);
   const data = await res.json();
-  if (data.error && data.statusCode === null) {
-    throw new Error(`Cloudflare proxy fetch failed: ${data.error}`);
-  }
+  if (data.error && data.statusCode === null) throw new Error(data.error);
   return data;
+}
+
+// Call Cloudflare Worker /fetch endpoint, trying region-matched probes first
+async function callProxyFetch(url, { method = 'GET', followRedirects = true } = {}) {
+  let hostname = '';
+  try { hostname = new URL(url).hostname; } catch { /* ignore */ }
+  const probes = getProbesForHost(hostname);
+  if (!probes.length) throw new Error('No probe configured for fallback');
+
+  let lastErr;
+  for (const probe of probes) {
+    try {
+      return await _callOneProbeFetch(probe.url, config.probeSecret, url, { method, followRedirects });
+    } catch (err) {
+      lastErr = err;
+      logger.debug(`Probe ${probe.name} fetch failed: ${err.message}, trying next`);
+    }
+  }
+  throw lastErr;
 }
 
 // Call Cloudflare Worker /ssl endpoint
@@ -213,20 +236,37 @@ async function httpGetTimed(url, { timeout = 15000 } = {}) {
   }
 }
 
-// Call Cloudflare Worker /check endpoint (uptime check from CF edge)
+// Call probes' /check endpoint, trying region-matched ones first.
+// Returns the first result that isn't a connection-level failure (httpStatus !== null),
+// falling back to the last result if all probes get network errors.
 async function proxyCheck(siteUrl) {
-  const probe = getProbe();
-  if (!probe) throw new Error('No Cloudflare probe configured for fallback');
+  let hostname = '';
+  try { hostname = new URL(siteUrl).hostname; } catch { /* ignore */ }
+  const probes = getProbesForHost(hostname);
+  if (!probes.length) throw new Error('No probe configured for fallback');
 
-  const res = await fetch(`${probe.url}/check`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: siteUrl, secret: probe.secret }),
-    signal: AbortSignal.timeout(20000),
-  });
-
-  if (!res.ok) throw new Error(`Cloudflare probe returned HTTP ${res.status}`);
-  return res.json();
+  let lastResult = null;
+  for (const probe of probes) {
+    try {
+      const res = await fetch(`${probe.url}/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: siteUrl, secret: config.probeSecret }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) { lastResult = { status: 'down', httpStatus: null, error: `Probe HTTP ${res.status}` }; continue; }
+      const data = await res.json();
+      lastResult = data;
+      // If the site responded with any HTTP status (even 4xx), it's reachable — stop here
+      if (data.httpStatus !== null && data.httpStatus !== undefined) return data;
+      // Connection-level failure — try next probe
+      logger.debug(`Probe ${probe.name} got connection error for ${hostname}, trying next`);
+    } catch (err) {
+      logger.debug(`Probe ${probe.name} unreachable: ${err.message}, trying next`);
+      lastResult = { status: 'down', httpStatus: null, error: err.message };
+    }
+  }
+  return lastResult || { status: 'down', httpStatus: null, error: 'All probes failed' };
 }
 
 async function proxySSLCheck(siteUrl) {

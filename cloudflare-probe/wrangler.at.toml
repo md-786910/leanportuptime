@@ -1,0 +1,15 @@
+name = "wp-sentinel-probe-at"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Smart Placement runs this worker from the Cloudflare PoP closest to the
+# upstream origin (Austrian sites), not closest to our Contabo server.
+# This means requests originate from Vienna/Frankfurt edge IPs instead of
+# a random global PoP — less likely to be blocked by AT hosting providers.
+[placement]
+mode = "smart"
+
+[vars]
+LOCATION = "at-cf"
+
+# Set secret via: npx wrangler secret put PROBE_SECRET --config wrangler.at.toml
