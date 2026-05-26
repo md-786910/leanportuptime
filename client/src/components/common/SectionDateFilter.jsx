@@ -54,9 +54,9 @@ export default function SectionDateFilter({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
       {/* Segmented control — matches StrategyToggle style */}
-      <div className="flex gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-0.5">
+      <div className="flex gap-1 bg-brand-surface-container-high dark:bg-brand-on-surface rounded-lg p-0.5 overflow-x-auto scrollbar-hide w-full sm:w-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
         {periods.map((p) => (
           <button
             key={p.key}

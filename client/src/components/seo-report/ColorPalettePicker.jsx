@@ -8,7 +8,7 @@ export default function ColorPalettePicker() {
   const setColorTheme = useSeoReportStore((s) => s.setColorTheme);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       {themeKeys.map((key) => {
         const theme = THEMES[key];
         const isActive = colorTheme === key;

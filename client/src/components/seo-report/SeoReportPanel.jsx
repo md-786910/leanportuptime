@@ -186,8 +186,8 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
       {/* Sticky band: header + view-mode controls */}
       <div className="sticky top-0 z-20 -mx-6 md:-mx-10 px-6 md:px-10 -mt-6 md:-mt-10 pt-6 md:pt-10 pb-3 bg-[#f8f9f9] dark:bg-brand-on-surface space-y-3">
         <Card className="shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+            <div className="min-w-0">
               <h1 className="text-base font-semibold text-brand-on-surface dark:text-brand-outline-variant">SEO Report</h1>
               {audit?.scannedAt && (
                 <p className="text-xs text-brand-outline dark:text-brand-on-surface-variant mt-0.5 font-label">
@@ -195,9 +195,9 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
                 </p>
               )}
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
+            <div className="flex flex-col items-start gap-3 w-full sm:w-auto sm:flex-row sm:items-center min-w-0">
               <ColorPalettePicker />
-              <div className="w-px h-5 bg-brand-outline-variant dark:bg-brand-outline hidden sm:block" />
+              <div className="w-px h-5 bg-brand-outline-variant dark:bg-brand-outline hidden sm:block flex-shrink-0" />
               <SectionDateFilter
                 periods={GLOBAL_PERIODS}
                 period={period} setPeriod={setPeriod}
