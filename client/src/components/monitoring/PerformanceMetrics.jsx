@@ -12,7 +12,7 @@ export default function PerformanceMetrics({ summary }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {metrics.map((m) => (
         <KpiCard key={m.label} label={m.label} value={m.value} hint={m.hint} accent={m.accent} />
       ))}

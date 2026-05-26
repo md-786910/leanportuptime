@@ -74,7 +74,16 @@ export default function Sidebar() {
       )}
 
       <aside
-        className={`h-screen w-60 rounded-r-lg bg-gradient-to-b from-[#f7f9fb] to-[#f2f4f6] shadow-xl shadow-slate-200/50 flex flex-col gap-2 z-50`}
+        className={`
+          fixed inset-y-0 left-0 z-50
+          md:relative md:z-auto md:translate-x-0 md:inset-y-auto md:left-auto
+          h-screen w-64 md:w-60
+          rounded-r-lg bg-gradient-to-b from-[#f7f9fb] to-[#f2f4f6]
+          shadow-xl shadow-slate-200/50
+          flex flex-col gap-2
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
       >
         {/* Logo Section */}
         <div className="flex items-center gap-3.5 px-4 py-4">

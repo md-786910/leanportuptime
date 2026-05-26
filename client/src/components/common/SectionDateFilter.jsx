@@ -62,7 +62,7 @@ export default function SectionDateFilter({
             key={p.key}
             type="button"
             onClick={() => setPeriod(p.key)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-label ${
+            className={`px-3 py-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap font-label ${
               period === p.key
                 ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm'
                 : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline'

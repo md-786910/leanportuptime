@@ -38,7 +38,7 @@ export default function DashboardPage() {
     <div className="max-w-[1600px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section */}
       <div className="space-y-1">
-        <h1 className="text-4xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
           Performance Overview
         </h1>
         <p className="text-sm text-brand-on-surface-variant dark:text-brand-outline font-medium">
@@ -51,7 +51,7 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-brand-outline-variant dark:border-brand-outline pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-brand-outline-variant dark:border-brand-outline pb-6">
           <h2 className="text-xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">Sites</h2>
           <SiteListToolbar
             onAddSite={isAdmin ? () => setShowAddModal(true) : null}

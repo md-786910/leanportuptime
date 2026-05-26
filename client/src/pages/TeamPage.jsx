@@ -232,7 +232,7 @@ export default function TeamPage() {
           <div className="space-y-4">
             {inviteRows.map((row, index) => (
               <div key={index} className="bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl border border-brand-outline-variant dark:border-brand-outline p-5 shadow-sm transition-all hover:border-brand-200 dark:hover:border-brand-800 overflow-visible">
-                <div className="flex flex-col lg:flex-row items-start gap-6">
+                <div className="flex flex-col md:flex-row md:items-end gap-6">
                   <div className="flex-1 w-full">
                     <Input
                       label="Email Address"
@@ -245,8 +245,8 @@ export default function TeamPage() {
                       className="!bg-brand-surface-container-low dark:!bg-brand-on-surface/50"
                     />
                   </div>
-                  <div className="w-full lg:w-64">
-                    <RoleSelector 
+                  <div className="w-full md:w-56">
+                    <RoleSelector
                       value={row.role}
                       onChange={(role) => updateRow(index, 'role', role)}
                       isOwner={isOwner}
@@ -256,7 +256,7 @@ export default function TeamPage() {
                     <button
                       type="button"
                       onClick={() => removeRow(index)}
-                      className="lg:mt-8 p-2 text-brand-outline hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+                      className="md:mb-0.5 p-2 text-brand-outline hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
                     >
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

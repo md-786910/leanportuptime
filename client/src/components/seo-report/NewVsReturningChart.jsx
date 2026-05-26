@@ -49,8 +49,8 @@ export default function NewVsReturningChart({ newUsers, returningUsers, themeKey
           </button>
         )}
       </div>
-      <div className="flex items-center gap-6">
-        <div className="relative w-40 h-40 flex-shrink-0">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 mx-auto sm:mx-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <defs>
@@ -65,8 +65,8 @@ export default function NewVsReturningChart({ newUsers, returningUsers, themeKey
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={48}
-                outerRadius={72}
+                innerRadius="40%"
+                outerRadius="60%"
                 paddingAngle={4}
                 dataKey="value"
                 stroke="none"
@@ -98,7 +98,7 @@ export default function NewVsReturningChart({ newUsers, returningUsers, themeKey
           </div>
         </div>
 
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 w-full space-y-2 min-w-0">
           {chartData.map((d) => {
             const pct = total > 0 ? ((d.value / total) * 100).toFixed(1) : '0';
             return (
@@ -106,18 +106,18 @@ export default function NewVsReturningChart({ newUsers, returningUsers, themeKey
                 key={d.name}
                 className="rounded-lg border border-brand-outline-variant/60 dark:border-brand-outline/60 bg-brand-surface-container-low/50 dark:bg-brand-on-surface/30 px-3 py-2 hover:bg-brand-surface-container-low dark:hover:bg-brand-on-surface/50 transition-colors"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-white dark:ring-brand-on-surface" style={{ backgroundColor: d.color }} />
                     <span className="text-[13px] font-medium font-label text-brand-on-surface dark:text-brand-outline-variant truncate">
                       {d.name}
                     </span>
                   </div>
-                  <div className="flex items-baseline gap-2 flex-shrink-0">
+                  <div className="flex items-baseline gap-1.5 flex-shrink-0">
                     <span className="text-base font-headline font-extrabold tabular-nums text-brand-on-surface dark:text-white leading-none">
                       {formatNumber(d.value)}
                     </span>
-                    <span className="text-[11px] font-semibold tabular-nums text-brand-outline dark:text-brand-on-surface-variant font-label w-12 text-right">
+                    <span className="text-[11px] font-semibold tabular-nums text-brand-outline dark:text-brand-on-surface-variant font-label w-10 text-right">
                       {pct}%
                     </span>
                   </div>

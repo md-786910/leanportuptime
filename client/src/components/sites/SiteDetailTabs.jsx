@@ -5,8 +5,8 @@ export default function SiteDetailTabs({ activeTab, onTabChange, allowedTabs }) 
     ? SITE_TABS.filter((t) => allowedTabs.includes(t.key))
     : SITE_TABS;
   return (
-    <div className="border-b border-brand-outline-variant dark:border-brand-outline">
-      <nav className="flex gap-0 -mb-px overflow-x-auto">
+    <div className="border-b border-brand-outline-variant dark:border-brand-outline overflow-x-hidden">
+      <nav className="flex gap-0 -mb-px overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}>
         {visible.map((tab) => (
           <button
             key={tab.key}

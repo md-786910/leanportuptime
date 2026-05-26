@@ -128,7 +128,7 @@ export default function NotificationsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 mt-4 sm:mt-0 sm:ml-8 pl-12 sm:pl-0">
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 mt-3 sm:mt-0 sm:ml-8 shrink-0">
                     <div className="flex items-center gap-1.5">
                       <div className={`h-1.5 w-1.5 rounded-full ${n.status === 'sent' ? 'bg-emerald-500' : n.status === 'failed' ? 'bg-rose-500' : 'bg-brand-surface-container-highest'}`}></div>
                       <span className="text-[10px] font-bold font-label text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-widest leading-none">

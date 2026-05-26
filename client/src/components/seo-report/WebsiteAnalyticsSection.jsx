@@ -170,7 +170,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const formSubmitUsers = sumEventUsersByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* KPI row */}
       <BentoCard>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">

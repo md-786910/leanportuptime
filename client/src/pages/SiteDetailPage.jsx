@@ -94,7 +94,7 @@ export default function SiteDetailPage() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${ period === p ? "bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400" : "text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface" } font-label`}
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors min-h-[2.75rem] flex items-center ${ period === p ? "bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400" : "text-brand-on-surface-variant hover:bg-brand-surface-container-high dark:hover:bg-brand-on-surface" } font-label`}
             >
               {p}
             </button>

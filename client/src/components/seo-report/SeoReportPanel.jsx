@@ -209,7 +209,7 @@ export default function SeoReportPanel({ siteId, siteName, siteUrl }) {
         </Card>
 
         {/* View mode toggle + Generate Report */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <ViewModeToggle />
           <GenerateReportButton siteId={siteId} siteName={siteName} siteUrl={siteUrl} scores={scores} strategy={activeStrategy} history={history} />
         </div>

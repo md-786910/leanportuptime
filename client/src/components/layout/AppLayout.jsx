@@ -14,7 +14,7 @@ export default function AppLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-brand-surface-container-low dark:bg-brand-on-surface">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header />
         <main className="flex-1 overflow-y-auto bg-[#f8f9f9] dark:bg-brand-on-surface">
           <div className="p-6 md:p-10">

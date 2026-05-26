@@ -10,7 +10,7 @@
 // `size`: 'sm' (default), 'md'.
 
 const SIZE = {
-  sm: { track: 'p-1', btn: 'px-3 py-1.5 text-xs' },
+  sm: { track: 'p-1', btn: 'px-3 py-2 text-xs' },
   md: { track: 'p-1', btn: 'px-4 py-2 text-sm' },
 };
 

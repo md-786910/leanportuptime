@@ -21,7 +21,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="w-full h-18 sticky top-0 z-40 bg-[#f2f4f6] p-4">
+    <header className="w-full min-h-[4rem] sticky top-0 z-40 bg-[#f2f4f6] p-4">
       <div className="flex items-center justify-between gap-6">
         {/* Left: Hamburger & Search */}
         <div className="flex items-center gap-4 flex-1">
@@ -102,7 +102,7 @@ export default function Header() {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-3 w-64 bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-2xl border border-brand-outline-variant dark:border-brand-outline py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute right-0 mt-3 w-64 max-w-[calc(100vw-2rem)] bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-xl shadow-2xl border border-brand-outline-variant dark:border-brand-outline py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                 <div className="px-5 py-4 border-b border-brand-outline-variant dark:border-brand-outline/60 mb-1">
                   <p className="text-sm font-bold text-brand-on-surface dark:text-white">{user?.name}</p>
                   <p className="text-[11px] text-brand-on-surface-variant dark:text-brand-outline font-medium truncate mt-0.5 font-label">{user?.email}</p>

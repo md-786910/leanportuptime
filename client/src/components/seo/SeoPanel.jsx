@@ -575,7 +575,7 @@ export default function SeoPanel({ siteId }) {
             return (
               <Card>
                 {/* Header with Mobile/Desktop toggle */}
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
                   <h3 className="text-sm font-semibold text-brand-on-surface dark:text-brand-outline-variant">Diagnose performance issues</h3>
                   <div className="flex items-center gap-2">
                     <button
@@ -592,7 +592,7 @@ export default function SeoPanel({ siteId }) {
                     {audit.pageSpeed.mobile && (
                       <button
                         onClick={() => setActiveStrategy('mobile')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ activeStrategy === 'mobile' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
+                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${ activeStrategy === 'mobile' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="7" y="2" width="10" height="20" rx="2" strokeWidth="2" /><line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="3" strokeLinecap="round" /></svg>
                         Mobile
@@ -601,7 +601,7 @@ export default function SeoPanel({ siteId }) {
                     {audit.pageSpeed.desktop && (
                       <button
                         onClick={() => setActiveStrategy('desktop')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ activeStrategy === 'desktop' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
+                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-colors ${ activeStrategy === 'desktop' ? 'bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-on-surface dark:text-brand-outline-variant shadow-sm' : 'text-brand-on-surface-variant hover:text-brand-on-surface dark:hover:text-brand-outline' } font-label`}
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2" strokeWidth="2" /><line x1="8" y1="21" x2="16" y2="21" strokeWidth="2" strokeLinecap="round" /><line x1="12" y1="17" x2="12" y2="21" strokeWidth="2" /></svg>
                         Desktop
