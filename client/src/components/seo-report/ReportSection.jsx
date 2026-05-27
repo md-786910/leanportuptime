@@ -11,26 +11,37 @@ export default function ReportSection({ hidden = false, title, description, acce
 
   return (
     <section className="space-y-6">
-      <div className="flex items-start gap-4 px-1">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${accentClasses}`}>
+      <div className="flex items-start gap-3 px-1">
+        {/* Icon — smaller on mobile */}
+        <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${accentClasses}`}>
           {typeof icon === 'string' ? (
-            <span className="material-symbols-outlined text-2xl">{icon}</span>
+            <span className="material-symbols-outlined text-xl sm:text-2xl">{icon}</span>
           ) : (
             icon
           )}
         </div>
+
         <div className="min-w-0 flex-1 pt-0.5">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-lg font-black font-headline text-brand-on-surface dark:text-brand-outline-variant leading-tight tracking-tight uppercase">
-              {title}
-            </h2>
-            {actions && <div className="flex items-center gap-3 flex-shrink-0">{actions}</div>}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+            {/* Title + description block */}
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-black font-headline text-brand-on-surface dark:text-brand-outline-variant leading-tight tracking-tight uppercase">
+                {title}
+              </h2>
+              {description && (
+                <p className="text-sm text-brand-on-surface-variant/80 dark:text-brand-outline mt-1 font-label leading-relaxed max-w-3xl">
+                  {description}
+                </p>
+              )}
+            </div>
+
+            {/* Actions: below description on mobile, right-aligned on desktop */}
+            {actions && (
+              <div className="flex items-center gap-2 flex-shrink-0 self-start sm:mt-0.5">
+                {actions}
+              </div>
+            )}
           </div>
-          {description && (
-            <p className="text-sm text-brand-on-surface-variant/80 dark:text-brand-outline mt-1 font-label leading-relaxed max-w-3xl">
-              {description}
-            </p>
-          )}
         </div>
       </div>
       <div className="space-y-8">{children}</div>
