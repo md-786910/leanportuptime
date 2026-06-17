@@ -11,6 +11,7 @@ const FORM_SUBMIT_EVENTS = new Set([
   'form_submission',
   'contact_form',
   'contact_form_submit',
+  'contact_form_submitted',
   'wpforms_submit',
 ]);
 

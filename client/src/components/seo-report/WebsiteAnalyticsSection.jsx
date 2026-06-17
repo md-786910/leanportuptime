@@ -35,6 +35,7 @@ const FORM_SUBMIT_EVENTS = new Set([
   'form_submission',
   'contact_form',
   'contact_form_submit',
+  'contact_form_submitted',
   'wpforms_submit',
 ]);
 
@@ -168,6 +169,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const events = details.events || {};
   const fileDownloadUsers = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
   const formSubmitUsers = sumEventUsersByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
+  const fileDownloadStatus = events.fileDownloads?.status;
 
   return (
     <div className="space-y-6 overflow-x-hidden">
@@ -219,9 +221,11 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
           <KpiCard
             label="File Downloads"
             value={formatNumber(fileDownloadUsers)}
-            subtitle="Users who downloaded a file"
+            subtitle={fileDownloadStatus === 'not_detected' ? 'Event not set up in GA4' : 'Users who downloaded a file'}
             accent={KPI_ACCENTS[4]}
-            tooltip="Files downloaded (PDFs, etc.)."
+            tooltip={fileDownloadStatus === 'not_detected'
+              ? "GA4's file_download event isn't configured on this site. Set it up to start tracking downloads."
+              : 'Files downloaded (PDFs, etc.).'}
           />
           <KpiCard
             label="Form Submitted"

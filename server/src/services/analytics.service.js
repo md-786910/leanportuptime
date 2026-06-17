@@ -24,6 +24,7 @@ const FORM_EVENT_NAMES = [
   'contact_form',
   'form_submission',
   'contact_form_submit',
+  'contact_form_submitted',
   'wpforms_submit',
 ];
 
