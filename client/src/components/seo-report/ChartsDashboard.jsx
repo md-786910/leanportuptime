@@ -519,7 +519,7 @@ function GASection({ siteId, themeKey }) {
   };
 
   const fileDownloads = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
-  const websiteRequests = sumEventUsersByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
+  const websiteRequests = sumEventsByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
   const uniqueVisitors = overview.uniqueVisitors || 0;
   const bounceRatePct = overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—';
   const avgTime = fmtDur(overview.avgTimeOnPage);
@@ -553,7 +553,7 @@ function GASection({ siteId, themeKey }) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* google Analytics */}
           <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} tooltip="Files downloaded (PDFs, etc.)." />
-          <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Users who completed a form" accent={GA_STAT_ACCENTS[1]} tooltip="Completed form submissions (lead, contact, etc.)." />
+          <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Form submissions" accent={GA_STAT_ACCENTS[1]} tooltip="Completed form submissions (lead, contact, etc.)." />
           <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} tooltip="Distinct people who visited the site during this period." />
           <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} tooltip="Share of visits where someone left without engaging — lower is better." />
           <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} tooltip="Average time users spent on a page during a session." />
