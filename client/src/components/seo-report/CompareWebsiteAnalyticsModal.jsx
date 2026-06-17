@@ -23,6 +23,14 @@ function sumEventUsersByName(allEvents, matcher) {
   );
 }
 
+function sumEventCountByName(allEvents, matcher) {
+  if (!Array.isArray(allEvents)) return 0;
+  return allEvents.reduce(
+    (sum, e) => (matcher(e.eventName) ? sum + (e.eventCount || 0) : sum),
+    0
+  );
+}
+
 function fmtNumber(n) {
   if (n == null) return '—';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -49,7 +57,7 @@ const METRICS = [
   { key: 'bounceRate',    label: 'Bounce Rate',       hint: 'Lower is better',      lowerIsBetter: true,  getValue: (d) => d?.overview?.bounceRate,      format: fmtPercent, isRate: true },
   { key: 'avgTime',       label: 'Avg. Time on Page', hint: 'Per session',          lowerIsBetter: false, getValue: (d) => d?.overview?.avgTimeOnPage,   format: fmtDuration },
   { key: 'fileDownloads', label: 'File Downloads',    hint: 'Users who downloaded', lowerIsBetter: false, getValue: (d) => sumEventUsersByName(d?.details?.events?.allEvents, (n) => n === 'file_download'), format: fmtNumber },
-  { key: 'formSubmitted', label: 'Form Submitted',    hint: 'Users who completed',  lowerIsBetter: false, getValue: (d) => sumEventUsersByName(d?.details?.events?.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n)), format: fmtNumber },
+  { key: 'formSubmitted', label: 'Form Submitted',    hint: 'Form submissions',     lowerIsBetter: false, getValue: (d) => sumEventCountByName(d?.details?.events?.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n)), format: fmtNumber },
 ];
 
 function DeltaCell({ current, previous, lowerIsBetter, available, isRate }) {

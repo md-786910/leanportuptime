@@ -47,6 +47,14 @@ function sumEventUsersByName(allEvents, matcher) {
   );
 }
 
+function sumEventCountByName(allEvents, matcher) {
+  if (!Array.isArray(allEvents)) return 0;
+  return allEvents.reduce(
+    (sum, e) => (matcher(e.eventName) ? sum + (e.eventCount || 0) : sum),
+    0
+  );
+}
+
 function KpiCard({ label, value, subtitle, accent, tooltip }) {
   const labelEl = (
     <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] mb-1.5">
@@ -168,7 +176,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const details = data?.details || {};
   const events = details.events || {};
   const fileDownloadUsers = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
-  const formSubmitUsers = sumEventUsersByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
+  const formSubmitUsers = sumEventCountByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
   const fileDownloadStatus = events.fileDownloads?.status;
 
   return (
@@ -230,7 +238,7 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
           <KpiCard
             label="Form Submitted"
             value={formatNumber(formSubmitUsers)}
-            subtitle="Users who completed a form"
+            subtitle="Form submissions"
             accent={KPI_ACCENTS[5]}
             tooltip="Completed form submissions (lead, contact, etc.)."
           />
