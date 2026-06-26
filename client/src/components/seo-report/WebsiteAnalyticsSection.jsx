@@ -36,6 +36,26 @@ function sumEventUsersByName(allEvents, matcher) {
   );
 }
 
+// GA4 form-completion events — fallback "Form Submitted" source for sites that
+// are NOT enabled for the WordPress webhook (see formSubmissionsEnabled).
+const FORM_SUBMIT_EVENTS = new Set([
+  'generate_lead',
+  'form_submit',
+  'form_submission',
+  'contact_form',
+  'contact_form_submit',
+  'contact_form_submitted',
+  'wpforms_submit',
+]);
+
+function sumEventCountByName(allEvents, matcher) {
+  if (!Array.isArray(allEvents)) return 0;
+  return allEvents.reduce(
+    (sum, e) => (matcher(e.eventName) ? sum + (e.eventCount || 0) : sum),
+    0
+  );
+}
+
 function KpiCard({ label, value, subtitle, accent, tooltip, onAction, actionTitle }) {
   const labelEl = (
     <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] mb-1.5">
@@ -88,7 +108,8 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const customTo = useSeoReportStore((s) => s.customTo);
   const dateRange = computeDateRange(period, customFrom, customTo);
   const { data, isLoading, isFetching, error } = useWebsiteAnalytics(siteId, period, dateRange);
-  const { count: formSubmitCount } = useFormSubmissionsCount(siteId, period, dateRange);
+  const formEnabled = !!analyticsStatus?.formSubmissionsEnabled;
+  const { count: formSubmitCount } = useFormSubmissionsCount(siteId, period, dateRange, { enabled: formEnabled });
   const [formDrawerOpen, setFormDrawerOpen] = useState(false);
 
   const filters = analyticsStatus?.filters || { excludedCountries: [], excludedTopPages: [] };
@@ -173,6 +194,8 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const events = details.events || {};
   const fileDownloadUsers = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
   const fileDownloadStatus = events.fileDownloads?.status;
+  // GA4 fallback used when this site isn't enabled for WordPress form submissions.
+  const gaFormCount = sumEventCountByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
 
   return (
     <div className="space-y-6 overflow-x-hidden">
@@ -232,11 +255,13 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
           />
           <KpiCard
             label="Form Submitted"
-            value={formatNumber(formSubmitCount)}
+            value={formatNumber(formEnabled ? formSubmitCount : gaFormCount)}
             subtitle="Form submissions"
             accent={KPI_ACCENTS[5]}
-            tooltip="Form submissions captured from your site for this period. Click the icon to view all details."
-            onAction={() => setFormDrawerOpen(true)}
+            tooltip={formEnabled
+              ? 'Form submissions captured from your site for this period. Click the icon to view all details.'
+              : 'Completed form submissions (lead, contact, etc.) from Google Analytics.'}
+            onAction={formEnabled ? () => setFormDrawerOpen(true) : undefined}
             actionTitle="View form submissions"
           />
         </div>

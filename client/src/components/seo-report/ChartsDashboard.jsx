@@ -53,6 +53,26 @@ function sumEventUsersByName(allEvents, matcher) {
   );
 }
 
+// GA4 form-completion events — fallback "Form Submitted" source for sites that
+// are NOT enabled for the WordPress webhook (see formSubmissionsEnabled).
+const FORM_SUBMIT_EVENTS = new Set([
+  'generate_lead',
+  'form_submit',
+  'form_submission',
+  'contact_form',
+  'contact_form_submit',
+  'contact_form_submitted',
+  'wpforms_submit',
+]);
+
+function sumEventsByName(allEvents, matcher) {
+  if (!Array.isArray(allEvents)) return 0;
+  return allEvents.reduce(
+    (sum, e) => (matcher(e.eventName) ? sum + (e.eventCount || 0) : sum),
+    0
+  );
+}
+
 // 7-day over prior-7-day delta on a daily time series. Returns { direction, pct } or null.
 function computeDelta(data, key) {
   if (!Array.isArray(data) || data.length < 14) return null;
@@ -461,7 +481,8 @@ function GASection({ siteId, themeKey }) {
   const customTo = useSeoReportStore((s) => s.customTo);
   const dateRange = computeDateRange(period, customFrom, customTo);
   const { data, isLoading, isFetching } = useWebsiteAnalytics(siteId, period, dateRange);
-  const { count: formSubmitCount } = useFormSubmissionsCount(siteId, period, dateRange);
+  const formEnabled = !!analyticsStatus?.formSubmissionsEnabled;
+  const { count: formSubmitCount } = useFormSubmissionsCount(siteId, period, dateRange, { enabled: formEnabled });
   const [formDrawerOpen, setFormDrawerOpen] = useState(false);
   const filtersMutation = useAnalyticsFilters(siteId);
   const [pendingScope, setPendingScope] = useState(null);
@@ -514,6 +535,8 @@ function GASection({ siteId, themeKey }) {
   };
 
   const fileDownloads = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
+  // GA4 fallback used when this site isn't enabled for WordPress form submissions.
+  const gaFormCount = sumEventsByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
   const uniqueVisitors = overview.uniqueVisitors || 0;
   const bounceRatePct = overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—';
   const avgTime = fmtDur(overview.avgTimeOnPage);
@@ -547,7 +570,7 @@ function GASection({ siteId, themeKey }) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* google Analytics */}
           <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} tooltip="Files downloaded (PDFs, etc.)." />
-          <StatCard label="Form Submitted" value={fmt(formSubmitCount)} hint="Form submissions" accent={GA_STAT_ACCENTS[1]} tooltip="Form submissions captured from your site for this period. Click the icon to view all details." onAction={() => setFormDrawerOpen(true)} actionTitle="View form submissions" />
+          <StatCard label="Form Submitted" value={fmt(formEnabled ? formSubmitCount : gaFormCount)} hint="Form submissions" accent={GA_STAT_ACCENTS[1]} tooltip={formEnabled ? 'Form submissions captured from your site for this period. Click the icon to view all details.' : 'Completed form submissions (lead, contact, etc.) from Google Analytics.'} onAction={formEnabled ? () => setFormDrawerOpen(true) : undefined} actionTitle="View form submissions" />
           <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} tooltip="Distinct people who visited the site during this period." />
           <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} tooltip="Share of visits where someone left without engaging — lower is better." />
           <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} tooltip="Average time users spent on a page during a session." />

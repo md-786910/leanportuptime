@@ -52,6 +52,12 @@ module.exports = {
     secret: process.env.FORM_WEBHOOK_SECRET || "",
     headerName: (process.env.FORM_WEBHOOK_HEADER || "x-form-secret").toLowerCase(),
     rateMax: parseInt(process.env.FORM_WEBHOOK_RATE_MAX || "30", 10),
+    // Allowlist of project (Site _id) values enabled for WordPress form submissions.
+    // Empty => no project enabled (every site keeps its GA4-derived count).
+    projectIds: (process.env.FORM_WEBHOOK_PROJECT_IDS || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
   },
   pageSpeedApiKey: process.env.PAGESPEED_API_KEY || "",
   google: {

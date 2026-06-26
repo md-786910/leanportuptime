@@ -1,6 +1,7 @@
 const analyticsService = require('../services/analytics.service');
 const Site = require('../models/Site');
 const resolveGoogleUser = require('../utils/resolveGoogleUser');
+const config = require('../config');
 
 /**
  * Compute date range from a period string.
@@ -40,6 +41,7 @@ exports.getStatus = async (req, res, next) => {
       data: {
         googleConnected,
         linked,
+        formSubmissionsEnabled: config.formWebhook.projectIds.includes(String(site._id)),
         propertyId: site.analytics?.propertyId || null,
         propertyName: site.analytics?.propertyName || null,
         connectedAt: site.analytics?.connectedAt || null,

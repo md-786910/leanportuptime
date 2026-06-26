@@ -3,11 +3,11 @@ import { getFormSubmissionsCount, getFormSubmissions } from '../api/formSubmissi
 
 // Dedicated count hook for the "Form Submitted" KPI. Independent of GA4 so it
 // works even when no Analytics property is linked.
-export const useFormSubmissionsCount = (siteId, period = '28d', dateRange = null) => {
+export const useFormSubmissionsCount = (siteId, period = '28d', dateRange = null, { enabled = true } = {}) => {
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['formSubmissionsCount', siteId, period, dateRange],
     queryFn: () => getFormSubmissionsCount(siteId, period, dateRange),
-    enabled: !!siteId && (period !== 'custom' || !!dateRange),
+    enabled: !!siteId && enabled && (period !== 'custom' || !!dateRange),
     staleTime: 5 * 60 * 1000,
   });
   return { count: data?.count ?? 0, isLoading, isFetching };

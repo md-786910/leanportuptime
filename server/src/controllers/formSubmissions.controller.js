@@ -73,6 +73,16 @@ exports.createFromWebhook = async (req, res, next) => {
     }
 
     const projectId = String(value.project_id);
+
+    // Allowlist gate (checked before any DB lookup so we never reveal whether a
+    // non-enabled project id exists). Empty list => no project enabled.
+    if (!config.formWebhook.projectIds.includes(projectId)) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Form submissions are not enabled for this project' },
+      });
+    }
+
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
       return res.status(404).json({
         success: false,
