@@ -16,6 +16,7 @@ const PERIODS = [
   { key: '28d', label: '28 days' },
   { key: 'thisMonth', label: 'This Month' },
   { key: '2m', label: '2 months' },
+  { key: 'all', label: 'All time' },
   { key: 'custom', label: 'Custom' },
 ];
 

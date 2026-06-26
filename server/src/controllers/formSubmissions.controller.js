@@ -98,7 +98,13 @@ exports.createFromWebhook = async (req, res, next) => {
       });
     }
 
-    const submission = await FormSubmission.create({
+    const submittedAt = value.date ? new Date(value.date) : new Date();
+    // Bulk imports (parseFormExcel.js tags rows with imported:true) carry a
+    // historical date — backdate createdAt/updatedAt to it so every time field
+    // reflects the real submission. Live site posts keep auto timestamps (now).
+    const isImport = req.body.imported === true || req.body.imported === 'true';
+
+    const doc = new FormSubmission({
       siteId: site._id,
       projectId,
       firstName: value.first_name || '',
@@ -109,9 +115,17 @@ exports.createFromWebhook = async (req, res, next) => {
       websiteLink: value.website_link || value['website link'] || '',
       websiteType: value.website_type || '',
       submitFrom: value.submit_from || 'live',
-      submittedAt: value.date ? new Date(value.date) : new Date(),
+      submittedAt,
       payload: req.body,
     });
+
+    if (isImport) {
+      doc.createdAt = submittedAt;
+      doc.updatedAt = submittedAt;
+    }
+    // `timestamps: false` on this save preserves the manual createdAt/updatedAt
+    // for imports; live posts (no override) get auto now timestamps.
+    const submission = await doc.save(isImport ? { timestamps: false } : undefined);
 
     // Minimal response — never echo internal data to an unauthenticated caller.
     res.status(201).json({ success: true, data: { id: submission._id, received: true } });
@@ -144,14 +158,14 @@ exports.list = async (req, res, next) => {
 
     const { from, to } = resolvePeriodRange(req.query);
     if (from || to) {
-      filter.createdAt = {};
-      if (from) filter.createdAt.$gte = from;
-      if (to) filter.createdAt.$lte = to;
+      filter.submittedAt = {};
+      if (from) filter.submittedAt.$gte = from;
+      if (to) filter.submittedAt.$lte = to;
     }
 
     const [rows, total] = await Promise.all([
       FormSubmission.find(filter)
-        .sort({ createdAt: -1 })
+        .sort({ submittedAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
@@ -175,9 +189,9 @@ exports.count = async (req, res, next) => {
 
     const { from, to, period } = resolvePeriodRange(req.query);
     if (from || to) {
-      filter.createdAt = {};
-      if (from) filter.createdAt.$gte = from;
-      if (to) filter.createdAt.$lte = to;
+      filter.submittedAt = {};
+      if (from) filter.submittedAt.$gte = from;
+      if (to) filter.submittedAt.$lte = to;
     }
 
     const count = await FormSubmission.countDocuments(filter);

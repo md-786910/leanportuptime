@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon --watch src --watch server.js server.js",
     "worker": "node src/workers/index.js",
-    "seed": "node ../scripts/seed.js"
+    "seed": "node ../scripts/seed.js",
+    "forms:parse": "node scripts/parseFormExcel.js",
+    "forms:send": "node scripts/sendFormSubmissions.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -34,6 +36,7 @@
     "winston": "^3.14.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "xlsx": "^0.18.5"
   }
 }

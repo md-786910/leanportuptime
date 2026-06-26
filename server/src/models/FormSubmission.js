@@ -41,9 +41,10 @@ const formSubmissionSchema = new mongoose.Schema(
 );
 
 // Primary count/list path: per site, filtered by source, newest first.
-// `createdAt` is the canonical time for period filtering so the card count and
-// the drawer total always agree.
-formSubmissionSchema.index({ siteId: 1, submitFrom: 1, createdAt: -1 });
-formSubmissionSchema.index({ siteId: 1, websiteType: 1, createdAt: -1 });
+// `submittedAt` is the canonical time for period filtering/sorting — it holds the
+// real submission date for both live webhook posts (date provided) and imported
+// historical rows, so filtering by it works for backfilled data too.
+formSubmissionSchema.index({ siteId: 1, submitFrom: 1, submittedAt: -1 });
+formSubmissionSchema.index({ siteId: 1, websiteType: 1, submittedAt: -1 });
 
 module.exports = mongoose.model('FormSubmission', formSubmissionSchema);
