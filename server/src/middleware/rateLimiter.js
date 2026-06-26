@@ -29,4 +29,18 @@ const authLimiter = rateLimit({
   },
 });
 
-module.exports = { apiLimiter, authLimiter };
+const formWebhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: config.env === 'development' ? 1000 : config.formWebhook.rateMax,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: 'Too many requests, please try again later',
+    },
+  },
+});
+
+module.exports = { apiLimiter, authLimiter, formWebhookLimiter };

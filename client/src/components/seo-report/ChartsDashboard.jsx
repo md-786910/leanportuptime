@@ -12,6 +12,8 @@ import { useSeoReportStore } from '../../store/seoReportStore';
 import { themeColor } from './colorThemes';
 import { useGscStatus, useGscPerformance, useGscInsights } from '../../hooks/useSearchConsole';
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnalyticsInsights, useAnalyticsFilters } from '../../hooks/useAnalytics';
+import { useFormSubmissionsCount } from '../../hooks/useFormSubmissions';
+import FormSubmissionsDrawer from './FormSubmissionsDrawer';
 import { CountryFilterDropdown } from './ChannelBreakdownChart';
 import TopQueriesTable from './TopQueriesTable';
 import TopPagesTable from './TopPagesTable';
@@ -41,28 +43,6 @@ function fmtDur(s) {
   if (!s || s <= 0) return '0s';
   const m = Math.floor(s / 60); const sec = Math.round(s % 60);
   return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
-}
-
-// GA4 reports each form event separately. We roll up these completion-event
-// names (covering GA4 defaults + WPForms / Contact Form 7 / etc.) so the KPI
-// works across plugins. `form_start` is intentionally excluded — it's funnel
-// intent, not a submission.
-const FORM_SUBMIT_EVENTS = new Set([
-  'generate_lead',
-  'form_submit',
-  'form_submission',
-  'contact_form',
-  'contact_form_submit',
-  'contact_form_submitted',
-  'wpforms_submit',
-]);
-
-function sumEventsByName(allEvents, matcher) {
-  if (!Array.isArray(allEvents)) return 0;
-  return allEvents.reduce(
-    (sum, e) => (matcher(e.eventName) ? sum + (e.eventCount || 0) : sum),
-    0
-  );
 }
 
 function sumEventUsersByName(allEvents, matcher) {
@@ -127,7 +107,20 @@ function MiniSparkline({ data, dataKey, color, height = 36 }) {
   );
 }
 
-function StatCard({ label, value, delta, sparkline, hint, accent, tooltip }) {
+function StatCard({ label, value, delta, sparkline, hint, accent, tooltip, onAction, actionTitle }) {
+  const actionBtn = onAction ? (
+    <button
+      type="button"
+      onClick={onAction}
+      title={actionTitle || 'View details'}
+      aria-label={actionTitle || 'View details'}
+      className="relative z-10 w-6 h-6 flex items-center justify-center rounded-lg border border-current/30 bg-current/5 hover:bg-current/10 transition-colors flex-shrink-0"
+    >
+      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 5.25h16.5M3.75 6.75h16.5" />
+      </svg>
+    </button>
+  ) : null;
   if (accent) {
     const labelEl = (
       <p className="text-[12px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.2em] truncate">
@@ -143,7 +136,7 @@ function StatCard({ label, value, delta, sparkline, hint, accent, tooltip }) {
               <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{labelEl}</span>
             </InfoTooltip>
           ) : labelEl}
-          <DeltaChip delta={delta} />
+          {actionBtn || <DeltaChip delta={delta} />}
         </div>
         <p className="text-2xl font-headline font-extrabold text-brand-on-surface dark:text-white tabular-nums leading-tight">
           {value}
@@ -468,6 +461,8 @@ function GASection({ siteId, themeKey }) {
   const customTo = useSeoReportStore((s) => s.customTo);
   const dateRange = computeDateRange(period, customFrom, customTo);
   const { data, isLoading, isFetching } = useWebsiteAnalytics(siteId, period, dateRange);
+  const { count: formSubmitCount } = useFormSubmissionsCount(siteId, period, dateRange);
+  const [formDrawerOpen, setFormDrawerOpen] = useState(false);
   const filtersMutation = useAnalyticsFilters(siteId);
   const [pendingScope, setPendingScope] = useState(null);
   const refreshing = filtersMutation.isPending || (isFetching && !isLoading);
@@ -519,7 +514,6 @@ function GASection({ siteId, themeKey }) {
   };
 
   const fileDownloads = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
-  const websiteRequests = sumEventsByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
   const uniqueVisitors = overview.uniqueVisitors || 0;
   const bounceRatePct = overview.bounceRate != null ? `${(overview.bounceRate * 100).toFixed(1)}%` : '—';
   const avgTime = fmtDur(overview.avgTimeOnPage);
@@ -553,7 +547,7 @@ function GASection({ siteId, themeKey }) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* google Analytics */}
           <StatCard label="File Downloads" value={fmt(fileDownloads)} hint="Users who downloaded a file" accent={GA_STAT_ACCENTS[0]} tooltip="Files downloaded (PDFs, etc.)." />
-          <StatCard label="Form Submitted" value={fmt(websiteRequests)} hint="Form submissions" accent={GA_STAT_ACCENTS[1]} tooltip="Completed form submissions (lead, contact, etc.)." />
+          <StatCard label="Form Submitted" value={fmt(formSubmitCount)} hint="Form submissions" accent={GA_STAT_ACCENTS[1]} tooltip="Form submissions captured from your site for this period. Click the icon to view all details." onAction={() => setFormDrawerOpen(true)} actionTitle="View form submissions" />
           <StatCard label="Unique Visitors" value={fmt(uniqueVisitors)} hint="Distinct users" accent={GA_STAT_ACCENTS[2]} tooltip="Distinct people who visited the site during this period." />
           <StatCard label="Bounce Rate" value={bounceRatePct} hint="Single-page sessions" accent={GA_STAT_ACCENTS[3]} tooltip="Share of visits where someone left without engaging — lower is better." />
           <StatCard label="Avg. Time on Page" value={avgTime} hint="Per session" accent={GA_STAT_ACCENTS[4]} tooltip="Average time users spent on a page during a session." />
@@ -706,6 +700,15 @@ function GASection({ siteId, themeKey }) {
         siteId={siteId}
         currentChannels={channels}
         currentLabel="Current Period"
+      />
+
+      <FormSubmissionsDrawer
+        isOpen={formDrawerOpen}
+        onClose={() => setFormDrawerOpen(false)}
+        siteId={siteId}
+        initialPeriod={period}
+        initialCustomFrom={customFrom}
+        initialCustomTo={customTo}
       />
     </ReportSection>
   );

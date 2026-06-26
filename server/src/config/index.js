@@ -48,6 +48,11 @@ module.exports = {
   invitationExpiryMinutes: parseInt(process.env.INVITATION_EXPIRY_MINUTES, 10) || 24 * 60,
   probes: parseProbes(process.env.PROBE_URLS),
   probeSecret: process.env.PROBE_SECRET || "",
+  formWebhook: {
+    secret: process.env.FORM_WEBHOOK_SECRET || "",
+    headerName: (process.env.FORM_WEBHOOK_HEADER || "x-form-secret").toLowerCase(),
+    rateMax: parseInt(process.env.FORM_WEBHOOK_RATE_MAX || "30", 10),
+  },
   pageSpeedApiKey: process.env.PAGESPEED_API_KEY || "",
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || "",

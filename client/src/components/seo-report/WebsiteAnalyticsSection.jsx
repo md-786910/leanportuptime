@@ -5,10 +5,12 @@ import Card from '../common/Card';
 import BentoCard from '../common/BentoCard';
 import { Sk } from '../common/Skeleton';
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsFilters } from '../../hooks/useAnalytics';
+import { useFormSubmissionsCount } from '../../hooks/useFormSubmissions';
 import ChannelBreakdownChart from './ChannelBreakdownChart';
 import TopPagesVisitedTable from './TopPagesVisitedTable';
 import GA4EventsPanel from './GA4EventsPanel';
 import CompareWebsiteAnalyticsModal from './CompareWebsiteAnalyticsModal';
+import FormSubmissionsDrawer from './FormSubmissionsDrawer';
 import { Tooltip } from '../common/Tooltip';
 
 function formatNumber(n) {
@@ -26,19 +28,6 @@ function formatDuration(seconds) {
   return `${s}s`;
 }
 
-// Form-completion events across GA4 default + WPForms / Contact Form 7. Mirrors
-// the Charts tab so both tabs show the same number. `form_start` is excluded
-// because it's funnel intent, not a submission.
-const FORM_SUBMIT_EVENTS = new Set([
-  'generate_lead',
-  'form_submit',
-  'form_submission',
-  'contact_form',
-  'contact_form_submit',
-  'contact_form_submitted',
-  'wpforms_submit',
-]);
-
 function sumEventUsersByName(allEvents, matcher) {
   if (!Array.isArray(allEvents)) return 0;
   return allEvents.reduce(
@@ -47,15 +36,7 @@ function sumEventUsersByName(allEvents, matcher) {
   );
 }
 
-function sumEventCountByName(allEvents, matcher) {
-  if (!Array.isArray(allEvents)) return 0;
-  return allEvents.reduce(
-    (sum, e) => (matcher(e.eventName) ? sum + (e.eventCount || 0) : sum),
-    0
-  );
-}
-
-function KpiCard({ label, value, subtitle, accent, tooltip }) {
+function KpiCard({ label, value, subtitle, accent, tooltip, onAction, actionTitle }) {
   const labelEl = (
     <p className="text-[10px] font-bold text-brand-outline dark:text-brand-on-surface-variant uppercase tracking-[0.18em] mb-1.5">
       {label}
@@ -64,6 +45,19 @@ function KpiCard({ label, value, subtitle, accent, tooltip }) {
   return (
     <div className="relative rounded-xl bg-white dark:bg-brand-surface-container-lowest border border-brand-outline-variant/70 dark:border-brand-outline/60 px-4 pt-4 pb-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)] hover:border-brand-outline-variant dark:hover:border-brand-outline transition-all overflow-hidden group">
       <div className={`absolute top-0 left-0 right-0 h-[1px] ${accent.bar}`} />
+      {onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          title={actionTitle || 'View details'}
+          aria-label={actionTitle || 'View details'}
+          className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-lg border border-brand-outline-variant dark:border-brand-outline bg-brand-surface-container-lowest dark:bg-brand-on-surface text-brand-outline hover:border-brand-400 hover:text-brand-primary transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 5.25h16.5M3.75 6.75h16.5" />
+          </svg>
+        </button>
+      )}
       {tooltip ? (
         <Tooltip content={tooltip} placement="top">
           <span className="cursor-help underline decoration-dotted underline-offset-2 decoration-brand-outline/60">{labelEl}</span>
@@ -94,6 +88,8 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const customTo = useSeoReportStore((s) => s.customTo);
   const dateRange = computeDateRange(period, customFrom, customTo);
   const { data, isLoading, isFetching, error } = useWebsiteAnalytics(siteId, period, dateRange);
+  const { count: formSubmitCount } = useFormSubmissionsCount(siteId, period, dateRange);
+  const [formDrawerOpen, setFormDrawerOpen] = useState(false);
 
   const filters = analyticsStatus?.filters || { excludedCountries: [], excludedTopPages: [] };
   const filtersMutation = useAnalyticsFilters(siteId);
@@ -176,7 +172,6 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
   const details = data?.details || {};
   const events = details.events || {};
   const fileDownloadUsers = sumEventUsersByName(events.allEvents, (n) => n === 'file_download');
-  const formSubmitUsers = sumEventCountByName(events.allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
   const fileDownloadStatus = events.fileDownloads?.status;
 
   return (
@@ -237,10 +232,12 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
           />
           <KpiCard
             label="Form Submitted"
-            value={formatNumber(formSubmitUsers)}
+            value={formatNumber(formSubmitCount)}
             subtitle="Form submissions"
             accent={KPI_ACCENTS[5]}
-            tooltip="Completed form submissions (lead, contact, etc.)."
+            tooltip="Form submissions captured from your site for this period. Click the icon to view all details."
+            onAction={() => setFormDrawerOpen(true)}
+            actionTitle="View form submissions"
           />
         </div>
       </BentoCard>
@@ -296,6 +293,15 @@ function WebsiteDashboard({ siteId, themeKey, viewMode, analyticsStatus }) {
         siteId={siteId}
         currentData={data}
         currentLabel="Current Period"
+      />
+
+      <FormSubmissionsDrawer
+        isOpen={formDrawerOpen}
+        onClose={() => setFormDrawerOpen(false)}
+        siteId={siteId}
+        initialPeriod={period}
+        initialCustomFrom={customFrom}
+        initialCustomTo={customTo}
       />
     </div>
   );

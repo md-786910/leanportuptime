@@ -30,8 +30,13 @@ const analyticsRoutes = require("./routes/analytics.routes");
 const backlinksRoutes = require("./routes/backlinks.routes");
 const keywordsRoutes = require("./routes/keywords.routes");
 const appSettingsRoutes = require("./routes/appSettings.routes");
+const formSubmissionsRoutes = require("./routes/formSubmissions.routes");
+const siteFormSubmissionsRoutes = require("./routes/siteFormSubmissions.routes");
 
 const app = express();
+
+// Trust proxy so rate limiters key on the real client IP behind a proxy.
+app.set("trust proxy", config.trustProxy);
 
 // Security & parsing middleware
 app.use(helmet());
@@ -56,6 +61,8 @@ app.get("/api/health", (req, res) => {
 
 // API routes
 app.use("/api/auth", authRoutes);
+// Public webhook (no auth) — WordPress posts form submissions; secured by shared secret.
+app.use("/api/form-submissions", formSubmissionsRoutes);
 app.use("/api/sites", sitesRoutes);
 app.use("/api/sites/:id/checks", auth, siteAccess, requireAnyTab(["overview", "performance", "history"]), checksRoutes);
 app.use("/api/sites/:id/ssl", auth, siteAccess, requireTab("ssl"), sslRoutes);
@@ -69,6 +76,7 @@ app.use("/api/sites/:id/search-console", auth, siteAccess, requireTab("seo-repor
 app.use("/api/sites/:id/analytics", auth, siteAccess, requireTab("seo-report"), analyticsRoutes);
 app.use("/api/sites/:id/backlinks", auth, siteAccess, requireTab("seo-report"), backlinksRoutes);
 app.use("/api/sites/:id/keywords", auth, siteAccess, requireTab("seo-report"), keywordsRoutes);
+app.use("/api/sites/:id/form-submissions", auth, siteAccess, requireTab("seo-report"), siteFormSubmissionsRoutes);
 app.use("/api/settings", auth, appSettingsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/invitations", invitationRoutes);
