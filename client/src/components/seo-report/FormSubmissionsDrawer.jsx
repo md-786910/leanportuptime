@@ -4,6 +4,7 @@ import DataTable from '../common/DataTable';
 import EmptyState from '../common/EmptyState';
 import { Sk } from '../common/Skeleton';
 import SectionDateFilter, { computeDateRange } from '../common/SectionDateFilter';
+import Tooltip from '../common/Tooltip';
 import { useFormSubmissions } from '../../hooks/useFormSubmissions';
 
 const LIMIT = 20;
@@ -54,6 +55,66 @@ function SourceBadge({ value }) {
   );
 }
 
+// CF7 [select] submits the raw option value, often wrapped in braces and in the
+// site's source language. Strip the braces (durable for any value) and prettify
+// the known legacy German tokens into readable English labels.
+const TYPE_LABELS = {
+  '{Allgemein}': 'General',
+  '{Antriebssysteme}': 'Drive systems',
+  '{Systemelektronik}': 'System electronics',
+  '{Fahrzeugvernetzung}': 'Vehicle networking',
+  '{Wasserstofftechnologie}': 'Hydrogen technology',
+  '{Prüftechnik}': 'Test technology',
+  '{Messtechnik}': 'Measurement technology',
+  '{Entwicklung und Prototyping}': 'Development and prototyping',
+  '{Fertigung und Montage}': 'Manufacturing and assembly',
+  '{Sytemintegration und Testing}': 'System integration and testing',
+  '{Sonder- und Behördenfahrzeuge}': 'Special and government vehicles',
+  '{Arbeitnehmerüberlassung}': 'Temporary employment',
+};
+
+function formatWebsiteType(value) {
+  if (!value) return '—';
+  if (TYPE_LABELS[value]) return TYPE_LABELS[value];
+  return String(value).replace(/^\{|\}$/g, '').trim() || '—';
+}
+
+const MessageIcon = ({ className = '' }) => (
+  <svg
+    className={`w-3.5 h-3.5 ${className}`}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+    aria-hidden
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5m-9 7l3.5-2H18a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v13z" />
+  </svg>
+);
+
+// Truncated message text with a visible icon that reveals the full description
+// in a hover/focus popover (reuses the portal-based Tooltip so it escapes the
+// table's overflow container).
+function MessageCell({ text }) {
+  if (!text) return <span className="text-brand-outline">—</span>;
+  return (
+    <div className="flex items-center gap-1.5 min-w-0">
+      <span className="block truncate max-w-[200px]" title={text}>
+        {text}
+      </span>
+      <Tooltip content={text} placement="left">
+        <button
+          type="button"
+          aria-label="Show full message"
+          className="shrink-0 text-brand-outline hover:text-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary-container rounded"
+        >
+          <MessageIcon />
+        </button>
+      </Tooltip>
+    </div>
+  );
+}
+
 const columns = [
   {
     key: 'submittedAt',
@@ -82,9 +143,9 @@ const columns = [
       ),
   },
   { key: 'telephone', label: 'Phone', width: '14%', render: (r) => r.telephone || '—' },
-  { key: 'websiteType', label: 'Type', width: '12%', render: (r) => r.websiteType || '—' },
+  { key: 'websiteType', label: 'Type', width: '12%', render: (r) => formatWebsiteType(r.websiteType) },
   { key: 'submitFrom', label: 'Source', width: '10%', render: (r) => <SourceBadge value={r.submitFrom} /> },
-  { key: 'description', label: 'Message', truncate: true, render: (r) => r.description || '—' },
+  { key: 'description', label: 'Message', render: (r) => <MessageCell text={r.description} /> },
 ];
 
 export default function FormSubmissionsDrawer({
@@ -134,10 +195,14 @@ export default function FormSubmissionsDrawer({
   );
 
   // Distinct website types from the loaded rows, for the quick filter dropdown.
+  // Keep the raw value (matches stored data for the API filter) but show a
+  // readable label.
   const typeOptions = useMemo(() => {
     const set = new Set(rows.map((r) => r.websiteType).filter(Boolean));
     if (websiteType) set.add(websiteType);
-    return Array.from(set).sort();
+    return Array.from(set)
+      .map((value) => ({ value, label: formatWebsiteType(value) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [rows, websiteType]);
 
   const total = meta?.total || 0;
@@ -226,8 +291,8 @@ export default function FormSubmissionsDrawer({
           >
             <option value="">All types</option>
             {typeOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
+              <option key={t.value} value={t.value}>
+                {t.label}
               </option>
             ))}
           </select>
