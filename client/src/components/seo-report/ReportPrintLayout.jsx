@@ -272,6 +272,8 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
   websiteData, organicOverview, backlinks, keywords,
   scores, strategy, history,
   reportPeriodLabel = 'Selected period',
+  formSubmissionsEnabled = false,
+  formSubmitCount = 0,
 }, ref) {
   const tk = themeKey || 'default';
   const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -291,7 +293,8 @@ const ReportPrintLayout = forwardRef(function ReportPrintLayout({
   const websiteEvents = websiteData?.details?.events || {};
   const allEvents = Array.isArray(websiteEvents.allEvents) ? websiteEvents.allEvents : [];
   const fileDownloads = sumEventUsersByName(allEvents, (n) => n === 'file_download');
-  const formRequests = sumEventUsersByName(allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
+  const gaFormRequests = sumEventUsersByName(allEvents, (n) => FORM_SUBMIT_EVENTS.has(n));
+  const formRequests = formSubmissionsEnabled ? formSubmitCount : gaFormRequests;
   const hasWebsiteAnalytics = Boolean(
     websiteData?.overview || channels.length > 0 || allEvents.length > 0
   );

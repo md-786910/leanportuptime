@@ -6,6 +6,7 @@ import ReportPrintLayout from './ReportPrintLayout';
 import { computeDateRange } from '../common/SectionDateFilter';
 import { useGscPerformance, useGscInsights, useGscStatus } from '../../hooks/useSearchConsole';
 import { useAnalyticsStatus, useWebsiteAnalytics, useAnalyticsOverview, useAnalyticsInsights } from '../../hooks/useAnalytics';
+import { useFormSubmissionsCount } from '../../hooks/useFormSubmissions';
 import { useBacklinksStatus } from '../../hooks/useBacklinks';
 import { useKeywordsStatus } from '../../hooks/useKeywords';
 import { useSeoReportStore } from '../../store/seoReportStore';
@@ -53,6 +54,10 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
   const { insights: organicInsights } = useAnalyticsInsights(siteId, period, dateRange);
   const { status: backlinksStatus } = useBacklinksStatus(siteId);
   const { status: keywordsStatus } = useKeywordsStatus(siteId);
+  const formSubmissionsEnabled = !!analyticsStatus?.formSubmissionsEnabled;
+  const { count: formSubmitCount } = useFormSubmissionsCount(siteId, period, dateRange, {
+    enabled: formSubmissionsEnabled,
+  });
 
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
@@ -163,6 +168,8 @@ export default function GenerateReportButton({ siteId, siteName, siteUrl, scores
             backlinks={backlinksStatus?.backlinks}
             keywords={keywordsStatus?.items}
             reportPeriodLabel={periodLabel}
+            formSubmissionsEnabled={formSubmissionsEnabled}
+            formSubmitCount={formSubmitCount}
           />
         </div>,
         document.body

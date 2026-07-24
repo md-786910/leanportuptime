@@ -36,6 +36,14 @@ const ENGAGEMENT_EVENTS = new Set([
 ]);
 
 const HIDDEN_EVENTS = new Set(['view_search_results']);
+// Redundant when form submissions come from the WordPress webhook (FORM_WEBHOOK_PROJECT_IDS).
+const WEBHOOK_HIDDEN_FORM_EVENTS = new Set(['form_start', 'contact_form_submitted']);
+
+function isHiddenEvent(eventName, formSubmissionsEnabled) {
+  if (HIDDEN_EVENTS.has(eventName)) return true;
+  if (formSubmissionsEnabled && WEBHOOK_HIDDEN_FORM_EVENTS.has(eventName)) return true;
+  return false;
+}
 
 function formatNumber(n) {
   if (n == null) return '—';
@@ -60,18 +68,18 @@ function eventBadge(eventName) {
   return null;
 }
 
-export default function GA4EventsPanel({ events, themeKey, siteId }) {
+export default function GA4EventsPanel({ events, themeKey, siteId, formSubmissionsEnabled = false }) {
   const [expanded, setExpanded] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const list = Array.isArray(events) ? events : [];
 
   const { totalCount, maxCount, sorted } = useMemo(() => {
-    const filtered = list.filter((e) => !HIDDEN_EVENTS.has(e.eventName));
+    const filtered = list.filter((e) => !isHiddenEvent(e.eventName, formSubmissionsEnabled));
     const total = filtered.reduce((sum, e) => sum + (e.eventCount || 0), 0);
     const max = filtered.reduce((m, e) => Math.max(m, e.eventCount || 0), 0);
     const s = [...filtered].sort((a, b) => (b.eventCount || 0) - (a.eventCount || 0));
     return { totalCount: total, maxCount: max, sorted: s };
-  }, [list]);
+  }, [list, formSubmissionsEnabled]);
 
   const visibleRows = expanded ? sorted : sorted.slice(0, 20);
   const hasMore = sorted.length > 20;
@@ -206,6 +214,7 @@ export default function GA4EventsPanel({ events, themeKey, siteId }) {
           siteId={siteId}
           currentEvents={list}
           currentLabel="Current Period"
+          formSubmissionsEnabled={formSubmissionsEnabled}
         />
       )}
     </div>

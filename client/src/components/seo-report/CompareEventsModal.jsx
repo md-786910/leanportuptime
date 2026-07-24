@@ -7,6 +7,14 @@ import RangeHeaderButton from './compare/RangeHeaderButton';
 import { useComparePeriods } from './compare/useComparePeriods';
 
 const HIDDEN_EVENTS = new Set(['view_search_results']);
+// Redundant when form submissions come from the WordPress webhook (FORM_WEBHOOK_PROJECT_IDS).
+const WEBHOOK_HIDDEN_FORM_EVENTS = new Set(['form_start', 'contact_form_submitted']);
+
+function isHiddenEvent(eventName, formSubmissionsEnabled) {
+  if (HIDDEN_EVENTS.has(eventName)) return true;
+  if (formSubmissionsEnabled && WEBHOOK_HIDDEN_FORM_EVENTS.has(eventName)) return true;
+  return false;
+}
 
 function fmtNumber(n) {
   if (n == null) return '—';
@@ -51,7 +59,7 @@ function TagPill({ tone = 'gain', label }) {
   );
 }
 
-export default function CompareEventsModal({ isOpen, onClose, siteId, currentEvents = [], currentLabel = 'Current Period' }) {
+export default function CompareEventsModal({ isOpen, onClose, siteId, currentEvents = [], currentLabel = 'Current Period', formSubmissionsEnabled = false }) {
   const cmp = useComparePeriods({ isOpen });
   const [showAll, setShowAll] = useState(false);
 
@@ -95,11 +103,11 @@ export default function CompareEventsModal({ isOpen, onClose, siteId, currentEve
   const merged = useMemo(() => {
     const byName = new Map();
     for (const e of effectiveCurrentEvents) {
-      if (HIDDEN_EVENTS.has(e.eventName)) continue;
+      if (isHiddenEvent(e.eventName, formSubmissionsEnabled)) continue;
       byName.set(e.eventName, { name: e.eventName, current: e.eventCount || 0, previous: 0 });
     }
     for (const e of compareEvents) {
-      if (HIDDEN_EVENTS.has(e.eventName)) continue;
+      if (isHiddenEvent(e.eventName, formSubmissionsEnabled)) continue;
       const row = byName.get(e.eventName) || { name: e.eventName, current: 0, previous: 0 };
       row.previous = e.eventCount || 0;
       byName.set(e.eventName, row);
@@ -107,15 +115,15 @@ export default function CompareEventsModal({ isOpen, onClose, siteId, currentEve
     const arr = [...byName.values()];
     arr.sort((a, b) => Math.max(b.current, b.previous) - Math.max(a.current, a.previous));
     return arr;
-  }, [effectiveCurrentEvents, compareEvents]);
+  }, [effectiveCurrentEvents, compareEvents, formSubmissionsEnabled]);
 
   const totalCurrent = useMemo(
-    () => effectiveCurrentEvents.reduce((s, e) => HIDDEN_EVENTS.has(e.eventName) ? s : s + (e.eventCount || 0), 0),
-    [effectiveCurrentEvents],
+    () => effectiveCurrentEvents.reduce((s, e) => isHiddenEvent(e.eventName, formSubmissionsEnabled) ? s : s + (e.eventCount || 0), 0),
+    [effectiveCurrentEvents, formSubmissionsEnabled],
   );
   const totalCompare = useMemo(
-    () => compareEvents.reduce((s, e) => HIDDEN_EVENTS.has(e.eventName) ? s : s + (e.eventCount || 0), 0),
-    [compareEvents],
+    () => compareEvents.reduce((s, e) => isHiddenEvent(e.eventName, formSubmissionsEnabled) ? s : s + (e.eventCount || 0), 0),
+    [compareEvents, formSubmissionsEnabled],
   );
 
   const visibleRows = showAll ? merged : merged.slice(0, 20);
