@@ -30,7 +30,10 @@ const isGraphEnabled = () =>
 // Graph /users/{id}/sendMail needs a plain mailbox UPN, but SMTP_FROM is
 // often display-name formatted ("Sitelyze <no-reply@sitelyze.io>"). Extract
 // the bare email so a display-name FROM doesn't produce a 400/404 URL.
+// GRAPH_SENDER overrides this when the Graph mailbox differs from SMTP_FROM
+// (e.g. SMTP_FROM is unlicensed/on-prem and Graph must send as another user).
 const getGraphSender = () => {
+  if ((config.graph.sender || "").trim()) return config.graph.sender.trim();
   const from = (config.smtp.from || "").trim();
   const match = from.match(/<([^>]+)>/);
   return (match ? match[1] : from).trim();
@@ -111,7 +114,13 @@ const sendViaGraph = async ({ to, subject, html, text }) => {
     }
   );
   if (!res.ok) {
-    throw new Error(`Graph sendMail failed: ${res.status} ${await res.text()}`);
+    const body = await res.text();
+    if (res.status === 404 && body.includes("MailboxNotEnabledForRESTAPI")) {
+      throw new Error(
+        `Graph sendMail failed: 404 MailboxNotEnabledForRESTAPI — sender '${getGraphSender()}' is not an active Exchange Online mailbox (inactive/soft-deleted/on-prem). License it or set GRAPH_SENDER to a licensed mailbox. Raw: ${body}`
+      );
+    }
+    throw new Error(`Graph sendMail failed: ${res.status} ${body}`);
   }
 };
 

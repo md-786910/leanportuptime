@@ -44,6 +44,7 @@ module.exports = {
     tenantId: process.env.GRAPH_TENANT_ID || "",
     clientId: process.env.GRAPH_CLIENT_ID || "",
     clientSecret: process.env.GRAPH_CLIENT_SECRET || "",
+    sender: process.env.GRAPH_SENDER || "",
   },
   sslEmailListToSend: (process.env.SSL_EMAIL_LIST_TO_SEND || "")
     .split(",")
