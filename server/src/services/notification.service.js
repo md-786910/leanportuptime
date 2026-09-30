@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const config = require("../config");
+const mailer = require("./mailer.service");
 const Notification = require("../models/Notification");
 const logger = require("../utils/logger");
 
@@ -16,7 +17,11 @@ class NotificationService {
         },
       });
       logger.info(`SMTP configured: ${config.smtp.host}:${config.smtp.port}`);
+    } else if (mailer.isGraphEnabled()) {
+      this.transporter = null;
+      logger.info("Microsoft Graph mail enabled — SMTP fallback disabled");
     } else {
+      this.transporter = null;
       logger.warn("SMTP not configured — email notifications disabled");
     }
   }
@@ -85,7 +90,7 @@ class NotificationService {
   }
 
   async _sendEmail(site, type, message) {
-    if (!this.transporter) {
+    if (!this.transporter && !mailer.isGraphEnabled()) {
       throw new Error("SMTP not configured");
     }
 
@@ -103,7 +108,7 @@ class NotificationService {
       type,
     });
 
-    await this.transporter.sendMail({
+    await mailer.sendMail({
       from: config.smtp.from,
       to: recipients.join(","),
       subject: `[Sitelyze]: ${site.name} - ${type.toUpperCase()}`,
@@ -117,11 +122,11 @@ class NotificationService {
   }
 
   async sendPasswordResetEmail(toEmail, resetUrl) {
-    if (!this.transporter) {
+    if (!this.transporter && !mailer.isGraphEnabled()) {
       throw new Error("SMTP not configured");
     }
 
-    await this.transporter.sendMail({
+    await mailer.sendMail({
       from: config.smtp.from,
       to: toEmail,
       subject: `[Sitelyze] Reset your password`,
@@ -142,7 +147,7 @@ class NotificationService {
   }
 
   async sendInvitationEmail(toEmail, inviterName, siteNames, acceptUrl) {
-    if (!this.transporter) {
+    if (!this.transporter && !mailer.isGraphEnabled()) {
       throw new Error("SMTP not configured");
     }
 
@@ -159,7 +164,7 @@ class NotificationService {
         ? `${mins / 60} ${mins / 60 === 1 ? "hour" : "hours"}`
         : `${mins} minutes`;
 
-    await this.transporter.sendMail({
+    await mailer.sendMail({
       from: config.smtp.from,
       to: toEmail,
       subject: `[Sitelyze] You've been invited to monitor sites`,

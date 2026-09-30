@@ -40,6 +40,11 @@ module.exports = {
     pass: process.env.SMTP_PASS,
     from: process.env.SMTP_FROM || "noreply@sitelyze.com",
   },
+  graph: {
+    tenantId: process.env.GRAPH_TENANT_ID || "",
+    clientId: process.env.GRAPH_CLIENT_ID || "",
+    clientSecret: process.env.GRAPH_CLIENT_SECRET || "",
+  },
   sslEmailListToSend: (process.env.SSL_EMAIL_LIST_TO_SEND || "")
     .split(",")
     .map((email) => email.trim())
