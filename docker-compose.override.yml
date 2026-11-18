@@ -4,7 +4,8 @@ services:
     container_name: wp-sentinel-mongo-gui
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      # Localhost only — reach it via SSH tunnel: ssh -L 8081:localhost:8081 user@server
+      - "127.0.0.1:8081:8081"
     environment:
       ME_CONFIG_MONGODB_SERVER: mongo
       ME_CONFIG_SITE_BASEURL: /mongo/   # <-- ADD THIS LINE

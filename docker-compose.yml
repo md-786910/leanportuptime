@@ -43,8 +43,8 @@ services:
     image: mongo:7
     container_name: wp-sentinel-mongo
     restart: unless-stopped
-    ports:
-      - "27017:27017"
+    expose:
+      - "27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: wpsentinel
       MONGO_INITDB_ROOT_PASSWORD: Kx9mQ7vLp2wNrT4bZj8X
@@ -71,12 +71,34 @@ services:
     networks:
       - wp-sentinel
 
+  mongo-backup:
+    image: mongo:7
+    container_name: wp-sentinel-mongo-backup
+    restart: unless-stopped
+    entrypoint: ["sh", "/scripts/mongo-backup.sh"]
+    environment:
+      MONGO_HOST: mongo
+      MONGO_PORT: "27017"
+      MONGO_USER: wpsentinel
+      MONGO_PASSWORD: Kx9mQ7vLp2wNrT4bZj8X
+      BACKUP_DIR: /backups
+      BACKUP_INTERVAL_DAYS: "3"
+      BACKUP_KEEP: "2"
+    volumes:
+      - ./scripts/mongo-backup.sh:/scripts/mongo-backup.sh:ro
+      - ./backups:/backups
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - wp-sentinel
+
   redis:
     image: redis:7-alpine
     container_name: wp-sentinel-redis
     restart: unless-stopped
-    ports:
-      - "16379:6379"
+    expose:
+      - "6379"
     command: redis-server --requirepass R3disP4ss8xYq2Wm
     volumes:
       - redis-data:/data
