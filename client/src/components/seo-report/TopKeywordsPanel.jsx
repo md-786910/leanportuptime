@@ -89,7 +89,7 @@ export default function TopKeywordsPanel({ siteId }) {
   const topHasRanked = sorted.some((it) => it.position != null);
   const providerInfo = status?.providerInfo || {};
   const providerNotConfigured = !providerInfo.configured;
-  const maxKeywords = status?.maxKeywordsPerSite || 30;
+  const maxKeywords = status?.maxKeywordsPerSite || 250;
   const canManage = !isViewer;
 
   const headerProps = {

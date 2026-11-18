@@ -39,7 +39,7 @@ export default function KeywordRankingsSection({ siteId, themeKey }) {
   const quota = status?.quota || { used: 0, limit: 4, remaining: 4 };
   const providerInfo = status?.providerInfo || {};
   const providerConfig = status?.providerConfig || { locationCode: DEFAULT_LOCATION_CODE, languageCode: 'de' };
-  const maxKeywords = status?.maxKeywordsPerSite || 30;
+  const maxKeywords = status?.maxKeywordsPerSite || 250;
   const quotaExhausted = quota.remaining <= 0;
   const providerNotConfigured = !providerInfo.configured;
 
