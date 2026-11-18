@@ -10,3 +10,7 @@ Thumbs.db
 *.swo
 # Mongo backups (sidecar)
 backups/
+
+# Backups of env files made by scripts/rotate-mongo-password.sh
+*.env.bak
+.env.bak
