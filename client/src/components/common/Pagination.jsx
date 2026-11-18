@@ -10,13 +10,13 @@ export default function Pagination({ page, total, limit, onPageChange }) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-5 px-1">
       {/* Result count */}
-      <p className="text-sm font-medium text-brand-on-surface dark:text-brand-outline text-center sm:text-left">
+      <p className="text-[13px] text-slate-500 dark:text-slate-400 text-center sm:text-left">
         Showing{' '}
-        <span className="font-semibold font-label">{startItem}</span>
+        <span className="font-medium text-slate-700 dark:text-slate-200 font-label">{startItem}</span>
         {' '}to{' '}
-        <span className="font-semibold font-label">{endItem}</span>
+        <span className="font-medium text-slate-700 dark:text-slate-200 font-label">{endItem}</span>
         {' '}of{' '}
-        <span className="font-semibold font-label">{total}</span>
+        <span className="font-medium text-slate-700 dark:text-slate-200 font-label">{total}</span>
         {' '}results
       </p>
 
@@ -34,7 +34,7 @@ export default function Pagination({ page, total, limit, onPageChange }) {
           Previous
         </Button>
 
-        <span className="text-xs font-medium font-label text-brand-on-surface dark:text-brand-outline px-2 whitespace-nowrap">
+        <span className="text-xs font-medium font-label text-slate-500 dark:text-slate-400 px-2 whitespace-nowrap">
           Page {page} of {totalPages}
         </span>
 

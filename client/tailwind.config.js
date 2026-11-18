@@ -6,6 +6,11 @@ module.exports = {
     extend: {
       colors: {
         brand: {
+          // Numeric aliases (used across components; previously undefined)
+          "50": "#eef0ff",
+          "400": "#818cf8",
+          "500": "#4f46e5",
+          "600": "#4338ca",
           "surface-container-highest": "#e0e3e5",
           "on-primary": "#ffffff",
           "tertiary-fixed": "#ffdbcc",
@@ -54,6 +59,11 @@ module.exports = {
           "inverse-surface": "#2d3133",
           "on-error": "#ffffff"
         },
+      },
+
+      boxShadow: {
+        soft: "0 1px 2px rgba(16,24,40,0.04), 0 4px 12px -2px rgba(16,24,40,0.06)",
+        card: "0 1px 2px rgba(16,24,40,0.04)",
       },
 
       borderRadius: {

@@ -17,7 +17,7 @@ export default function AppLayout() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header />
         <main className="flex-1 overflow-y-auto bg-[#f8f9f9] dark:bg-brand-on-surface">
-          <div className="p-6 md:p-10">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
             <Outlet />
           </div>
         </main>

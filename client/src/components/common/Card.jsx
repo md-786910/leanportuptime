@@ -8,7 +8,7 @@ export default function Card({ children, className = '', padding = 'lg', noPaddi
 
   return (
     <div
-      className={`bg-brand-surface-container-lowest border border-brand-outline-variant rounded-xl shadow-lg ${ !noPadding ? paddingClasses[padding] : '' } ${className}`}
+      className={`bg-white dark:bg-brand-inverse-surface border border-brand-outline-variant/60 dark:border-white/10 rounded-xl shadow-card ${ !noPadding ? paddingClasses[padding] : '' } ${className}`}
       {...props}
     >
       {children}

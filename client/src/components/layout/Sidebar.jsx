@@ -68,7 +68,7 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-brand-inverse-surface/60 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-30 md:hidden"
           onClick={toggleSidebar}
         />
       )}
@@ -77,39 +77,36 @@ export default function Sidebar() {
         className={`
           fixed inset-y-0 left-0 z-50
           md:relative md:z-auto md:translate-x-0 md:inset-y-auto md:left-auto
-          h-screen w-64 md:w-60
-          rounded-r-lg bg-gradient-to-b from-[#f7f9fb] to-[#f2f4f6]
-          shadow-xl shadow-slate-200/50
-          flex flex-col gap-2
+          h-screen w-64 md:w-60 flex-shrink-0
+          bg-gradient-to-b from-[#f7f9fb] to-[#f2f4f6] dark:from-brand-inverse-surface dark:to-brand-inverse-surface
+          border-r border-brand-outline-variant/50 dark:border-white/10
+          flex flex-col
           transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        {/* Logo Section */}
-        <div className="flex items-center gap-3.5 px-4 py-4">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-brand-primary to-brand-primary-container flex items-center justify-center shadow-md shadow-brand-primary/20 transform hover:rotate-3 transition-transform">
-            <svg className="h-6 w-6 text-brand-on-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        {/* Logo */}
+        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-brand-outline-variant/40 dark:border-white/5">
+          <div className="h-8 w-8 rounded-lg bg-brand-primary flex items-center justify-center">
+            <svg className="h-[18px] w-[18px] text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.25} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <div>
-            <span className="text-xl font-bold font-label tracking-tight text-brand-on-surface">Sitelyze</span>
-            <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-secondary animate-pulse"></span>
-              <p className="text-[10px] font-bold font-label text-brand-on-surface-variant uppercase tracking-widest">Enterprise</p>
-            </div>
-          </div>
+          <span className="text-[17px] font-bold font-headline tracking-tight text-slate-900 dark:text-white">Sitelyze</span>
+          <span className="ml-auto text-[10px] font-semibold font-label text-brand-on-surface-variant dark:text-slate-400 bg-brand-surface-container dark:bg-white/5 px-1.5 py-0.5 rounded-md">
+            Enterprise
+          </span>
         </div>
 
-        {/* Navigation Section */}
-        <nav className="flex-1 px-4 py-4 space-y-8 overflow-y-auto scrollbar-hide">
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-5 space-y-6 overflow-y-auto">
           {menuGroups.map((group) => {
             const visibleItems = group.items.filter(item => !item.adminOnly || user?.role === 'admin');
             if (visibleItems.length === 0) return null;
 
             return (
-              <div key={group.title} className="space-y-1">
-                <h3 className="px-4 text-[11px] font-bold font-label text-brand-outline uppercase tracking-[0.15em] mb-3">
+              <div key={group.title} className="space-y-0.5">
+                <h3 className="px-3 mb-2 text-[11px] font-medium font-label text-brand-outline dark:text-slate-500">
                   {group.title}
                 </h3>
                 {visibleItems.map((item) => (
@@ -118,10 +115,10 @@ export default function Sidebar() {
                     to={item.to}
                     end={item.to === '/'}
                     className={({ isActive }) =>
-                      `flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold font-label transition-all duration-200 group relative ${
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium font-label transition-colors group ${
                         isActive
-                          ? 'bg-brand-primary-container text-brand-on-primary-container'
-                          : 'text-brand-on-surface-variant hover:bg-brand-surface-container-low hover:text-brand-on-surface'
+                          ? 'bg-brand-primary-container text-white shadow-sm shadow-brand-primary/20'
+                          : 'text-brand-on-surface-variant dark:text-slate-400 hover:bg-brand-surface-container dark:hover:bg-white/5 hover:text-brand-on-surface dark:hover:text-white'
                       }`
                     }
                     onClick={() => {
@@ -130,13 +127,10 @@ export default function Sidebar() {
                   >
                     {({ isActive }) => (
                       <>
-                        <span className={`flex-shrink-0 transition-colors duration-200 ${isActive ? 'text-brand-on-primary-container' : 'text-brand-outline group-hover:text-brand-on-surface'}`}>
+                        <span className={`flex-shrink-0 [&>svg]:h-[18px] [&>svg]:w-[18px] ${isActive ? 'text-white' : 'text-brand-outline group-hover:text-brand-on-surface dark:group-hover:text-slate-300'}`}>
                           {item.icon}
                         </span>
                         <span className="flex-1">{item.label}</span>
-                        {isActive && (
-                          <span className="absolute left-0 w-1 h-5 bg-brand-primary rounded-r-full shadow-[2px_0_8px_rgba(51,102,255,0.3)]" />
-                        )}
                       </>
                     )}
                   </NavLink>
@@ -146,20 +140,19 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Upgrade Card / Footer */}
-        <div className="p-4 mt-auto">
-          <div className="relative overflow-hidden px-5 py-5 rounded-xl bg-brand-inverse-surface shadow-lg border border-brand-outline">
-            {/* Background Decoration */}
-            <div className="absolute -right-4 -top-4 h-16 w-16 bg-brand-primary/20 rounded-full blur-2xl" />
-            
-            <div className="relative">
-              <p className="text-xs font-bold font-label text-brand-inverse-on-surface mb-1.5">Need assistance?</p>
-              <p className="text-[11px] font-label text-brand-outline-variant leading-relaxed mb-4">Our dedicated support team is available 24/7 for Enterprise partners.</p>
-              <button className="w-full py-2 bg-brand-primary hover:opacity-90 text-brand-on-primary text-[11px] font-bold font-label rounded-lg shadow-lg shadow-brand-primary/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                Contact Support
-              </button>
-            </div>
-          </div>
+        {/* Support */}
+        <div className="p-3 border-t border-brand-outline-variant/40 dark:border-white/5">
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left hover:bg-brand-surface-container dark:hover:bg-white/5 transition-colors group">
+            <span className="h-8 w-8 rounded-lg bg-brand-surface-container-lowest dark:bg-white/5 border border-brand-outline-variant/50 flex items-center justify-center text-brand-outline group-hover:text-brand-primary transition-colors">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[13px] font-medium font-label text-slate-700 dark:text-slate-200">Need help?</span>
+              <span className="block text-[11px] font-label text-slate-400">Contact support · 24/7</span>
+            </span>
+          </button>
         </div>
       </aside>
     </>

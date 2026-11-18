@@ -1,115 +1,41 @@
-import Card from '../common/Card';
-
 export default function KPICards({ statusCounts = {} }) {
   const { up = 0, down = 0, degraded = 0, pending = 0 } = statusCounts;
   const total = up + down + degraded + pending;
+  const pct = (value) => (total > 0 ? Math.round((value / total) * 100) : 0);
 
-  const getPercentage = (value) => (total > 0 ? (value / total) * 100 : 0);
-
-  const cards = [
-    {
-      label: 'Total Infrastructure',
-      value: total,
-      sublabel: 'Monitored Endpoints',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-      ),
-      color: 'text-brand-primary dark:text-brand-400',
-      bgColor: 'bg-brand-primary',
-      accent: 'border-brand-500',
-      iconBg: 'bg-brand-50 dark:bg-brand-400/10',
-      percent: 100,
-    },
-    {
-      label: 'Operational',
-      value: up,
-      sublabel: 'Healthy Status',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      color: 'text-emerald-600 dark:text-emerald-400',
-      bgColor: 'bg-emerald-500',
-      accent: 'border-emerald-500',
-      iconBg: 'bg-emerald-50 dark:bg-emerald-400/10',
-      percent: getPercentage(up),
-    },
-    {
-      label: 'Critical',
-      value: down,
-      sublabel: 'Down / Inactive',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      color: 'text-rose-600 dark:text-rose-400',
-      bgColor: 'bg-rose-500',
-      accent: 'border-rose-500',
-      iconBg: 'bg-rose-50 dark:bg-rose-400/10',
-      percent: getPercentage(down),
-    },
-    {
-      label: 'Degraded',
-      value: degraded,
-      sublabel: 'High Latency',
-      icon: (
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
-      color: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-500',
-      accent: 'border-amber-500',
-      iconBg: 'bg-amber-50 dark:bg-amber-400/10',
-      percent: getPercentage(degraded),
-    },
+  const stats = [
+    { label: 'Total sites', value: total, hint: 'Monitored endpoints', dot: 'bg-brand-primary' },
+    { label: 'Operational', value: up, hint: `${pct(up)}% healthy`, dot: 'bg-emerald-500', bar: 'bg-emerald-500', percent: pct(up) },
+    { label: 'Down', value: down, hint: down ? 'Needs attention' : 'All clear', dot: 'bg-rose-500', bar: 'bg-rose-500', percent: pct(down), alert: down > 0 },
+    { label: 'Degraded', value: degraded, hint: 'High latency', dot: 'bg-amber-500', bar: 'bg-amber-500', percent: pct(degraded) },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {cards.map((card) => (
-        <Card
-          key={card.label}
-          className={`group relative overflow-hidden transition-all duration-300 border-l-4 ${card.accent}`}
+    <div className="grid grid-cols-2 lg:grid-cols-4 bg-white dark:bg-brand-inverse-surface border border-brand-outline-variant/60 dark:border-white/10 rounded-xl shadow-card overflow-hidden">
+      {stats.map((s, i) => (
+        <div
+          key={s.label}
+          className={`p-5 sm:p-6 border-slate-100 dark:border-white/5
+            ${i % 2 === 1 ? 'border-l' : ''} ${i >= 2 ? 'border-t lg:border-t-0' : ''} ${i === 2 ? 'lg:border-l' : ''}`}
         >
-          <div className="flex flex-col gap-5">
-            <div className="flex items-center justify-between">
-              <div className={`h-8 w-8 rounded-xl ${card.iconBg} flex items-center justify-center ${card.color} group-hover:scale-110 transition-transform duration-300`}>
-                {card.icon}
-              </div>
-              <h3 className="text-3xl font-bold text-brand-on-surface dark:text-white tracking-tight font-headline">
-                {card.value}
-              </h3>
-            </div>
-
-            <div className="space-y-1">
-              
-              <div>
-                <p className="text-[13px] font-bold text-brand-on-surface dark:text-brand-outline-variant">
-                  {card.label}
-                </p>
-                <p className="text-[11px] font-medium text-brand-outline dark:text-brand-on-surface-variant font-label">
-                  {card.sublabel}
-                </p>
-              </div>
-            </div>
-
-            {/* Subtle Progress Bar */}
-            <div className="h-1 w-full bg-brand-surface-container-lowest dark:bg-brand-on-surface rounded-full overflow-hidden">
-              <div
-                className={`h-full ${card.bgColor} transition-all duration-1000 ease-out`}
-                style={{ width: `${card.percent}%` }}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${s.dot} ${s.alert ? 'animate-pulse' : ''}`} />
+            <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 font-label">{s.label}</p>
           </div>
-          
-          {/* Decorative element */}
-          <div className={`absolute -right-4 -bottom-4 w-20 h-20 rounded-full blur-3xl opacity-10 ${card.bgColor}`} />
-        </Card>
+          <p className={`mt-3 text-3xl font-semibold tracking-tight font-headline tabular-nums ${s.alert ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
+            {s.value}
+          </p>
+          <div className="mt-3 flex items-center gap-3">
+            {s.bar ? (
+              <div className="h-1 flex-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                <div className={`h-full ${s.bar} rounded-full transition-all duration-700`} style={{ width: `${s.percent}%` }} />
+              </div>
+            ) : (
+              <div className="flex-1" />
+            )}
+            <p className="text-[12px] text-slate-400 font-label whitespace-nowrap">{s.hint}</p>
+          </div>
+        </div>
       ))}
     </div>
   );
