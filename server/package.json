@@ -9,7 +9,8 @@
     "worker": "node src/workers/index.js",
     "seed": "node ../scripts/seed.js",
     "forms:parse": "node scripts/parseFormExcel.js",
-    "forms:send": "node scripts/sendFormSubmissions.js"
+    "forms:send": "node scripts/sendFormSubmissions.js",
+    "user:create": "node scripts/createUser.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

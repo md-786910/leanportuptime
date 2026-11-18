@@ -8,6 +8,7 @@ const SITE_TABS = [
   'plugins',
   'sitescan',
   'history',
+  'linkedin',
 ];
 
 const SITE_TABS_SET = new Set(SITE_TABS);

@@ -17,42 +17,6 @@ const generateRefreshToken = (userId) => {
   });
 };
 
-exports.register = async (req, res, next) => {
-  try {
-    const { email, password, name } = req.body;
-
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        error: { code: "DUPLICATE_ERROR", message: "Email already registered" },
-      });
-    }
-
-    const user = await User.create({ email, password, name });
-
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-
-    user.refreshTokens.push(refreshToken);
-    await user.save();
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: config.env === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.status(201).json({
-      success: true,
-      data: { user, accessToken },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;

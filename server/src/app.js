@@ -32,6 +32,7 @@ const keywordsRoutes = require("./routes/keywords.routes");
 const appSettingsRoutes = require("./routes/appSettings.routes");
 const formSubmissionsRoutes = require("./routes/formSubmissions.routes");
 const siteFormSubmissionsRoutes = require("./routes/siteFormSubmissions.routes");
+const linkedinRoutes = require("./routes/linkedin.routes");
 
 const app = express();
 
@@ -74,6 +75,7 @@ app.use("/api/sites/:id/reports", auth, siteAccess, reportsRoutes);
 app.use("/api/google", googleRoutes);
 app.use("/api/sites/:id/search-console", auth, siteAccess, requireTab("seo-report"), searchConsoleRoutes);
 app.use("/api/sites/:id/analytics", auth, siteAccess, requireTab("seo-report"), analyticsRoutes);
+app.use("/api/sites/:id/linkedin", auth, siteAccess, requireTab("linkedin"), linkedinRoutes);
 app.use("/api/sites/:id/backlinks", auth, siteAccess, requireTab("seo-report"), backlinksRoutes);
 app.use("/api/sites/:id/keywords", auth, siteAccess, requireTab("seo-report"), keywordsRoutes);
 app.use("/api/sites/:id/form-submissions", auth, siteAccess, requireTab("seo-report"), siteFormSubmissionsRoutes);

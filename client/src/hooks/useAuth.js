@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
-import { loginApi, registerApi, logoutApi, forgotPasswordApi, resetPasswordApi } from '../api/auth.api';
+import { loginApi, logoutApi, forgotPasswordApi, resetPasswordApi } from '../api/auth.api';
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -24,20 +24,6 @@ export const useAuth = () => {
     }
   };
 
-  const register = async (email, password, name) => {
-    setIsLoading(true);
-    try {
-      const { user, accessToken } = await registerApi(email, password, name);
-      setAuth(user, accessToken);
-      toast.success('Account created successfully!');
-      navigate('/');
-    } catch (error) {
-      toast.error(error.response?.data?.error?.message || 'Registration failed');
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const logout = async () => {
     try {
@@ -76,5 +62,5 @@ export const useAuth = () => {
     }
   };
 
-  return { user, isAuthenticated, isLoading, login, register, logout, forgotPassword, resetPassword };
+  return { user, isAuthenticated, isLoading, login, logout, forgotPassword, resetPassword };
 };

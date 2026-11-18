@@ -5,12 +5,6 @@ const auth = require("../middleware/auth");
 const validate = require("../middleware/validate");
 const { authLimiter } = require("../middleware/rateLimiter");
 
-const registerSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(8).required(),
-  name: Joi.string().min(2).max(100).required(),
-});
-
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
@@ -25,12 +19,6 @@ const resetPasswordSchema = Joi.object({
   password: Joi.string().min(8).required(),
 });
 
-router.post(
-  "/register",
-  authLimiter,
-  validate(registerSchema),
-  authController.register,
-);
 router.post("/login", authLimiter, validate(loginSchema), authController.login);
 router.post("/refresh", authController.refresh);
 router.get("/me", auth, authController.getMe);

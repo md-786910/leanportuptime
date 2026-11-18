@@ -65,6 +65,22 @@ module.exports = {
       .map((s) => s.trim())
       .filter(Boolean),
   },
+  linkedin: {
+    accessToken: process.env.LINKEDIN_ACCESS_TOKEN || "",
+    // Optional: lets the server renew the access token when it expires.
+    refreshToken: process.env.LINKEDIN_REFRESH_TOKEN || "",
+    clientId: process.env.LINKEDIN_CLIENT_ID || "",
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET || "",
+    apiVersion: process.env.LINKEDIN_API_VERSION || "202601",
+    // "siteId:adAccountId,siteId:adAccountId" => { siteId: adAccountId }
+    // Only listed projects get the LinkedIn Ads tab.
+    projects: Object.fromEntries(
+      (process.env.LINKEDIN_PROJECT_IDS || "")
+        .split(",")
+        .map((s) => s.trim().split(":").map((p) => p.trim()))
+        .filter(([siteId, accountId]) => siteId && accountId)
+    ),
+  },
   pageSpeedApiKey: process.env.PAGESPEED_API_KEY || "",
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || "",

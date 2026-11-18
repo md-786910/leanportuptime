@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useSite } from "../hooks/useSites";
 import { useSiteMutations } from "../hooks/useSiteMutations";
@@ -25,6 +25,7 @@ import PluginPanel from "../components/plugins/PluginPanel";
 import SiteScanPanel from "../components/sitescan/SiteScanPanel";
 import SeoPanel from "../components/seo/SeoPanel";
 import SeoReportPanel from "../components/seo-report/SeoReportPanel";
+import LinkedInPanel from "../components/linkedin/LinkedInPanel";
 
 export default function SiteDetailPage() {
   const { id } = useParams();
@@ -45,7 +46,12 @@ export default function SiteDetailPage() {
   const hasChecks = (checks?.length ?? 0) > 0;
   const hideMonitoringForViewer = isViewer && !hasChecks;
 
-  const allowedTabs = useAllowedTabs(id);
+  const tabsForUser = useAllowedTabs(id);
+  // LinkedIn tab only for projects listed in LINKEDIN_PROJECT_IDS (kept while site loads).
+  const allowedTabs = useMemo(
+    () => tabsForUser.filter((t) => t !== "linkedin" || !site || site.linkedinEnabled),
+    [tabsForUser, site]
+  );
 
   useEffect(() => {
     if (!allowedTabs.length) return;
@@ -124,6 +130,7 @@ export default function SiteDetailPage() {
       {activeTab === "seo" && <SeoPanel siteId={id} />}
       {activeTab === "seo-report" && <SeoReportPanel siteId={id} siteName={site.name} siteUrl={site.url} />}
       {activeTab === "security" && <SecurityPanel siteId={id} />}
+      {activeTab === "linkedin" && site.linkedinEnabled && <LinkedInPanel siteId={id} />}
 
       {activeTab === "plugins" && <PluginPanel siteId={id} />}
 

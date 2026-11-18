@@ -1,6 +1,7 @@
 const Site = require('../models/Site');
 const Check = require('../models/Check');
 const { uptimeQueue } = require('../config/queue');
+const linkedinService = require('../services/linkedin.service');
 
 function siteFilter(user) {
   if (user.role === 'admin' && !user.invitedBy) return { userId: user._id };
@@ -78,7 +79,10 @@ exports.get = async (req, res, next) => {
         error: { code: 'NOT_FOUND', message: 'Site not found' },
       });
     }
-    res.json({ success: true, data: site });
+    res.json({
+      success: true,
+      data: { ...site.toJSON(), linkedinEnabled: linkedinService.isEnabled(site._id) },
+    });
   } catch (error) {
     next(error);
   }

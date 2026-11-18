@@ -4,6 +4,7 @@ export const SITE_TABS = [
   { key: 'ssl', label: 'SSL' },
   { key: 'seo', label: 'SEO (Lighthouse)' },
   { key: 'seo-report', label: 'SEO Report' },
+  { key: 'linkedin', label: 'LinkedIn Ads' },
   { key: 'security', label: 'Security' },
   { key: 'plugins', label: 'Plugins' },
   { key: 'sitescan', label: 'Site Scan' },
