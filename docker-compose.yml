@@ -12,6 +12,8 @@ services:
       - ./server/server.js:/app/server.js
       - ./server/.env:/app/.env
       - ./server/node_modules:/app/node_modules
+      # Shared with mongo-backup: lists backups and drops the "backup now" trigger
+      - ./backups:/app/backups
     depends_on:
       mongo:
         condition: service_healthy

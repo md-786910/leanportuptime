@@ -30,6 +30,7 @@ const analyticsRoutes = require("./routes/analytics.routes");
 const backlinksRoutes = require("./routes/backlinks.routes");
 const keywordsRoutes = require("./routes/keywords.routes");
 const appSettingsRoutes = require("./routes/appSettings.routes");
+const backupsRoutes = require("./routes/backups.routes");
 const formSubmissionsRoutes = require("./routes/formSubmissions.routes");
 const siteFormSubmissionsRoutes = require("./routes/siteFormSubmissions.routes");
 
@@ -78,6 +79,7 @@ app.use("/api/sites/:id/backlinks", auth, siteAccess, requireTab("seo-report"), 
 app.use("/api/sites/:id/keywords", auth, siteAccess, requireTab("seo-report"), keywordsRoutes);
 app.use("/api/sites/:id/form-submissions", auth, siteAccess, requireTab("seo-report"), siteFormSubmissionsRoutes);
 app.use("/api/settings", auth, appSettingsRoutes);
+app.use("/api/backups", auth, backupsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/users/team", teamRoutes);
